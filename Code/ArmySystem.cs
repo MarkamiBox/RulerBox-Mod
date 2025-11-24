@@ -9,7 +9,6 @@ namespace RulerBox
     public enum ArmySelectionMode
     {
         Normal,     // Standard control
-                    // Commit with the message hello world
         Recruit,    // Drag over civilians -> Recruit
         Dismiss     // Drag over soldiers -> Dismiss
     }
