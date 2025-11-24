@@ -38,7 +38,7 @@ namespace RulerBox
         public static string ManpowerTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
-            if (d == null) return "No datas";
+            if (d == null) return "No data";
 
             string modeStr = "Normal";
             if (ArmySystem.CurrentMode == ArmySelectionMode.Recruit) 
