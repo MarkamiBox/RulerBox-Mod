@@ -59,7 +59,7 @@ namespace RulerBox
                 $"Capacity:  {FormatBig(d.ManpowerMax)}\n\n" +
                 
                 $"<color=#999999>Drafting costs 1 Manpower Point per soldier.\n" +
-                $"Dismissing refunds ~0.33 points.</color>";
+                $"Dismissing refunds Manpower Point.</color>";
         }
 
         // ==============================================================================================
