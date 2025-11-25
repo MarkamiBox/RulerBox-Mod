@@ -65,23 +65,6 @@ namespace RulerBox
             rootV.childForceExpandWidth = true;
             rootV.childForceExpandHeight = false; // Let the flexible element fill space
 
-            // === 1. TITLE ===
-            var titleGO = new GameObject("Title", typeof(RectTransform));
-            titleGO.transform.SetParent(root.transform, false);
-            var titleText = titleGO.AddComponent<Text>();
-            titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            titleText.text = "Diplomacy";
-            titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.color = Color.white;
-            titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 10;
-            titleText.resizeTextMaxSize = 10;
-            
-            var titleLE = titleGO.AddComponent<LayoutElement>();
-            titleLE.minHeight = 24f;
-            titleLE.preferredHeight = 24f;
-            titleLE.flexibleHeight = 0;
-
             // === 2. HEADER PANEL (Flags + Info) ===
             CreateHeader(root.transform);
 
@@ -389,87 +372,101 @@ namespace RulerBox
         {
             var row = new GameObject("Footer");
             row.transform.SetParent(parent, false);
-            
-            // Background
+
+            // Background bar (still full width)
             var bg = row.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = new Color(0.1f, 0.1f, 0.1f, 1f);
 
-            // Layout Group - CRITICAL: Child Force Expand WIDTH = FALSE
-            var h = row.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleCenter;
-            h.spacing = 15; // Good spacing between elements
-            h.padding = new RectOffset(10, 10, 2, 2);
-            h.childControlWidth = false;  // Allow children to set their own width
-            h.childControlHeight = false;
-            h.childForceExpandWidth = false; // STOP STRETCHING
-            h.childForceExpandHeight = false;
-            
-            // Layout Element - STRICT HEIGHT
-            var le = row.AddComponent<LayoutElement>();
-            le.preferredHeight = 28f; 
-            le.minHeight = 28f;
-            le.flexibleHeight = 0f;
+            // This layout just centers a single child (the compact indicator group)
+            var outerH = row.AddComponent<HorizontalLayoutGroup>();
+            outerH.childAlignment        = TextAnchor.MiddleCenter;
+            outerH.spacing               = 0;
+            outerH.padding               = new RectOffset(0, 0, 2, 2);
+            outerH.childControlWidth     = false;
+            outerH.childControlHeight    = false;
+            outerH.childForceExpandWidth = false;
+            outerH.childForceExpandHeight= false;
 
-            // Indicators
-            MakeInd(row.transform, "iconSkull", new Color(1f, 0.4f, 0.4f), out textCorruption);
-            MakeInd(row.transform, "iconWar", new Color(1f, 0.4f, 0.4f), out textWarExhaustion);
-            MakeInd(row.transform, "iconKingdom", new Color(1f, 0.9f, 0.4f), out textPoliticalPower);
-            MakeInd(row.transform, "iconPeace", new Color(0.4f, 0.8f, 1f), out textStability);
+            var le = row.AddComponent<LayoutElement>();
+            le.preferredHeight = 28f;
+            le.minHeight       = 28f;
+            le.flexibleHeight  = 0f;
+
+            // INNER GROUP – this is what actually holds the four indicators.
+            // Its width is only as big as the indicators + spacing.
+            var inner = new GameObject("IndicatorsGroup");
+            inner.transform.SetParent(row.transform, false);
+
+            var innerH = inner.AddComponent<HorizontalLayoutGroup>();
+            innerH.childAlignment        = TextAnchor.MiddleCenter;
+            innerH.spacing               = 8;   // distance between indicators
+            innerH.padding               = new RectOffset(6, 6, 0, 0);
+            innerH.childControlWidth     = false;
+            innerH.childControlHeight    = false;
+            innerH.childForceExpandWidth = false;
+            innerH.childForceExpandHeight= false;
+
+            // Important: this makes the group shrink to its preferred size
+            var fitter = inner.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit   = ContentSizeFitter.FitMode.Unconstrained;
+
+            // Indicators now go on the INNER group, not directly on the footer row
+            MakeInd(inner.transform, "iconSkull",   new Color(1f, 0.4f, 0.4f), out textCorruption);
+            MakeInd(inner.transform, "iconWar",     new Color(1f, 0.4f, 0.4f), out textWarExhaustion);
+            MakeInd(inner.transform, "iconKingdom", new Color(1f, 0.9f, 0.4f), out textPoliticalPower);
+            MakeInd(inner.transform, "iconPeace",   new Color(0.4f, 0.8f, 1f), out textStability);
         }
 
         private static void MakeInd(Transform parent, string iconName, Color col, out Text txt)
         {
             var ind = new GameObject("Ind_" + iconName);
             ind.transform.SetParent(parent, false);
-            
-            // Group Layout
+
             var h = ind.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4;
-            h.childControlWidth = false; 
-            h.childControlHeight = false;
-            h.childForceExpandWidth = false; // Very Important
-            h.childForceExpandHeight = false;
-            h.childAlignment = TextAnchor.MiddleCenter;
+            h.spacing               = 4;
+            h.childControlWidth     = false;
+            h.childControlHeight    = false;
+            h.childForceExpandWidth = false;
+            h.childForceExpandHeight= false;
+            h.childAlignment        = TextAnchor.MiddleCenter;
 
-            // STRICT SIZE LIMITS ON THE CONTAINER
+            // Let the chip use whatever width it needs (no tiny fixed width)
             var le = ind.AddComponent<LayoutElement>();
-            le.preferredWidth = 10f; // Force a small width
-            le.minWidth = 10f;
-            le.flexibleWidth = 0f;   // Do not grow
             le.preferredHeight = 20f;
+            le.minHeight       = 20f;
+            le.flexibleWidth   = 0f;
 
-            // === ICON ===
+            // ICON
             var iconObj = new GameObject("Icon");
             iconObj.transform.SetParent(ind.transform, false);
-            
+
             var img = iconObj.AddComponent<Image>();
             var spr = Resources.Load<Sprite>("ui/Icons/" + iconName);
-            // Fallback if sprite is missing
-            if (spr == null) spr = windowInnerSprite; 
+            if (spr == null) spr = windowInnerSprite;
             img.sprite = spr;
-            img.color = col;
+            img.color  = col;
             img.preserveAspect = true;
 
-            // STRICT SIZE FOR ICON
             var iconLe = iconObj.AddComponent<LayoutElement>();
-            iconLe.preferredWidth = 16f; 
+            iconLe.preferredWidth  = 16f;
             iconLe.preferredHeight = 16f;
-            iconLe.minWidth = 16f;
-            iconLe.minHeight = 16f;
-            iconLe.flexibleWidth = 0;
+            iconLe.minWidth        = 16f;
+            iconLe.minHeight       = 16f;
+            iconLe.flexibleWidth   = 0;
 
-            // === TEXT ===
+            // TEXT
             txt = CreateText(ind.transform, "0", 10, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
-            
-            // STRICT SIZE FOR TEXT
+
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
-            txtLe.preferredWidth = 10f; // Small fixed width for number
-            txtLe.minWidth = 10f;
+            txtLe.preferredWidth  = 28f;   // just enough for “100%”, tweak if you want
+            txtLe.minWidth        = 20f;
             txtLe.preferredHeight = 16f;
-            txtLe.flexibleWidth = 0f; // Do not expand
+            txtLe.flexibleWidth   = 0f;
         }
+
 
         // ================================================================================================
         // HELPERS
