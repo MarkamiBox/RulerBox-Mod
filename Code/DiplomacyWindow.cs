@@ -400,7 +400,7 @@ namespace RulerBox
 
             var innerH = inner.AddComponent<HorizontalLayoutGroup>();
             innerH.childAlignment        = TextAnchor.MiddleCenter;
-            innerH.spacing               = 8;   // distance between indicators
+            innerH.spacing               = 2;   // distance between indicators
             innerH.padding               = new RectOffset(6, 6, 0, 0);
             innerH.childControlWidth     = false;
             innerH.childControlHeight    = false;
@@ -425,7 +425,7 @@ namespace RulerBox
             ind.transform.SetParent(parent, false);
 
             var h = ind.AddComponent<HorizontalLayoutGroup>();
-            h.spacing               = 4;
+            h.spacing               = 1;
             h.childControlWidth     = false;
             h.childControlHeight    = false;
             h.childForceExpandWidth = false;
@@ -450,14 +450,14 @@ namespace RulerBox
             img.preserveAspect = true;
 
             var iconLe = iconObj.AddComponent<LayoutElement>();
-            iconLe.preferredWidth  = 16f;
-            iconLe.preferredHeight = 16f;
-            iconLe.minWidth        = 16f;
-            iconLe.minHeight       = 16f;
+            iconLe.preferredWidth  = 6f;
+            iconLe.preferredHeight = 6f;
+            iconLe.minWidth        = 6f;
+            iconLe.minHeight       = 6f;
             iconLe.flexibleWidth   = 0;
 
             // TEXT
-            txt = CreateText(ind.transform, "0", 10, FontStyle.Bold, col);
+            txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
 
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
