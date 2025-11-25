@@ -9,6 +9,7 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
+        private static Sprite bread;
         
         // --- UI References ---
         private static Image headerFlagIcon;
