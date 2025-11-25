@@ -434,8 +434,8 @@ namespace RulerBox
 
             // STRICT SIZE LIMITS ON THE CONTAINER
             var le = ind.AddComponent<LayoutElement>();
-            le.preferredWidth = 50f; // Force a small width
-            le.minWidth = 40f;
+            le.preferredWidth = 10f; // Force a small width
+            le.minWidth = 10f;
             le.flexibleWidth = 0f;   // Do not grow
             le.preferredHeight = 20f;
 
@@ -465,8 +465,8 @@ namespace RulerBox
             
             // STRICT SIZE FOR TEXT
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
-            txtLe.preferredWidth = 25f; // Small fixed width for number
-            txtLe.minWidth = 20f;
+            txtLe.preferredWidth = 10f; // Small fixed width for number
+            txtLe.minWidth = 10f;
             txtLe.preferredHeight = 16f;
             txtLe.flexibleWidth = 0f; // Do not expand
         }
