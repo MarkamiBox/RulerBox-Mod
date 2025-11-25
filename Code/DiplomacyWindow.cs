@@ -32,10 +32,10 @@ namespace RulerBox
         {
             if (root != null) return;
 
-            // Load resources
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
 
             // === ROOT CONTAINER ===
+            // It stretches to fill the "ContentContainer" from TopPanelUI
             root = new GameObject("DiplomacyRoot", typeof(RectTransform));
             root.transform.SetParent(parent, false);
 
@@ -45,28 +45,30 @@ namespace RulerBox
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            // Main Vertical Stack
+            // The Main Vertical Stack
             var rootV = root.AddComponent<VerticalLayoutGroup>();
             rootV.childAlignment = TextAnchor.UpperCenter;
             rootV.spacing = 4;
             rootV.padding = new RectOffset(4, 4, 4, 4);
             rootV.childControlWidth = true;
-            rootV.childControlHeight = false; // Let children dictate height
+            rootV.childControlHeight = true; // Control height so children fill the space
             rootV.childForceExpandWidth = true;
-            rootV.childForceExpandHeight = false;
+            rootV.childForceExpandHeight = false; // Don't force expand, let Flexible Height handle it
 
             // === 1. TITLE ===
             var titleGO = new GameObject("Title", typeof(RectTransform));
             titleGO.transform.SetParent(root.transform, false);
+            
             var titleText = titleGO.AddComponent<Text>();
             titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             titleText.text = "Diplomacy";
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
             titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 10;
+            titleText.resizeTextMinSize = 12;
             titleText.resizeTextMaxSize = 18;
             
+            // Title layout: Fixed height
             var titleLE = titleGO.AddComponent<LayoutElement>();
             titleLE.minHeight = 24f;
             titleLE.preferredHeight = 24f;
@@ -79,10 +81,10 @@ namespace RulerBox
             CreateRelationsSection(root.transform);
 
             // === 4. SEARCH BAR ===
-            // Placed above the split view for better layout flow
+            // (Small bar above the split view)
             CreateSearchBar(root.transform);
 
-            // === 5. SPLIT VIEW (List | Buttons) ===
+            // === 5. SPLIT VIEW (Search List | Actions Buttons) ===
             var splitGO = new GameObject("SplitView", typeof(RectTransform));
             splitGO.transform.SetParent(root.transform, false);
             
@@ -93,13 +95,14 @@ namespace RulerBox
             splitH.childForceExpandWidth = true;
             splitH.childForceExpandHeight = true;
 
+            // Split view takes all remaining vertical space
             var splitLE = splitGO.AddComponent<LayoutElement>();
-            splitLE.flexibleHeight = 1f; // Fill remaining vertical space
+            splitLE.flexibleHeight = 1f; 
 
-            // Left Column (List)
+            // Left Column
             CreateLeftColumn(splitGO.transform);
 
-            // Right Column (Buttons)
+            // Right Column
             CreateRightColumn(splitGO.transform);
 
             // === 6. FOOTER INDICATORS ===
@@ -136,7 +139,7 @@ namespace RulerBox
             // 2. Relations
             RefreshRelations(k);
 
-            // 3. Search List
+            // 3. Search
             RefreshSearchList(searchInput.text);
 
             // 4. Indicators
@@ -171,23 +174,26 @@ namespace RulerBox
             h.childControlHeight = true;
             h.childForceExpandWidth = false;
 
+            // Fixed height header
             var le = container.AddComponent<LayoutElement>();
             le.preferredHeight = 50f;
             le.minHeight = 50f;
             le.flexibleHeight = 0;
 
-            // Flag
+            // Flag Container
             var flagWrapper = new GameObject("FlagWrapper", typeof(RectTransform));
             flagWrapper.transform.SetParent(container.transform, false);
             var flagLE = flagWrapper.AddComponent<LayoutElement>();
             flagLE.preferredWidth = 40f; flagLE.preferredHeight = 40f;
             flagLE.minWidth = 40f; flagLE.minHeight = 40f;
             
+            // Flag BG
             var flagBgObj = new GameObject("FlagBG", typeof(RectTransform));
             flagBgObj.transform.SetParent(flagWrapper.transform, false);
             headerFlagBg = flagBgObj.AddComponent<Image>();
             Stretch(flagBgObj.GetComponent<RectTransform>());
 
+            // Flag Icon
             var flagIconObj = new GameObject("FlagIcon", typeof(RectTransform));
             flagIconObj.transform.SetParent(flagWrapper.transform, false);
             headerFlagIcon = flagIconObj.AddComponent<Image>();
@@ -228,7 +234,7 @@ namespace RulerBox
 
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(container.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>(), 4);
+            Stretch(viewport.GetComponent<RectTransform>(), 2); // Small padding
             viewport.AddComponent<Mask>().showMaskGraphic = false;
             viewport.AddComponent<Image>().color = Color.clear;
 
@@ -239,11 +245,12 @@ namespace RulerBox
             var h = content.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 4;
-            h.childControlWidth = false; 
+            h.childControlWidth = false; // Important for horizontal lists
             h.childControlHeight = false;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
 
+            // Pivot Left
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
             cRT.pivot = new Vector2(0, 0.5f);
@@ -262,7 +269,9 @@ namespace RulerBox
             searchObj.transform.SetParent(parent, false);
             
             var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 22f; sLe.minHeight = 22f; sLe.flexibleHeight = 0;
+            sLe.preferredHeight = 22f; 
+            sLe.minHeight = 22f; 
+            sLe.flexibleHeight = 0;
             
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
@@ -271,18 +280,17 @@ namespace RulerBox
             searchInput = searchObj.AddComponent<InputField>();
             
             var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
-            phText.rectTransform.offsetMin = new Vector2(6, 0);
+            Stretch(phText.rectTransform, 4);
             searchInput.placeholder = phText;
 
             var txtText = CreateText(searchObj.transform, "", 9, FontStyle.Normal, Color.white);
-            txtText.rectTransform.offsetMin = new Vector2(6, 0);
+            Stretch(txtText.rectTransform, 4);
             searchInput.textComponent = txtText;
             searchInput.onValueChanged.AddListener(RefreshSearchList);
         }
 
         private static void CreateLeftColumn(Transform parent)
         {
-            // Kingdom List Scroll
             var listObj = new GameObject("KingdomList", typeof(RectTransform));
             listObj.transform.SetParent(parent, false);
             
@@ -390,7 +398,7 @@ namespace RulerBox
             h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 10;
             h.padding = new RectOffset(4, 4, 0, 0);
-            h.childControlWidth = false; // Prevents Icon Stretching!
+            h.childControlWidth = false; // PREVENT STRETCHING
             h.childControlHeight = false;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
@@ -420,7 +428,7 @@ namespace RulerBox
 
             var le = ind.AddComponent<LayoutElement>();
             le.preferredHeight = 20f;
-            le.minWidth = 30f; 
+            le.minWidth = 40f; // Ensure minimum space for text
 
             // Icon
             var iconObj = new GameObject("Icon", typeof(RectTransform));
@@ -444,7 +452,7 @@ namespace RulerBox
         }
 
         // ================================================================================================
-        // HELPERS
+        // LOGIC
         // ================================================================================================
 
         private static void CreateActionBtn(string label, System.Action onClick)
