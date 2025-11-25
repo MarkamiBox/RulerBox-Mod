@@ -495,7 +495,6 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(chip.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 2);
 
             var fBg = iconObj.AddComponent<Image>();
             fBg.sprite = k.getElementBackground();
@@ -503,7 +502,6 @@ namespace RulerBox
 
             var ico = new GameObject("Ico", typeof(RectTransform));
             ico.transform.SetParent(iconObj.transform, false);
-            Stretch(ico.GetComponent<RectTransform>());
             var img = ico.AddComponent<Image>();
             img.sprite = k.getElementIcon();
             img.color = k.kingdomColor.getColorBanner();
