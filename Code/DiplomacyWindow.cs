@@ -254,9 +254,11 @@ namespace RulerBox
 
         private static void RefreshRelations(Kingdom k)
         {
+            // Clear existing chips
             if (alliesContent != null) foreach (Transform child in alliesContent) Object.Destroy(child.gameObject);
             if (warsContent != null)   foreach (Transform child in warsContent)   Object.Destroy(child.gameObject);
 
+            // 1. Allies
             if (k.hasAlliance())
             {
                 foreach (var ally in k.getAlliance().kingdoms_list)
@@ -266,14 +268,24 @@ namespace RulerBox
                 }
             }
 
+            // 2. Enemies (Wars)
             var wars = World.world.wars.getWars(k);
             foreach (var war in wars)
             {
-                if (!war.hasEnded())
+                if (war.hasEnded()) continue;
+
+                // Determine which side 'k' is on. 
+                // If 'k' is an attacker, enemies are defenders. Otherwise, enemies are attackers.
+                bool weAreAttackers = war.isAttacker(k);
+                List<Kingdom> enemies = weAreAttackers ? war.getDefenders() : war.getAttackers();
+
+                // Loop through ALL enemies in this war, not just the main one
+                foreach (var enemy in enemies)
                 {
-                    var enemy = war.getMainDefender() == k ? war.getMainAttacker() : war.getMainDefender();
-                    if (enemy != null && enemy != k)
+                    if (enemy != k && enemy.isAlive())
+                    {
                         CreateRelationChip(enemy, Color.red, warsContent);
+                    }
                 }
             }
         }
