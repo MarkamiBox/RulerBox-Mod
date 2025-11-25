@@ -34,7 +34,7 @@ namespace RulerBox
 
             // Load resources
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-            bread = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+            bread = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.Resource.iconResMythril.png");
 
             // === ROOT CONTAINER (The Red Container) ===
             // This is the main box that holds everything.
@@ -433,14 +433,14 @@ namespace RulerBox
             iconObj.transform.SetParent(ind.transform, false);
             var img = iconObj.AddComponent<Image>();
             var spr = Resources.Load<Sprite>("ui/Icons/" + iconName);
-            if (spr == null) spr = windowInnerSprite;
+            if (spr == null) spr = bread;
             img.sprite = spr;
             img.color = col;
             img.preserveAspect = true; 
 
             var iconLe = iconObj.AddComponent<LayoutElement>();
-            iconLe.preferredWidth = 14; 
-            iconLe.preferredHeight = 14;
+            iconLe.preferredWidth = 6; 
+            iconLe.preferredHeight = 6;
 
             // Text
             txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
