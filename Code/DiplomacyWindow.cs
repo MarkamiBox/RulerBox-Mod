@@ -387,27 +387,31 @@ namespace RulerBox
 
         private static void CreateFooter(Transform parent)
         {
-            var row = new GameObject("Footer", typeof(RectTransform));
+            var row = new GameObject("Footer");
             row.transform.SetParent(parent, false);
             
+            // Background
             var bg = row.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = new Color(0.1f, 0.1f, 0.1f, 1f);
 
+            // Layout Group - CRITICAL: Child Force Expand WIDTH = FALSE
             var h = row.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleCenter;
-            h.spacing = 2;
-            h.padding = new RectOffset(4, 4, 0, 0);
-            h.childControlWidth = false;
+            h.spacing = 15; // Good spacing between elements
+            h.padding = new RectOffset(10, 10, 2, 2);
+            h.childControlWidth = false;  // Allow children to set their own width
             h.childControlHeight = false;
-            h.childForceExpandWidth = false;
+            h.childForceExpandWidth = false; // STOP STRETCHING
             h.childForceExpandHeight = false;
             
+            // Layout Element - STRICT HEIGHT
             var le = row.AddComponent<LayoutElement>();
-            le.preferredHeight = 24f;
-            le.minHeight = 24f;
+            le.preferredHeight = 28f; 
+            le.minHeight = 28f;
             le.flexibleHeight = 0f;
 
+            // Indicators
             MakeInd(row.transform, "iconSkull", new Color(1f, 0.4f, 0.4f), out textCorruption);
             MakeInd(row.transform, "iconWar", new Color(1f, 0.4f, 0.4f), out textWarExhaustion);
             MakeInd(row.transform, "iconKingdom", new Color(1f, 0.9f, 0.4f), out textPoliticalPower);
@@ -416,28 +420,33 @@ namespace RulerBox
 
         private static void MakeInd(Transform parent, string iconName, Color col, out Text txt)
         {
-            var ind = new GameObject("Ind_" + iconName, typeof(RectTransform));
+            var ind = new GameObject("Ind_" + iconName);
             ind.transform.SetParent(parent, false);
             
+            // Group Layout
             var h = ind.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 2;
+            h.spacing = 4;
             h.childControlWidth = false; 
             h.childControlHeight = false;
-            h.childForceExpandWidth = false;
+            h.childForceExpandWidth = false; // Very Important
             h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleCenter;
 
+            // STRICT SIZE LIMITS ON THE CONTAINER
             var le = ind.AddComponent<LayoutElement>();
-            le.preferredHeight = 24f;
-            le.preferredWidth = 20f; 
-            le.flexibleWidth = 0f;
+            le.preferredWidth = 50f; // Force a small width
+            le.minWidth = 40f;
+            le.flexibleWidth = 0f;   // Do not grow
+            le.preferredHeight = 20f;
 
-            // Icon
-            var iconObj = new GameObject("Icon", typeof(RectTransform));
+            // === ICON ===
+            var iconObj = new GameObject("Icon");
             iconObj.transform.SetParent(ind.transform, false);
+            
             var img = iconObj.AddComponent<Image>();
             var spr = Resources.Load<Sprite>("ui/Icons/" + iconName);
-            if (spr == null) spr = bread;
+            // Fallback if sprite is missing
+            if (spr == null) spr = windowInnerSprite; 
             img.sprite = spr;
             img.color = col;
             img.preserveAspect = true;
@@ -449,17 +458,17 @@ namespace RulerBox
             iconLe.minWidth = 16f;
             iconLe.minHeight = 16f;
             iconLe.flexibleWidth = 0;
-            iconLe.flexibleHeight = 0;
 
-            // Text
-            txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
+            // === TEXT ===
+            txt = CreateText(ind.transform, "0", 10, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
             
             // STRICT SIZE FOR TEXT
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
-            txtLe.preferredWidth = 30f; 
+            txtLe.preferredWidth = 25f; // Small fixed width for number
+            txtLe.minWidth = 20f;
             txtLe.preferredHeight = 16f;
-            txtLe.flexibleWidth = 1f;
+            txtLe.flexibleWidth = 0f; // Do not expand
         }
 
         // ================================================================================================
