@@ -427,7 +427,7 @@ namespace RulerBox
 
             var le = ind.AddComponent<LayoutElement>();
             le.preferredHeight = 20f;
-            le.minWidth = 10f;
+            le.minWidth = 1f;
 
             // Icon
             var iconObj = new GameObject("Icon", typeof(RectTransform));
