@@ -28,6 +28,8 @@ namespace RulerBox
         private static Text textWarExhaustion;
         private static Text textPoliticalPower;
         private static Text textStability;
+        private static Transform alliesContent;
+        private static Transform warsContent;
 
         public static void Initialize(Transform parent)
         {
@@ -182,43 +184,72 @@ namespace RulerBox
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = new Color(0, 0, 0, 0.4f);
 
+            // Vertical Layout to stack Allies row and War row
+            var v = container.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 2;
+            v.padding = new RectOffset(2,2,2,2);
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
+            v.childForceExpandHeight = true;
+
+            // Increased height to accommodate two rows
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 40f;
-            le.minHeight = 40f;
+            le.preferredHeight = 68f; 
+            le.minHeight = 68f;
             le.flexibleHeight = 0;
 
-            var scroll = container.AddComponent<ScrollRect>();
-            scroll.horizontal = true; scroll.vertical = false;
+            // --- ROW 1: ALLIES ---
+            alliesContent = CreateSingleRelationRow(container.transform, "AlliesRow", new Color(0, 0.2f, 0, 0.3f));
+
+            // --- ROW 2: WARS ---
+            warsContent = CreateSingleRelationRow(container.transform, "WarsRow", new Color(0.2f, 0, 0, 0.3f));
+        }
+
+        private static Transform CreateSingleRelationRow(Transform parent, string name, Color tint)
+        {
+            var rowObj = new GameObject(name, typeof(RectTransform));
+            rowObj.transform.SetParent(parent, false);
+
+            var bg = rowObj.AddComponent<Image>();
+            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
+            bg.color = tint;
+
+            var scroll = rowObj.AddComponent<ScrollRect>();
+            scroll.horizontal = true; 
+            scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
 
             var viewport = new GameObject("Viewport", typeof(RectTransform));
-            viewport.transform.SetParent(container.transform, false);
+            viewport.transform.SetParent(rowObj.transform, false);
             Stretch(viewport.GetComponent<RectTransform>(), 2);
+            
             viewport.AddComponent<Mask>().showMaskGraphic = false;
             viewport.AddComponent<Image>().color = Color.clear;
 
-            var content = new GameObject("Content", typeof(RectTransform));
-            content.transform.SetParent(viewport.transform, false);
-            relationsContent = content.transform;
+            var contentObj = new GameObject("Content", typeof(RectTransform));
+            contentObj.transform.SetParent(viewport.transform, false);
             
-            var h = content.AddComponent<HorizontalLayoutGroup>();
+            var h = contentObj.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
-            h.spacing = 4;
+            h.spacing = 2;
             h.childControlWidth = false; 
             h.childControlHeight = false;
-            h.childForceExpandWidth = false;
+            h.childForceExpandWidth = false; 
             h.childForceExpandHeight = false;
 
-            var cRT = content.GetComponent<RectTransform>();
+            var cRT = contentObj.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
             cRT.pivot = new Vector2(0, 0.5f);
             
-            var fitter = content.AddComponent<ContentSizeFitter>();
+            var fitter = contentObj.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
 
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
+
+            return contentObj.transform;
         }
 
 
@@ -252,18 +283,24 @@ namespace RulerBox
 
         private static void RefreshRelations(Kingdom k)
         {
-            foreach (Transform child in relationsContent) Object.Destroy(child.gameObject);
+            // Clear both rows
+            foreach (Transform child in alliesContent) Object.Destroy(child.gameObject);
+            foreach (Transform child in warsContent) Object.Destroy(child.gameObject);
 
-            // Allies
+            // 1. Allies
             if (k.hasAlliance())
             {
                 foreach (var ally in k.getAlliance().kingdoms_list)
                 {
                     if (ally != k && ally.isAlive())
-                        CreateRelationChip(ally, Color.green);
+                    {
+                        // Add to Allies Row
+                        CreateRelationChip(ally, Color.green, alliesContent);
+                    }
                 }
             }
-            // Enemies
+
+            // 2. Enemies
             var wars = World.world.wars.getWars(k);
             foreach (var war in wars)
             {
@@ -271,17 +308,20 @@ namespace RulerBox
                 {
                     var enemy = war.getMainDefender() == k ? war.getMainAttacker() : war.getMainDefender();
                     if (enemy != null && enemy != k)
-                        CreateRelationChip(enemy, Color.red);
+                    {
+                        // Add to Wars Row
+                        CreateRelationChip(enemy, Color.red, warsContent);
+                    }
                 }
             }
         }
 
-        private static void CreateRelationChip(Kingdom k, Color borderColor)
+        private static void CreateRelationChip(Kingdom k, Color borderColor, Transform parent)
         {
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
-            chip.transform.SetParent(relationsContent, false);
+            chip.transform.SetParent(parent, false);
             var le = chip.AddComponent<LayoutElement>();
-            le.preferredWidth = 30; le.preferredHeight = 30;
+            le.preferredWidth = 28; le.preferredHeight = 28;
 
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
