@@ -576,7 +576,7 @@ namespace RulerBox
             try
             {
                 if (kingdomNameText != null)
-                    kingdomNameText.text = k.data.name;
+                    kingdomNameText.text = k.data != null ? k.data.name : k.id;
 
                 if (populationText != null)
                     populationText.text = "Population: " + k.getPopulationPeople();
