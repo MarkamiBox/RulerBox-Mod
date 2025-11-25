@@ -406,7 +406,7 @@ namespace RulerBox
             var le = row.AddComponent<LayoutElement>();
             le.preferredHeight = 24f;
             le.minHeight = 24f;
-            le.flexibleHeight = 0;
+            le.flexibleHeight = 0f;
 
             MakeInd(row.transform, "iconSkull", new Color(1f, 0.4f, 0.4f), out textCorruption);
             MakeInd(row.transform, "iconWar", new Color(1f, 0.4f, 0.4f), out textWarExhaustion);
@@ -420,14 +420,17 @@ namespace RulerBox
             ind.transform.SetParent(parent, false);
             
             var h = ind.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 3;
+            h.spacing = 2;
             h.childControlWidth = false; 
+            h.childControlHeight = false;
             h.childForceExpandWidth = false;
+            h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleCenter;
 
             var le = ind.AddComponent<LayoutElement>();
-            le.preferredHeight = 20f;
-            le.minWidth = 1f;
+            le.preferredHeight = 24f;
+            le.preferredWidth = 20f; 
+            le.flexibleWidth = 0f;
 
             // Icon
             var iconObj = new GameObject("Icon", typeof(RectTransform));
@@ -437,17 +440,26 @@ namespace RulerBox
             if (spr == null) spr = bread;
             img.sprite = spr;
             img.color = col;
-            img.preserveAspect = true; 
+            img.preserveAspect = true;
 
+            // STRICT SIZE FOR ICON
             var iconLe = iconObj.AddComponent<LayoutElement>();
-            iconLe.preferredWidth = 6; 
-            iconLe.preferredHeight = 6;
+            iconLe.preferredWidth = 16f; 
+            iconLe.preferredHeight = 16f;
+            iconLe.minWidth = 16f;
+            iconLe.minHeight = 16f;
+            iconLe.flexibleWidth = 0;
+            iconLe.flexibleHeight = 0;
 
             // Text
             txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
+            
+            // STRICT SIZE FOR TEXT
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
-            txtLe.minWidth = 15f;
+            txtLe.preferredWidth = 30f; 
+            txtLe.preferredHeight = 16f;
+            txtLe.flexibleWidth = 1f;
         }
 
         // ================================================================================================
