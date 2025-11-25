@@ -53,7 +53,7 @@ namespace RulerBox
             var bg = root.AddComponent<Image>();
             // Using a sprite makes it look like a UI panel, but colored red for visibility
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(1f, 0f, 0f, 0.5f); // Semi-transparent Red
+            bg.color = new Color(1f, 0f, 0f, 0.1f); // Semi-transparent Red
 
             // MAIN VERTICAL LAYOUT
             var rootV = root.AddComponent<VerticalLayoutGroup>();
@@ -70,35 +70,6 @@ namespace RulerBox
 
             // === 3. RELATIONS PANEL (Allies/Wars Scroll) ===
             CreateRelationsSection(root.transform);
-
-            // === 4. SEARCH BAR ===
-            //CreateSearchBar(root.transform);
-
-            // === 5. SPLIT VIEW (Left List | Right Buttons) ===
-            // This creates the flexible container that fills the rest of the red box
-            var splitGO = new GameObject("SplitView", typeof(RectTransform));
-            splitGO.transform.SetParent(root.transform, false);
-            
-            var splitH = splitGO.AddComponent<HorizontalLayoutGroup>();
-            splitH.spacing = 4;
-            splitH.childControlWidth = true;
-            splitH.childControlHeight = true;
-            splitH.childForceExpandWidth = true;
-            splitH.childForceExpandHeight = true;
-
-            // Key Component: Flexible Height = 1 makes this expand to fill space
-            var splitLE = splitGO.AddComponent<LayoutElement>();
-            splitLE.flexibleHeight = 1f; 
-
-            // Left Column
-            CreateLeftColumn(splitGO.transform);
-
-            // Right Column
-            CreateRightColumn(splitGO.transform);
-
-            // === 6. FOOTER INDICATORS ===
-            CreateFooter(rootV.transform);
-
             root.SetActive(false);
         }
 
@@ -197,9 +168,9 @@ namespace RulerBox
             var stackLE = infoStack.AddComponent<LayoutElement>();
             stackLE.flexibleWidth = 1f;
 
-            headerKingdomName = CreateText(infoStack.transform, "Kingdom", 11, FontStyle.Bold, Color.white);
-            headerRulerInfo = CreateText(infoStack.transform, "Ruler", 9, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
-            headerPopInfo = CreateText(infoStack.transform, "Pop", 9, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+            headerKingdomName = CreateText(infoStack.transform, "Kingdom", 9, FontStyle.Bold, Color.white);
+            headerRulerInfo = CreateText(infoStack.transform, "Ruler", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+            headerPopInfo = CreateText(infoStack.transform, "Pop", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
         }
 
         private static void CreateRelationsSection(Transform parent)
@@ -248,223 +219,6 @@ namespace RulerBox
 
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
-        }
-
-        private static void CreateSearchBar(Transform parent)
-        {
-            var searchObj = new GameObject("SearchBox", typeof(RectTransform));
-            searchObj.transform.SetParent(parent, false);
-            
-            var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 22f; sLe.minHeight = 22f; sLe.flexibleHeight = 0;
-            
-            var sBg = searchObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
-            sBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-
-            searchInput = searchObj.AddComponent<InputField>();
-            
-            var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
-            Stretch(phText.rectTransform, 4);
-            searchInput.placeholder = phText;
-
-            var txtText = CreateText(searchObj.transform, "", 9, FontStyle.Normal, Color.white);
-            Stretch(txtText.rectTransform, 4);
-            searchInput.textComponent = txtText;
-            searchInput.onValueChanged.AddListener(RefreshSearchList);
-        }
-
-        private static void CreateLeftColumn(Transform parent)
-        {
-            var listObj = new GameObject("KingdomList", typeof(RectTransform));
-            listObj.transform.SetParent(parent, false);
-            
-            var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 1f; 
-            listLe.flexibleWidth = 1f;
-
-            var lBg = listObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; }
-            lBg.color = new Color(0, 0, 0, 0.2f);
-
-            var scroll = listObj.AddComponent<ScrollRect>();
-            scroll.vertical = true; scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-
-            var viewport = new GameObject("Viewport", typeof(RectTransform));
-            viewport.transform.SetParent(listObj.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>());
-            viewport.AddComponent<RectMask2D>();
-
-            var content = new GameObject("Content", typeof(RectTransform));
-            content.transform.SetParent(viewport.transform, false);
-            kingdomListContent = content.transform;
-            
-            var vList = content.AddComponent<VerticalLayoutGroup>();
-            vList.childAlignment = TextAnchor.UpperCenter;
-            vList.spacing = 2;
-            vList.padding = new RectOffset(0,0,2,2);
-            vList.childControlWidth = true;
-            vList.childControlHeight = false;
-            vList.childForceExpandWidth = true;
-
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
-            cRT.pivot = new Vector2(0.5f, 1);
-
-            scroll.viewport = viewport.GetComponent<RectTransform>();
-            scroll.content = cRT;
-        }
-
-        private static void CreateRightColumn(Transform parent)
-        {
-            var col = new GameObject("RightCol", typeof(RectTransform));
-            col.transform.SetParent(parent, false);
-
-            var le = col.AddComponent<LayoutElement>();
-            le.preferredWidth = 100f; 
-            le.flexibleWidth = 0f;
-            le.flexibleHeight = 1f;
-
-            var bg = col.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.2f);
-
-            var scroll = col.AddComponent<ScrollRect>();
-            scroll.vertical = true; scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-
-            var viewport = new GameObject("Viewport", typeof(RectTransform));
-            viewport.transform.SetParent(col.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>());
-            viewport.AddComponent<RectMask2D>();
-
-            var content = new GameObject("Content", typeof(RectTransform));
-            content.transform.SetParent(viewport.transform, false);
-            actionsListContent = content.transform;
-
-            var vList = content.AddComponent<VerticalLayoutGroup>();
-            vList.childAlignment = TextAnchor.UpperCenter;
-            vList.spacing = 2;
-            vList.padding = new RectOffset(2,2,2,2);
-            vList.childControlWidth = true;
-            vList.childControlHeight = false;
-            vList.childForceExpandWidth = true;
-
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
-            cRT.pivot = new Vector2(0.5f, 1);
-
-            scroll.viewport = viewport.GetComponent<RectTransform>();
-            scroll.content = cRT;
-
-            // Buttons
-            CreateActionBtn("Laws", () => TopPanelUI.OpenEconomicLaws());
-            CreateActionBtn("Leaders", null);
-            CreateActionBtn("Policies", null);
-            CreateActionBtn("Ideologies", null);
-            CreateActionBtn("National Flags", null);
-        }
-
-        private static void CreateFooter(Transform parent)
-        {
-            var row = new GameObject("Footer");
-            row.transform.SetParent(parent, false);
-
-            // Background bar (still full width)
-            var bg = row.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 1f);
-
-            // This layout just centers a single child (the compact indicator group)
-            var outerH = row.AddComponent<HorizontalLayoutGroup>();
-            outerH.childAlignment        = TextAnchor.MiddleCenter;
-            outerH.spacing               = 0;
-            outerH.padding               = new RectOffset(0, 0, 2, 2);
-            outerH.childControlWidth     = false;
-            outerH.childControlHeight    = false;
-            outerH.childForceExpandWidth = false;
-            outerH.childForceExpandHeight= false;
-
-            var le = row.AddComponent<LayoutElement>();
-            le.preferredHeight = 28f;
-            le.minHeight       = 28f;
-            le.flexibleHeight  = 0f;
-
-            // INNER GROUP – this is what actually holds the four indicators.
-            // Its width is only as big as the indicators + spacing.
-            var inner = new GameObject("IndicatorsGroup");
-            inner.transform.SetParent(row.transform, false);
-
-            var innerH = inner.AddComponent<HorizontalLayoutGroup>();
-            innerH.childAlignment        = TextAnchor.MiddleCenter;
-            innerH.spacing               = 2;   // distance between indicators
-            innerH.padding               = new RectOffset(6, 6, 0, 0);
-            innerH.childControlWidth     = false;
-            innerH.childControlHeight    = false;
-            innerH.childForceExpandWidth = false;
-            innerH.childForceExpandHeight= false;
-
-            // Important: this makes the group shrink to its preferred size
-            var fitter = inner.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit   = ContentSizeFitter.FitMode.Unconstrained;
-
-            // Indicators now go on the INNER group, not directly on the footer row
-            MakeInd(inner.transform, "iconSkull",   new Color(1f, 0.4f, 0.4f), out textCorruption);
-            MakeInd(inner.transform, "iconWar",     new Color(1f, 0.4f, 0.4f), out textWarExhaustion);
-            MakeInd(inner.transform, "iconKingdom", new Color(1f, 0.9f, 0.4f), out textPoliticalPower);
-            MakeInd(inner.transform, "iconPeace",   new Color(0.4f, 0.8f, 1f), out textStability);
-        }
-
-        private static void MakeInd(Transform parent, string iconName, Color col, out Text txt)
-        {
-            var ind = new GameObject("Ind_" + iconName);
-            ind.transform.SetParent(parent, false);
-
-            var h = ind.AddComponent<HorizontalLayoutGroup>();
-            h.spacing               = 1;
-            h.childControlWidth     = false;
-            h.childControlHeight    = false;
-            h.childForceExpandWidth = false;
-            h.childForceExpandHeight= false;
-            h.childAlignment        = TextAnchor.MiddleCenter;
-
-            // Let the chip use whatever width it needs (no tiny fixed width)
-            var le = ind.AddComponent<LayoutElement>();
-            le.preferredHeight = 20f;
-            le.minHeight       = 20f;
-            le.flexibleWidth   = 0f;
-
-            // ICON
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(ind.transform, false);
-
-            var img = iconObj.AddComponent<Image>();
-            var spr = Resources.Load<Sprite>("ui/Icons/" + iconName);
-            if (spr == null) spr = windowInnerSprite;
-            img.sprite = spr;
-            img.color  = col;
-            img.preserveAspect = true;
-
-            var iconLe = iconObj.AddComponent<LayoutElement>();
-            iconLe.preferredWidth  = 6f;
-            iconLe.preferredHeight = 6f;
-            iconLe.minWidth        = 6f;
-            iconLe.minHeight       = 6f;
-            iconLe.flexibleWidth   = 0;
-
-            // TEXT
-            txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
-            txt.alignment = TextAnchor.MiddleLeft;
-
-            var txtLe = txt.gameObject.AddComponent<LayoutElement>();
-            txtLe.preferredWidth  = 28f;   // just enough for “100%”, tweak if you want
-            txtLe.minWidth        = 20f;
-            txtLe.preferredHeight = 16f;
-            txtLe.flexibleWidth   = 0f;
         }
 
 
