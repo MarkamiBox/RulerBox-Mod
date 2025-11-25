@@ -394,7 +394,7 @@ namespace RulerBox
 
             var h = row.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleCenter;
-            h.spacing = 10;
+            h.spacing = 2;
             h.padding = new RectOffset(4, 4, 0, 0);
             h.childControlWidth = false;
             h.childControlHeight = false;
@@ -425,7 +425,7 @@ namespace RulerBox
 
             var le = ind.AddComponent<LayoutElement>();
             le.preferredHeight = 20f;
-            le.minWidth = 30f;
+            le.minWidth = 10f;
 
             // Icon
             var iconObj = new GameObject("Icon", typeof(RectTransform));
@@ -442,7 +442,7 @@ namespace RulerBox
             iconLe.preferredHeight = 14;
 
             // Text
-            txt = CreateText(ind.transform, "0", 9, FontStyle.Bold, col);
+            txt = CreateText(ind.transform, "0", 3, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
             txtLe.minWidth = 15f;
