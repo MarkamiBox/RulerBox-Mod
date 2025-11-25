@@ -32,10 +32,11 @@ namespace RulerBox
         {
             if (root != null) return;
 
+            // Load resources similar to EconomyWindow
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
 
             // === ROOT CONTAINER ===
-            // Stretches to fill the parent (ContentContainer from TopPanelUI)
+            // Stretches to fill the parent (ContentContainer)
             root = new GameObject("DiplomacyRoot");
             root.transform.SetParent(parent, false);
 
@@ -45,7 +46,7 @@ namespace RulerBox
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            // Vertical Stack for the whole window
+            // Vertical Stack: Title -> Header -> Relations -> Split View -> Footer
             var rootV = root.AddComponent<VerticalLayoutGroup>();
             rootV.childAlignment = TextAnchor.UpperCenter;
             rootV.spacing = 4;
@@ -91,7 +92,7 @@ namespace RulerBox
             splitH.childForceExpandHeight = true;
 
             var splitLE = splitGO.AddComponent<LayoutElement>();
-            splitLE.flexibleHeight = 1f; 
+            splitLE.flexibleHeight = 1f; // FILL REMAINING SPACE
 
             // Left Column (Search + List)
             CreateLeftColumn(splitGO.transform);
@@ -142,7 +143,7 @@ namespace RulerBox
             {
                 textCorruption.text = $"{d.CorruptionLevel * 100:0}%";
                 textWarExhaustion.text = $"{d.WarExhaustion:0}";
-                textPoliticalPower.text = $"{k.data.renown}"; // Placeholder for PP
+                textPoliticalPower.text = $"{k.data.renown}"; 
                 textStability.text = $"{d.Stability:0}%";
             }
         }
@@ -169,7 +170,7 @@ namespace RulerBox
             h.childForceExpandWidth = false;
 
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 45f; // Fixed height for header
+            le.preferredHeight = 45f; 
             le.minHeight = 45f;
             le.flexibleHeight = 0;
 
@@ -247,16 +248,18 @@ namespace RulerBox
             var h = content.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 4;
-            h.childControlWidth = false;
+            h.childControlWidth = false; // Crucial for horizontal scroll items
             h.childControlHeight = false;
+            h.childForceExpandWidth = false;
+            h.childForceExpandHeight = false;
 
+            var cRT = content.AddComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
+            cRT.pivot = new Vector2(0, 0.5f);
+            
             var fitter = content.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
-
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
-            cRT.pivot = new Vector2(0, 0.5f);
 
             scroll.viewport = vpRT;
             scroll.content = cRT;
@@ -357,7 +360,7 @@ namespace RulerBox
             v.childForceExpandHeight = true;
 
             var le = col.AddComponent<LayoutElement>();
-            le.preferredWidth = 100f; // Slightly smaller fixed width for buttons
+            le.preferredWidth = 100f; // Fixed width for buttons
             le.flexibleWidth = 0f;
             le.flexibleHeight = 1f;
 
@@ -419,7 +422,7 @@ namespace RulerBox
             h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 10;
             h.padding = new RectOffset(4, 4, 0, 0);
-            h.childControlWidth = false; 
+            h.childControlWidth = false; // Important: prevents icon stretching
             h.childControlHeight = false;
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
@@ -449,7 +452,7 @@ namespace RulerBox
 
             var le = ind.AddComponent<LayoutElement>();
             le.preferredHeight = 20f;
-            le.minWidth = 30f; 
+            le.minWidth = 30f; // Stops collapse
 
             // Icon
             var iconObj = new GameObject("Icon");
