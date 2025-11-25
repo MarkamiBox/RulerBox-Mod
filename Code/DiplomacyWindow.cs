@@ -34,6 +34,7 @@ namespace RulerBox
 
             // Load resources
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+            bread = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
 
             // === ROOT CONTAINER (The Red Container) ===
             // This is the main box that holds everything.
