@@ -10,155 +10,202 @@ namespace RulerBox
         private static GameObject root;
         private static Sprite windowInnerSprite;
         private static Sprite bgSprite;
-        
-        // Header UI Elements
-        private static Image headerFlagBg;
-        private static Image headerFlagIcon;
-        private static Text headerKingdomName;
-        private static Text headerRulerName;
-        private static Text headerPopulation;
 
-        // Relations UI Elements
+        // Header References
+        private static Image flagBg;
+        private static Image flagIcon;
+        private static Text kingdomNameText;
+        private static Text rulerNameText;
+        private static Text populationText;
+
+        // Relations
         private static Transform relationsContent;
 
-        // Search UI Elements
+        // Search
         private static InputField searchInput;
-        private static Transform kingdomListContent;
+        private static Transform kingdomSearchContent;
 
-        // Actions UI Elements
+        // Actions
         private static Transform actionsContent;
 
-        // Bottom Indicators
-        private static Text textCorruption;
-        private static Text textWarExhaustion;
-        private static Text textPoliticalPower;
-        private static Text textStability;
+        // Indicators
+        private static Text corruptionText;
+        private static Text warExhaustionText;
+        private static Text politicalPowerText;
+        private static Text stabilityText;
 
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
 
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-            // Using InvHub as generic background if available, otherwise fallback
-            bgSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.InvHub.png"); 
+            bgSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.InvHub.png");
 
-            // === 1. Root Window Setup ===
-            root = new GameObject("DiplomacyWindowRoot");
+            // 1. Root Object (The "Container")
+            root = new GameObject("DiplomacyRoot");
             root.transform.SetParent(parent, false);
-            
+
             var rt = root.AddComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero;
+            rt.offsetMax = Vector2.zero;
 
-            var vGroup = root.AddComponent<VerticalLayoutGroup>();
-            vGroup.childAlignment = TextAnchor.UpperCenter;
-            vGroup.spacing = 4;
-            vGroup.padding = new RectOffset(6, 6, 6, 6);
-            vGroup.childControlWidth = true;
-            vGroup.childControlHeight = false;
-            vGroup.childForceExpandWidth = true;
-            vGroup.childForceExpandHeight = false;
+            var rootV = root.AddComponent<VerticalLayoutGroup>();
+            rootV.childAlignment = TextAnchor.UpperCenter;
+            rootV.spacing = 4;
+            rootV.padding = new RectOffset(4, 4, 4, 4);
+            rootV.childControlWidth = true;
+            rootV.childControlHeight = true;
+            rootV.childForceExpandWidth = true;
+            rootV.childForceExpandHeight = false;
 
-            // === 2. Title ===
-            var titleObj = new GameObject("Title");
-            titleObj.transform.SetParent(root.transform, false);
-            var titleText = titleObj.AddComponent<Text>();
-            titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            titleText.text = "Diplomacy";
-            titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.color = Color.white;
-            titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 12;
-            titleText.resizeTextMaxSize = 16;
-            titleObj.AddComponent<LayoutElement>().preferredHeight = 24f;
+            // 2. Title Row
+            var titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(root.transform, false);
+            var title = titleGO.AddComponent<Text>();
+            title.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            title.text = "Diplomacy";
+            title.alignment = TextAnchor.MiddleCenter;
+            title.color = Color.white;
+            title.resizeTextForBestFit = true;
+            title.resizeTextMinSize = 10;
+            title.resizeTextMaxSize = 14;
+            titleGO.AddComponent<LayoutElement>().preferredHeight = 20f;
 
-            // === 3. Header (Flag | Info) ===
-            CreateHeader(root.transform);
+            // 3. Info Header (Flag + Text)
+            BuildHeaderSection(root.transform);
 
-            // === 4. Horizontal Relations Scroll (Allies/Wars) ===
-            CreateRelationsScroll(root.transform);
+            // 4. Horizontal Relations Scroll (Allies/Wars)
+            BuildRelationsSection(root.transform);
 
-            // === 5. Middle Split (Search List | Actions List) ===
-            var midRow = new GameObject("MiddleRow");
-            midRow.transform.SetParent(root.transform, false);
-            var midLayout = midRow.AddComponent<HorizontalLayoutGroup>();
-            midLayout.spacing = 4;
-            midLayout.childControlWidth = true;
-            midLayout.childControlHeight = true;
-            midLayout.childForceExpandWidth = true;
-            midLayout.childForceExpandHeight = true;
-            var midLE = midRow.AddComponent<LayoutElement>();
-            midLE.flexibleHeight = 1f; // Take remaining vertical space
+            // 5. Main Split Section (Search Left | Actions Right)
+            BuildSplitSection(root.transform);
 
-            // Left Column: Search Bar & Kingdom List
-            CreateKingdomSearchList(midRow.transform);
-
-            // Right Column: Actions Buttons
-            CreateActionsList(midRow.transform);
-
-            // === 6. Bottom Indicators ===
-            CreateIndicators(root.transform);
+            // 6. Footer Indicators
+            BuildIndicatorsSection(root.transform);
 
             root.SetActive(false);
         }
 
-        private static void CreateHeader(Transform parent)
+        public static void SetVisible(bool visible)
         {
-            var headerObj = new GameObject("Header");
-            headerObj.transform.SetParent(parent, false);
-            var hLayout = headerObj.AddComponent<HorizontalLayoutGroup>();
-            hLayout.childAlignment = TextAnchor.MiddleLeft;
-            hLayout.spacing = 10;
-            hLayout.childControlWidth = false;
-            hLayout.childControlHeight = false;
-            headerObj.AddComponent<LayoutElement>().preferredHeight = 50f;
-
-            // Flag Container
-            var flagObj = new GameObject("Flag");
-            flagObj.transform.SetParent(headerObj.transform, false);
-            var flagRT = flagObj.AddComponent<RectTransform>();
-            flagRT.sizeDelta = new Vector2(40, 40);
-            
-            headerFlagBg = flagObj.AddComponent<Image>();
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(flagObj.transform, false);
-            var iconRT = iconObj.AddComponent<RectTransform>();
-            iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
-            iconRT.offsetMin = Vector2.zero; iconRT.offsetMax = Vector2.zero;
-            headerFlagIcon = iconObj.AddComponent<Image>();
-
-            // Text Info Column
-            var infoObj = new GameObject("Info");
-            infoObj.transform.SetParent(headerObj.transform, false);
-            var vLayout = infoObj.AddComponent<VerticalLayoutGroup>();
-            vLayout.childAlignment = TextAnchor.MiddleLeft;
-            vLayout.spacing = 2;
-            vLayout.childControlWidth = true; 
-            vLayout.childControlHeight = false; 
-            var infoLE = infoObj.AddComponent<LayoutElement>();
-            infoLE.flexibleWidth = 1f;
-            infoLE.preferredHeight = 50f;
-
-            headerKingdomName = CreateText(infoObj.transform, "Kingdom Name", 12, FontStyle.Bold);
-            headerRulerName = CreateText(infoObj.transform, "Ruler: ---", 10, FontStyle.Normal);
-            headerPopulation = CreateText(infoObj.transform, "Population: 0", 10, FontStyle.Normal);
+            if (root != null) root.SetActive(visible);
         }
 
-        private static void CreateRelationsScroll(Transform parent)
+        public static bool IsVisible() => root != null && root.activeSelf;
+
+        public static void Refresh(Kingdom k)
         {
+            if (!IsVisible() || k == null) return;
+
+            // Update Header
+            if (k.kingdomColor != null)
+            {
+                flagBg.color = k.kingdomColor.getColorMain32();
+                flagIcon.color = k.kingdomColor.getColorBanner();
+            }
+            flagBg.sprite = k.getElementBackground();
+            flagIcon.sprite = k.getElementIcon();
+
+            kingdomNameText.text = k.data.name;
+            string ruler = k.king != null ? k.king.getName() : "None";
+            rulerNameText.text = $"Ruler: {ruler}";
+            populationText.text = $"Population: {k.getPopulationTotal()}";
+
+            // Update Relations
+            RefreshRelations(k);
+
+            // Update Search List (only if input changed or first load)
+            RefreshSearchList(searchInput.text);
+
+            // Update Indicators
+            var d = KingdomMetricsSystem.Get(k);
+            if (d != null)
+            {
+                corruptionText.text = $"Corr: {d.CorruptionLevel * 100:0}%";
+                warExhaustionText.text = $"WE: {d.WarExhaustion:0}";
+                politicalPowerText.text = $"PP: {k.data.renown}"; // Placeholder
+                stabilityText.text = $"Stab: {d.Stability:0}%";
+            }
+        }
+
+        // ==============================================================================================
+        // SECTION BUILDERS
+        // ==============================================================================================
+
+        private static void BuildHeaderSection(Transform parent)
+        {
+            var headerObj = new GameObject("HeaderSection");
+            headerObj.transform.SetParent(parent, false);
+            
+            var hl = headerObj.AddComponent<HorizontalLayoutGroup>();
+            hl.childAlignment = TextAnchor.MiddleLeft;
+            hl.spacing = 10;
+            hl.padding = new RectOffset(4, 4, 0, 0);
+            hl.childControlWidth = true;
+            hl.childControlHeight = true;
+            hl.childForceExpandWidth = true;
+
+            headerObj.AddComponent<LayoutElement>().preferredHeight = 40f;
+
+            // Flag Box
+            var flagBox = new GameObject("FlagBox");
+            flagBox.transform.SetParent(headerObj.transform, false);
+            flagBox.AddComponent<LayoutElement>().preferredWidth = 36f;
+            
+            var flagBgObj = new GameObject("FlagBg");
+            flagBgObj.transform.SetParent(flagBox.transform, false);
+            flagBg = flagBgObj.AddComponent<Image>();
+            flagBg.rectTransform.anchorMin = Vector2.zero;
+            flagBg.rectTransform.anchorMax = Vector2.one;
+
+            var flagIconObj = new GameObject("FlagIcon");
+            flagIconObj.transform.SetParent(flagBox.transform, false);
+            flagIcon = flagIconObj.AddComponent<Image>();
+            flagIcon.rectTransform.anchorMin = Vector2.zero;
+            flagIcon.rectTransform.anchorMax = Vector2.one;
+            flagIcon.rectTransform.offsetMin = new Vector2(2, 2);
+            flagIcon.rectTransform.offsetMax = new Vector2(-2, -2);
+
+            // Text Info
+            var infoCol = new GameObject("InfoCol");
+            infoCol.transform.SetParent(headerObj.transform, false);
+            var infoVL = infoCol.AddComponent<VerticalLayoutGroup>();
+            infoVL.childAlignment = TextAnchor.MiddleLeft;
+            infoVL.spacing = 2;
+            infoCol.AddComponent<LayoutElement>().flexibleWidth = 1f;
+
+            kingdomNameText = CreateText(infoCol.transform, "-", 10, FontStyle.Bold, TextAnchor.MiddleLeft);
+            rulerNameText = CreateText(infoCol.transform, "-", 8, FontStyle.Normal, TextAnchor.MiddleLeft);
+            populationText = CreateText(infoCol.transform, "-", 8, FontStyle.Normal, TextAnchor.MiddleLeft);
+        }
+
+        private static void BuildRelationsSection(Transform parent)
+        {
+            // Container for label + scroll
+            var sectionObj = new GameObject("RelationsSection");
+            sectionObj.transform.SetParent(parent, false);
+            var vl = sectionObj.AddComponent<VerticalLayoutGroup>();
+            vl.spacing = 2;
+            sectionObj.AddComponent<LayoutElement>().preferredHeight = 40f;
+
+            // Label? (Optional, skipping to save space, or add small one)
+            // Scroll View
             var scrollObj = new GameObject("RelationsScroll");
-            scrollObj.transform.SetParent(parent, false);
-            scrollObj.AddComponent<LayoutElement>().preferredHeight = 45f;
+            scrollObj.transform.SetParent(sectionObj.transform, false);
+            scrollObj.AddComponent<LayoutElement>().flexibleHeight = 1f;
 
             var bg = scrollObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
+            bg.sprite = windowInnerSprite;
+            bg.type = Image.Type.Sliced;
             bg.color = new Color(0, 0, 0, 0.3f);
 
-            var scrollRect = scrollObj.AddComponent<ScrollRect>();
-            scrollRect.horizontal = true;
-            scrollRect.vertical = false;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.horizontal = true;
+            scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
             var vpRT = viewport.AddComponent<RectTransform>();
@@ -170,61 +217,138 @@ namespace RulerBox
             var content = new GameObject("Content");
             content.transform.SetParent(viewport.transform, false);
             relationsContent = content.transform;
-            var cRT = content.AddComponent<RectTransform>();
-            // Horizontal scroll setup
+            
+            var contentHL = content.AddComponent<HorizontalLayoutGroup>();
+            contentHL.childAlignment = TextAnchor.MiddleLeft;
+            contentHL.spacing = 4;
+            contentHL.padding = new RectOffset(2, 2, 2, 2);
+            contentHL.childControlWidth = false;
+            contentHL.childControlHeight = false;
+
+            var contentFitter = content.AddComponent<ContentSizeFitter>();
+            contentFitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            contentFitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+
+            var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
             cRT.pivot = new Vector2(0, 0.5f);
-            
-            var hLayout = content.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 4;
-            hLayout.padding = new RectOffset(4, 4, 4, 4);
-            hLayout.childControlWidth = false;
-            hLayout.childControlHeight = false;
-            
-            content.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            scrollRect.viewport = vpRT;
-            scrollRect.content = cRT;
+            scroll.viewport = vpRT;
+            scroll.content = cRT;
         }
 
-        private static void CreateKingdomSearchList(Transform parent)
+        private static void BuildSplitSection(Transform parent)
         {
-            var container = new GameObject("KingdomListContainer");
-            container.transform.SetParent(parent, false);
-            container.AddComponent<LayoutElement>().flexibleWidth = 1f;
-            var vLayout = container.AddComponent<VerticalLayoutGroup>();
-            vLayout.spacing = 2;
+            var splitRow = new GameObject("SplitSection");
+            splitRow.transform.SetParent(parent, false);
+            var h = splitRow.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 4;
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = true;
+            h.childForceExpandHeight = true;
 
-            // Search Bar
+            // Flexible height to fill remaining space
+            var le = splitRow.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f;
+
+            // --- LEFT: Search & List ---
+            var leftCol = new GameObject("LeftCol");
+            leftCol.transform.SetParent(splitRow.transform, false);
+            var leftV = leftCol.AddComponent<VerticalLayoutGroup>();
+            leftV.spacing = 2;
+
+            // Search Input
             var searchObj = new GameObject("SearchInput");
-            searchObj.transform.SetParent(container.transform, false);
+            searchObj.transform.SetParent(leftCol.transform, false);
             searchObj.AddComponent<LayoutElement>().preferredHeight = 20f;
+            
             var sImg = searchObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { sImg.sprite = windowInnerSprite; sImg.type = Image.Type.Sliced; }
+            sImg.sprite = windowInnerSprite; sImg.type = Image.Type.Sliced;
             sImg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-            
+
             searchInput = searchObj.AddComponent<InputField>();
-            var placeHolder = CreateText(searchObj.transform, "Search...", 10, FontStyle.Italic);
-            placeHolder.color = new Color(1,1,1,0.5f);
-            var text = CreateText(searchObj.transform, "", 10, FontStyle.Normal);
-            
-            searchInput.placeholder = placeHolder;
-            searchInput.textComponent = text;
-            searchInput.onValueChanged.AddListener(OnSearchChanged);
+            var ph = CreateText(searchObj.transform, "Search...", 10, FontStyle.Italic, TextAnchor.MiddleLeft);
+            ph.color = new Color(1, 1, 1, 0.5f);
+            var txt = CreateText(searchObj.transform, "", 10, FontStyle.Normal, TextAnchor.MiddleLeft);
+            searchInput.placeholder = ph;
+            searchInput.textComponent = txt;
+            searchInput.onValueChanged.AddListener(RefreshSearchList);
 
-            // Scroll View
-            var scrollObj = new GameObject("Scroll");
-            scrollObj.transform.SetParent(container.transform, false);
+            // Scroll List
+            var searchScroll = CreateVerticalScroll(leftCol.transform, "SearchList");
+            kingdomSearchContent = searchScroll.GetComponent<ScrollRect>().content;
+
+            // --- RIGHT: Actions ---
+            var rightCol = new GameObject("RightCol");
+            rightCol.transform.SetParent(splitRow.transform, false);
+            var rightV = rightCol.AddComponent<VerticalLayoutGroup>();
+            rightV.spacing = 2;
+
+            // Header "Decisions / Laws"
+            var rightHeader = CreateText(rightCol.transform, "Actions", 10, FontStyle.Bold, TextAnchor.MiddleCenter);
+            rightHeader.GetComponent<LayoutElement>().preferredHeight = 16f;
+
+            // Scroll Actions
+            var actionsScroll = CreateVerticalScroll(rightCol.transform, "ActionsList");
+            actionsContent = actionsScroll.GetComponent<ScrollRect>().content;
+        }
+
+        private static void BuildIndicatorsSection(Transform parent)
+        {
+            var row = new GameObject("IndicatorsRow");
+            row.transform.SetParent(parent, false);
+            var h = row.AddComponent<HorizontalLayoutGroup>();
+            h.childAlignment = TextAnchor.MiddleCenter;
+            h.spacing = 10;
+            h.padding = new RectOffset(4, 4, 2, 2);
+            
+            row.AddComponent<LayoutElement>().preferredHeight = 24f;
+
+            // 4 Indicators
+            corruptionText = BuildSingleIndicator(row.transform, "iconSkull", Color.red);
+            warExhaustionText = BuildSingleIndicator(row.transform, "iconWar", Color.red);
+            politicalPowerText = BuildSingleIndicator(row.transform, "iconKingdom", Color.yellow);
+            stabilityText = BuildSingleIndicator(row.transform, "iconPeace", Color.cyan);
+        }
+
+        private static Text BuildSingleIndicator(Transform parent, string iconName, Color iconColor)
+        {
+            var indObj = new GameObject("Ind_" + iconName);
+            indObj.transform.SetParent(parent, false);
+            var h = indObj.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 4;
+            h.childControlWidth = true;
+            h.childForceExpandWidth = false;
+
+            var iconObj = new GameObject("Icon");
+            iconObj.transform.SetParent(indObj.transform, false);
+            var img = iconObj.AddComponent<Image>();
+            var sprite = Resources.Load<Sprite>("ui/Icons/" + iconName);
+            if (sprite == null) sprite = windowInnerSprite; // Fallback
+            img.sprite = sprite;
+            img.color = iconColor;
+            
+            var le = iconObj.AddComponent<LayoutElement>();
+            le.preferredWidth = 16; le.preferredHeight = 16;
+
+            var txt = CreateText(indObj.transform, "0", 10, FontStyle.Bold, TextAnchor.MiddleLeft);
+            return txt;
+        }
+
+        private static GameObject CreateVerticalScroll(Transform parent, string name)
+        {
+            var scrollObj = new GameObject(name);
+            scrollObj.transform.SetParent(parent, false);
             scrollObj.AddComponent<LayoutElement>().flexibleHeight = 1f;
-            
-            var bg = scrollObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0,0,0,0.2f);
 
-            var scrollRect = scrollObj.AddComponent<ScrollRect>();
-            scrollRect.vertical = true;
-            scrollRect.horizontal = false;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            var bg = scrollObj.AddComponent<Image>();
+            bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced;
+            bg.color = new Color(0, 0, 0, 0.2f);
+
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.vertical = true; scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
 
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
@@ -236,180 +360,43 @@ namespace RulerBox
 
             var content = new GameObject("Content");
             content.transform.SetParent(viewport.transform, false);
-            kingdomListContent = content.transform;
             var cRT = content.AddComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
             cRT.pivot = new Vector2(0.5f, 1);
 
-            var vContent = content.AddComponent<VerticalLayoutGroup>();
-            vContent.spacing = 2;
-            vContent.childControlWidth = true;
-            vContent.childControlHeight = false;
-            vContent.childForceExpandWidth = true;
+            var v = content.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 2;
+            v.childControlWidth = true;
+            v.childForceExpandWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandHeight = false;
 
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
-            scrollRect.viewport = vpRT;
-            scrollRect.content = cRT;
+            scroll.viewport = vpRT;
+            scroll.content = cRT;
+            return scrollObj;
         }
 
-        private static void CreateActionsList(Transform parent)
+        // ==============================================================================================
+        // LOGIC & UPDATES
+        // ==============================================================================================
+
+        private static void RefreshRelations(Kingdom k)
         {
-            var container = new GameObject("ActionsListContainer");
-            container.transform.SetParent(parent, false);
-            container.AddComponent<LayoutElement>().flexibleWidth = 1f; // Equal width to search list
-            
-            var bg = container.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0,0,0,0.2f);
+            foreach (Transform child in relationsContent) Object.Destroy(child.gameObject);
 
-            var scrollRect = container.AddComponent<ScrollRect>();
-            scrollRect.vertical = true;
-            scrollRect.horizontal = false;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-
-            var viewport = new GameObject("Viewport");
-            viewport.transform.SetParent(container.transform, false);
-            var vpRT = viewport.AddComponent<RectTransform>();
-            vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
-            vpRT.offsetMin = new Vector2(2, 2); vpRT.offsetMax = new Vector2(-2, -2);
-            viewport.AddComponent<Mask>().showMaskGraphic = false;
-            viewport.AddComponent<Image>().color = Color.clear;
-
-            var content = new GameObject("Content");
-            content.transform.SetParent(viewport.transform, false);
-            actionsContent = content.transform;
-            var cRT = content.AddComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
-            cRT.pivot = new Vector2(0.5f, 1);
-
-            var vContent = content.AddComponent<VerticalLayoutGroup>();
-            vContent.spacing = 2;
-            vContent.childControlWidth = true;
-            vContent.childControlHeight = false;
-            vContent.childForceExpandWidth = true;
-
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            scrollRect.viewport = vpRT;
-            scrollRect.content = cRT;
-
-            // Add Action Buttons
-            CreateActionButton("Laws", () => TopPanelUI.OpenEconomicLaws());
-            CreateActionButton("Leaders", () => WorldTip.showNow("Leaders: Coming Soon", false, "top", 1f));
-            CreateActionButton("Policies", () => WorldTip.showNow("Policies: Coming Soon", false, "top", 1f));
-            CreateActionButton("Ideologies", () => WorldTip.showNow("Ideologies: Coming Soon", false, "top", 1f));
-            CreateActionButton("National Flags", () => WorldTip.showNow("National Flags: Coming Soon", false, "top", 1f));
-        }
-
-        private static void CreateIndicators(Transform parent)
-        {
-            var row = new GameObject("Indicators");
-            row.transform.SetParent(parent, false);
-            var hLayout = row.AddComponent<HorizontalLayoutGroup>();
-            hLayout.spacing = 10;
-            hLayout.childAlignment = TextAnchor.MiddleCenter;
-            row.AddComponent<LayoutElement>().preferredHeight = 24f;
-
-            // Helper to create an indicator
-            GameObject MakeInd(string iconName, Color iconColor, out Text txt)
-            {
-                var obj = new GameObject("Ind");
-                obj.transform.SetParent(row.transform, false);
-                var hl = obj.AddComponent<HorizontalLayoutGroup>();
-                hl.spacing = 4;
-                hl.childControlWidth = false;
-                hl.childForceExpandWidth = false;
-
-                var iconObj = new GameObject("Icon");
-                iconObj.transform.SetParent(obj.transform, false);
-                var img = iconObj.AddComponent<Image>();
-                
-                // Try load icon or use fallback
-                var sprite = Resources.Load<Sprite>("ui/Icons/" + iconName); 
-                if (sprite == null) sprite = windowInnerSprite; // Fallback
-                
-                img.sprite = sprite;
-                img.color = iconColor;
-                iconObj.AddComponent<LayoutElement>().preferredWidth = 16f;
-                iconObj.AddComponent<LayoutElement>().preferredHeight = 16f;
-
-                txt = CreateText(obj.transform, "0", 10, FontStyle.Bold);
-                txt.alignment = TextAnchor.MiddleLeft;
-                return obj;
-            }
-
-            // Corruption (Icon: Skull or similar)
-            MakeInd("iconSkull", Color.red, out textCorruption);
-            
-            // War Exhaustion (Icon: War swords)
-            MakeInd("iconWar", Color.red, out textWarExhaustion);
-
-            // Political Power (Icon: Kingdom/Crown, using Renown as proxy)
-            MakeInd("iconKingdom", Color.yellow, out textPoliticalPower);
-
-            // Stability (Icon: Peace/Scales)
-            MakeInd("iconPeace", Color.cyan, out textStability);
-        }
-
-        // --- Logic & Updates ---
-
-        public static void SetVisible(bool v)
-        {
-            if (root != null) root.SetActive(v);
-        }
-
-        public static bool IsVisible() => root != null && root.activeSelf;
-
-        public static void Refresh(Kingdom k)
-        {
-            if (!IsVisible() || k == null) return;
-
-            // 1. Update Header
-            if (k.kingdomColor != null)
-            {
-                headerFlagBg.color = k.kingdomColor.getColorMain32();
-                headerFlagIcon.color = k.kingdomColor.getColorBanner();
-            }
-            headerFlagBg.sprite = k.getElementBackground();
-            headerFlagIcon.sprite = k.getElementIcon();
-
-            headerKingdomName.text = k.data.name;
-            headerRulerName.text = k.king != null ? $"Ruler: {k.king.getName()}" : "Ruler: None";
-            headerPopulation.text = $"Population: {k.getPopulationTotal()}";
-
-            // 2. Update Relations
-            PopulateRelations(k);
-
-            // 3. Update Search List
-            PopulateSearchList(searchInput.text);
-
-            // 4. Update Indicators
-            var d = KingdomMetricsSystem.Get(k);
-            if (d != null)
-            {
-                textCorruption.text = $"{d.CorruptionLevel * 100:0}%";
-                textWarExhaustion.text = $"{d.WarExhaustion:0}";
-                textStability.text = $"{d.Stability:0}%";
-                textPoliticalPower.text = k.data.renown.ToString(); // PP Proxy
-            }
-        }
-
-        private static void PopulateRelations(Kingdom k)
-        {
-            foreach (Transform t in relationsContent) Object.Destroy(t.gameObject);
-
-            // Add Allies
+            // 1. Allies
             if (k.hasAlliance())
             {
                 foreach (var ally in k.getAlliance().kingdoms_list)
                 {
                     if (ally != k && ally.isAlive())
-                        CreateRelationIcon(ally, Color.green);
+                        CreateRelationChip(ally, Color.green);
                 }
             }
 
-            // Add Enemies
+            // 2. Wars
             var wars = World.world.wars.getWars(k);
             foreach (var war in wars)
             {
@@ -417,80 +404,71 @@ namespace RulerBox
                 {
                     var enemy = war.getMainDefender() == k ? war.getMainAttacker() : war.getMainDefender();
                     if (enemy != null && enemy != k)
-                        CreateRelationIcon(enemy, Color.red);
+                        CreateRelationChip(enemy, Color.red);
                 }
             }
         }
 
-        private static void CreateRelationIcon(Kingdom k, Color borderColor)
+        private static void CreateRelationChip(Kingdom k, Color borderColor)
         {
-            var btnObj = new GameObject("Rel_" + k.data.name);
-            btnObj.transform.SetParent(relationsContent, false);
-            
-            var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredWidth = 30; le.preferredHeight = 30;
+            var chip = new GameObject("Rel_" + k.data.name);
+            chip.transform.SetParent(relationsContent, false);
+            var le = chip.AddComponent<LayoutElement>();
+            le.preferredWidth = 32; le.preferredHeight = 32;
 
-            // Flag Background
-            var bg = btnObj.AddComponent<Image>();
-            bg.sprite = k.getElementBackground();
-            bg.color = k.kingdomColor.getColorMain32();
+            var bg = chip.AddComponent<Image>();
+            bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced;
+            bg.color = borderColor;
 
-            // Flag Icon
-            var icon = new GameObject("Icon").AddComponent<Image>();
-            icon.transform.SetParent(btnObj.transform, false);
-            var rt = icon.rectTransform;
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = new Vector2(2,2); rt.offsetMax = new Vector2(-2,-2);
+            var inner = new GameObject("Icon");
+            inner.transform.SetParent(chip.transform, false);
+            var innerRT = inner.AddComponent<RectTransform>();
+            innerRT.anchorMin = Vector2.zero; innerRT.anchorMax = Vector2.one;
+            innerRT.offsetMin = new Vector2(2, 2); innerRT.offsetMax = new Vector2(-2, -2);
+
+            var flagBg = inner.AddComponent<Image>();
+            flagBg.sprite = k.getElementBackground();
+            flagBg.color = k.kingdomColor.getColorMain32();
+
+            var icon = new GameObject("IconImg").AddComponent<Image>();
+            icon.transform.SetParent(inner.transform, false);
+            icon.rectTransform.anchorMin = Vector2.zero; icon.rectTransform.anchorMax = Vector2.one;
             icon.sprite = k.getElementIcon();
             icon.color = k.kingdomColor.getColorBanner();
 
-            // Status Border (Green/Red)
-            var borderObj = new GameObject("Border");
-            borderObj.transform.SetParent(btnObj.transform, false);
-            var borderImg = borderObj.AddComponent<Image>();
-            borderImg.sprite = windowInnerSprite;
-            borderImg.type = Image.Type.Sliced;
-            borderImg.color = borderColor;
-            var bRT = borderImg.rectTransform;
-            bRT.anchorMin = Vector2.zero; bRT.anchorMax = Vector2.one;
-
-            var btn = btnObj.AddComponent<Button>();
+            var btn = chip.AddComponent<Button>();
             btn.onClick.AddListener(() => {
                 Main.selectedKingdom = k;
-                // Refresh entire UI context for the new kingdom
                 HubUI.Refresh();
                 TopPanelUI.Refresh();
             });
         }
 
-        private static void PopulateSearchList(string filter)
+        private static void RefreshSearchList(string filter)
         {
-            foreach (Transform t in kingdomListContent) Object.Destroy(t.gameObject);
+            foreach (Transform child in kingdomSearchContent) Object.Destroy(child.gameObject);
 
-            var kingdoms = World.world.kingdoms.list;
-            foreach (var k in kingdoms)
+            foreach (var k in World.world.kingdoms.list)
             {
                 if (!k.isAlive() || k.data.id == Globals.NEUTRAL_KINGDOM_NUMERIC_ID) continue;
                 if (!string.IsNullOrEmpty(filter) && !k.data.name.ToLower().Contains(filter.ToLower())) continue;
 
-                CreateKingdomListButton(k);
+                CreateKingdomListItem(k);
             }
         }
 
-        private static void CreateKingdomListButton(Kingdom k)
+        private static void CreateKingdomListItem(Kingdom k)
         {
-            var btnObj = new GameObject("KBtn_" + k.data.name);
-            btnObj.transform.SetParent(kingdomListContent, false);
-            
-            var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 24;
-            le.flexibleWidth = 1f;
+            var item = new GameObject("Item_" + k.data.name);
+            item.transform.SetParent(kingdomSearchContent, false);
+            var le = item.AddComponent<LayoutElement>();
+            le.preferredHeight = 24f;
 
-            var img = btnObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.3f, 0.3f, 0.35f, 1f);
+            var img = item.AddComponent<Image>();
+            img.sprite = windowInnerSprite; img.type = Image.Type.Sliced;
+            img.color = new Color(0.25f, 0.25f, 0.25f, 1f);
 
-            var btn = btnObj.AddComponent<Button>();
+            var btn = item.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
                 Main.selectedKingdom = k;
@@ -498,64 +476,64 @@ namespace RulerBox
                 TopPanelUI.Refresh();
             });
 
-            var hLayout = btnObj.AddComponent<HorizontalLayoutGroup>();
-            hLayout.padding = new RectOffset(2, 2, 2, 2);
-            hLayout.spacing = 5;
-            hLayout.childControlWidth = false;
-            hLayout.childControlHeight = false;
-            hLayout.childForceExpandWidth = false;
+            var h = item.AddComponent<HorizontalLayoutGroup>();
+            h.padding = new RectOffset(2, 2, 2, 2);
+            h.spacing = 4;
+            h.childForceExpandWidth = false;
 
-            // Small Flag
-            var flagObj = new GameObject("Flag");
-            flagObj.transform.SetParent(btnObj.transform, false);
-            var fImg = flagObj.AddComponent<Image>();
+            // Tiny Flag
+            var fObj = new GameObject("Flag");
+            fObj.transform.SetParent(item.transform, false);
+            var fLe = fObj.AddComponent<LayoutElement>();
+            fLe.preferredWidth = 14; fLe.preferredHeight = 20;
+            var fImg = fObj.AddComponent<Image>();
             fImg.sprite = k.getElementBackground();
             fImg.color = k.kingdomColor.getColorMain32();
-            flagObj.AddComponent<LayoutElement>().preferredWidth = 14;
-            flagObj.AddComponent<LayoutElement>().preferredHeight = 20;
-
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(flagObj.transform, false);
-            var iImg = iconObj.AddComponent<Image>();
+            
+            var iObj = new GameObject("Icon");
+            iObj.transform.SetParent(fObj.transform, false);
+            var iImg = iObj.AddComponent<Image>();
             iImg.sprite = k.getElementIcon();
             iImg.color = k.kingdomColor.getColorBanner();
             iImg.rectTransform.anchorMin = Vector2.zero; iImg.rectTransform.anchorMax = Vector2.one;
 
-            // Name Text
-            var nameTxt = CreateText(btnObj.transform, k.data.name, 10, FontStyle.Normal);
-            nameTxt.alignment = TextAnchor.MiddleLeft;
+            // Name
+            var nameTxt = CreateText(item.transform, k.data.name, 10, FontStyle.Normal, TextAnchor.MiddleLeft);
             nameTxt.GetComponent<LayoutElement>().flexibleWidth = 1f;
         }
 
-        private static void OnSearchChanged(string val)
+        private static void CreateActionsList(Transform parent)
         {
-            if (IsVisible()) PopulateSearchList(val);
+            // Re-create static list of buttons if needed, or call once
+            foreach (Transform child in actionsContent) Object.Destroy(child.gameObject);
+
+            CreateActionButton("Laws", () => TopPanelUI.OpenEconomicLaws());
+            CreateActionButton("Leaders", () => WorldTip.showNow("Leaders: Coming Soon", false, "top", 1f));
+            CreateActionButton("Policies", () => WorldTip.showNow("Policies: Coming Soon", false, "top", 1f));
+            CreateActionButton("Ideologies", () => WorldTip.showNow("Ideologies: Coming Soon", false, "top", 1f));
+            CreateActionButton("National Flags", () => WorldTip.showNow("National Flags: Coming Soon", false, "top", 1f));
         }
 
         private static void CreateActionButton(string label, System.Action onClick)
         {
             var btnObj = new GameObject("Btn_" + label);
             btnObj.transform.SetParent(actionsContent, false);
-            
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 24;
-            le.flexibleWidth = 1f;
+            le.preferredHeight = 24f;
 
             var img = btnObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.4f, 0.4f, 0.45f, 1f);
+            img.sprite = windowInnerSprite; img.type = Image.Type.Sliced;
+            img.color = new Color(0.3f, 0.3f, 0.4f, 1f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            var txt = CreateText(btnObj.transform, label, 10, FontStyle.Normal);
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.rectTransform.anchorMin = Vector2.zero; txt.rectTransform.anchorMax = Vector2.one;
-            txt.rectTransform.offsetMin = Vector2.zero; txt.rectTransform.offsetMax = Vector2.zero;
+            CreateText(btnObj.transform, label, 10, FontStyle.Normal, TextAnchor.MiddleCenter);
         }
 
-        private static Text CreateText(Transform parent, string content, int fontSize, FontStyle style)
+        // Helper
+        private static Text CreateText(Transform parent, string content, int fontSize, FontStyle style, TextAnchor align)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
@@ -564,8 +542,14 @@ namespace RulerBox
             txt.text = content;
             txt.fontSize = fontSize;
             txt.fontStyle = style;
+            txt.alignment = align;
             txt.color = Color.white;
             txt.raycastTarget = false;
+            
+            var rt = txt.rectTransform;
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            
             return txt;
         }
     }
