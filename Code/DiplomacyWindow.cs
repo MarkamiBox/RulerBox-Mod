@@ -114,7 +114,7 @@ namespace RulerBox
             CreateRightColumn(splitGO.transform);
 
             // === 6. FOOTER INDICATORS ===
-            CreateFooter(root.transform);
+            CreateFooter(rootV.transform);
 
             root.SetActive(false);
         }
