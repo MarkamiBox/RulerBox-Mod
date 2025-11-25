@@ -560,7 +560,7 @@ namespace RulerBox
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
             var fLe = flagObj.AddComponent<LayoutElement>();
-            fLe.preferredWidth = 16f; fLe.preferredHeight = 22f;
+            fLe.preferredWidth = 5f; fLe.preferredHeight = 7f;
             
             var fBg = flagObj.AddComponent<Image>();
             fBg.sprite = k.getElementBackground();
