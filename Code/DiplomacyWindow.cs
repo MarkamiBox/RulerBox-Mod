@@ -75,7 +75,7 @@ namespace RulerBox
             titleText.color = Color.white;
             titleText.resizeTextForBestFit = true;
             titleText.resizeTextMinSize = 10;
-            titleText.resizeTextMaxSize = 18;
+            titleText.resizeTextMaxSize = 10;
             
             var titleLE = titleGO.AddComponent<LayoutElement>();
             titleLE.minHeight = 24f;
