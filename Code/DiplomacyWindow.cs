@@ -442,7 +442,7 @@ namespace RulerBox
             iconLe.preferredHeight = 14;
 
             // Text
-            txt = CreateText(ind.transform, "0", 3, FontStyle.Bold, col);
+            txt = CreateText(ind.transform, "0", 6, FontStyle.Bold, col);
             txt.alignment = TextAnchor.MiddleLeft;
             var txtLe = txt.gameObject.AddComponent<LayoutElement>();
             txtLe.minWidth = 15f;
