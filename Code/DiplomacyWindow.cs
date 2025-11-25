@@ -89,7 +89,7 @@ namespace RulerBox
             CreateRelationsSection(root.transform);
 
             // === 4. SEARCH BAR ===
-            CreateSearchBar(root.transform);
+            //CreateSearchBar(root.transform);
 
             // === 5. SPLIT VIEW (Left List | Right Buttons) ===
             // This creates the flexible container that fills the rest of the red box
