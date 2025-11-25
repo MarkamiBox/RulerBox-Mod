@@ -8,7 +8,7 @@ namespace RulerBox
 {
     public enum ArmySelectionMode
     {
-        Normal,     // Standard controlsss
+        Normal,     // Standard controlsa
         Recruit,    // Drag over civilians -> Recruit
         Dismiss     // Drag over soldiers -> Dismiss
     }
