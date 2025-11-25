@@ -485,9 +485,12 @@ namespace RulerBox
         {
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
             chip.transform.SetParent(parent, false);
+            
             var le = chip.AddComponent<LayoutElement>();
-            le.preferredWidth = 5; 
-            le.preferredHeight = 5;
+            // === SIZE UPDATE ===
+            le.preferredWidth = 8f;  // Reduced from 20f
+            le.preferredHeight = 8f; // Reduced from 20f
+            // ===================
 
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
@@ -495,16 +498,27 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(chip.transform, false);
+            
+            // Reduced padding to 1 so the flag isn't too tiny inside the small button
+            Stretch(iconObj.GetComponent<RectTransform>(), 1); 
 
             var fBg = iconObj.AddComponent<Image>();
             fBg.sprite = k.getElementBackground();
-            fBg.color = k.kingdomColor.getColorMain32();
+            if (k.kingdomColor != null)
+                fBg.color = k.kingdomColor.getColorMain32();
+            else
+                fBg.color = Color.white;
 
             var ico = new GameObject("Ico", typeof(RectTransform));
             ico.transform.SetParent(iconObj.transform, false);
+            Stretch(ico.GetComponent<RectTransform>());
+            
             var img = ico.AddComponent<Image>();
             img.sprite = k.getElementIcon();
-            img.color = k.kingdomColor.getColorBanner();
+            if (k.kingdomColor != null)
+                img.color = k.kingdomColor.getColorBanner();
+            else
+                img.color = Color.white;
 
             var btn = chip.AddComponent<Button>();
             btn.onClick.AddListener(() => {
