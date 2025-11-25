@@ -486,7 +486,7 @@ namespace RulerBox
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
             chip.transform.SetParent(parent, false);
             var le = chip.AddComponent<LayoutElement>();
-            le.preferredWidth = 30; le.preferredHeight = 30;
+            le.preferredWidth = 15; le.preferredHeight = 15;
 
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
