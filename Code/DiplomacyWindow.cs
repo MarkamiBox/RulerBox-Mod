@@ -264,7 +264,9 @@ namespace RulerBox
                 foreach (var ally in k.getAlliance().kingdoms_list)
                 {
                     if (ally != k && ally.isAlive())
+                    {
                         CreateRelationChip(ally, Color.green, alliesContent);
+                    }
                 }
             }
 
@@ -275,11 +277,12 @@ namespace RulerBox
                 if (war.hasEnded()) continue;
 
                 // Determine which side 'k' is on. 
-                // If 'k' is an attacker, enemies are defenders. Otherwise, enemies are attackers.
                 bool weAreAttackers = war.isAttacker(k);
-                List<Kingdom> enemies = weAreAttackers ? war.getDefenders() : war.getAttackers();
+                
+                // FIX: Use IEnumerable instead of List
+                IEnumerable<Kingdom> enemies = weAreAttackers ? war.getDefenders() : war.getAttackers();
 
-                // Loop through ALL enemies in this war, not just the main one
+                // Loop through ALL enemies in this war
                 foreach (var enemy in enemies)
                 {
                     if (enemy != k && enemy.isAlive())
