@@ -398,8 +398,13 @@ namespace RulerBox
             content.transform.SetParent(viewport.transform, false);
             actionsListContent = content.transform;
             var vList = content.AddComponent<VerticalLayoutGroup>();
-            vList.childAlignment = TextAnchor.UpperCenter; vList.spacing = 2; vList.padding = new RectOffset(2,2,2,2);
-            vList.childControlWidth = true; vList.childControlHeight = false; vList.childForceExpandWidth = true;
+            vList.childAlignment = TextAnchor.UpperCenter; 
+            vList.spacing = 2; 
+            vList.padding = new RectOffset(2,2,2,2);
+            vList.childControlWidth = true; 
+            vList.childControlHeight = true;      
+            vList.childForceExpandWidth = true;
+            vList.childForceExpandHeight = false; 
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
