@@ -106,7 +106,7 @@ namespace RulerBox
             if (headerRightFlagIcon) { headerRightFlagIcon.color = bannerColor; headerRightFlagIcon.sprite = k.getElementIcon(); }
 
             // Text
-            headerKingdomName.text = k.name;
+            headerKingdomName.text = k.data.name;
             string ruler = k.king != null ? k.king.getName() : "None";
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {k.getPopulationTotal()}";
