@@ -360,8 +360,9 @@ namespace RulerBox
             vList.childAlignment = TextAnchor.UpperCenter;
             vList.spacing = 1; 
             vList.childControlWidth = true; 
-            vList.childControlHeight = false; 
+            vList.childControlHeight = true;      
             vList.childForceExpandWidth = true;
+            vList.childForceExpandHeight = false; 
             
             // Add padding so items aren't glued to edges
             vList.padding = new RectOffset(2, 2, 2, 2); 
@@ -505,7 +506,7 @@ namespace RulerBox
 
             // Button Background
             var img = btnObj.AddComponent<Image>();
-            /*if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
+            if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 1f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -514,7 +515,7 @@ namespace RulerBox
                 Main.selectedKingdom = k;
                 HubUI.Refresh();
                 TopPanelUI.Refresh();
-            });*/
+            });
 
             // === FIX HERE: Layout Group Settings ===
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
