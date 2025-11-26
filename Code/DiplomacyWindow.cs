@@ -473,8 +473,11 @@ namespace RulerBox
         {
             var btnObj = new GameObject("KBtn_" + k.data.name, typeof(RectTransform));
             btnObj.transform.SetParent(kingdomListContent, false);
+            
+            // === MAIN SIZE CONTROL ===
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 26f; le.flexibleWidth = 1f;
+            le.preferredHeight = 18f;
+            le.flexibleWidth = 1f;
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
@@ -482,30 +485,37 @@ namespace RulerBox
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
-            btn.onClick.AddListener(() => { Main.selectedKingdom = k; HubUI.Refresh(); TopPanelUI.Refresh(); });
+            btn.onClick.AddListener(() => {
+                Main.selectedKingdom = k;
+                HubUI.Refresh();
+                TopPanelUI.Refresh();
+            });
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4; h.padding = new RectOffset(2, 2, 2, 2);
-            h.childControlWidth = false; h.childForceExpandWidth = false;
+            h.spacing = 4;
+            h.padding = new RectOffset(2, 2, 2, 2); 
+            h.childControlWidth = false;
+            h.childForceExpandWidth = false;
             h.childAlignment = TextAnchor.MiddleLeft;
 
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
             var fLe = flagObj.AddComponent<LayoutElement>();
-            fLe.preferredWidth = 16f; fLe.preferredHeight = 22f;
+            fLe.preferredWidth = 6f;  // Smaller
+            fLe.preferredHeight = 7f; // Smaller
             
             var fBg = flagObj.AddComponent<Image>();
             fBg.sprite = k.getElementBackground();
-            fBg.color = k.kingdomColor.getColorMain32();
+            if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
 
             var fIco = new GameObject("Ico", typeof(RectTransform));
             fIco.transform.SetParent(flagObj.transform, false);
             Stretch(fIco.GetComponent<RectTransform>());
             var iImg = fIco.AddComponent<Image>();
             iImg.sprite = k.getElementIcon();
-            iImg.color = k.kingdomColor.getColorBanner();
+            if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
 
-            var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
+            var txt = CreateText(btnObj.transform, k.data.name, 6, FontStyle.Normal, Color.white); // Font size 8
             txt.alignment = TextAnchor.MiddleLeft;
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
             txtLE.flexibleWidth = 1f;
