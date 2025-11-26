@@ -574,7 +574,8 @@ namespace RulerBox
             var btnObj = new GameObject("Btn_" + label, typeof(RectTransform));
             btnObj.transform.SetParent(actionsListContent, false);
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 26f; le.flexibleWidth = 1f;
+            le.preferredHeight = 23f; 
+            le.flexibleWidth = 1f;
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
