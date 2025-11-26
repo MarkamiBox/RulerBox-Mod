@@ -460,7 +460,7 @@ namespace RulerBox
             chip.transform.SetParent(parent, false);
 
             var rt = chip.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(10f, 10f);
+            rt.sizeDelta = new Vector2(20f, 20f);
 
             var le = chip.AddComponent<LayoutElement>();
             le.minWidth = 9f; 
