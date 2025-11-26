@@ -131,7 +131,7 @@ namespace RulerBox
             
             var bg = container.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.5f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(8, 8, 4, 4);
@@ -311,7 +311,7 @@ namespace RulerBox
             sLe.preferredHeight = 17f; sLe.minHeight = 17f; sLe.flexibleHeight = 0;
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
-            sBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
+            sBg.color = new Color(0.2f, 0.2f, 0.2f, 0.3f);
             searchInput = searchObj.AddComponent<InputField>();
             var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
             Stretch(phText.rectTransform, 4);
@@ -513,7 +513,7 @@ namespace RulerBox
             // Button Background
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.2f, 0.2f, 0.22f, 1f);
+            img.color = new Color(0.2f, 0.2f, 0.22f, 0.5f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -580,7 +580,7 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.25f, 0.25f, 0.3f, 1f);
+            img.color = new Color(0.25f, 0.25f, 0.3f, 0.5f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
