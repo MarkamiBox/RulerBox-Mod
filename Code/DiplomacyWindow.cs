@@ -459,8 +459,10 @@ namespace RulerBox
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
             chip.transform.SetParent(parent, false);
             var le = chip.AddComponent<LayoutElement>();
-            le.minWidth = 18f; le.minHeight = 18f;
-            le.preferredWidth = 18f; le.preferredHeight = 18f;
+            le.minWidth = 9f; 
+            le.minHeight = 9f;
+            le.preferredWidth = 9f; 
+            le.preferredHeight = 9f;
 
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
