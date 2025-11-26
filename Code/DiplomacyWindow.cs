@@ -296,7 +296,7 @@ namespace RulerBox
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = 2;
             v.childControlWidth = true;
-            v.childControlHeight = true;
+            v.childControlHeight = false;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
 
