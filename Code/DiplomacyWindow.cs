@@ -308,7 +308,7 @@ namespace RulerBox
             var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 10f; sLe.minHeight = 20f; sLe.flexibleHeight = 0;
+            sLe.preferredHeight = 20f; sLe.minHeight = 20f; sLe.flexibleHeight = 0;
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
             sBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
@@ -321,7 +321,7 @@ namespace RulerBox
             searchInput.textComponent = txtText;
             searchInput.onValueChanged.AddListener(RefreshSearchList);
 
-            // Scroll
+            // List Scroll Container
             var listObj = new GameObject("KingdomList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
@@ -329,23 +329,46 @@ namespace RulerBox
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; }
             lBg.color = new Color(0, 0, 0, 0.2f);
+
             var scroll = listObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
+
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(listObj.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>());
+            var vpRT = viewport.GetComponent<RectTransform>();
+            Stretch(vpRT); // Stretch viewport to fill listObj
             viewport.AddComponent<RectMask2D>();
+
+            // CONTENT
             var content = new GameObject("Content", typeof(RectTransform));
             content.transform.SetParent(viewport.transform, false);
             kingdomListContent = content.transform;
+
+            var cRT = content.GetComponent<RectTransform>();
+            // Stretch Horizontally (0-1), Align Top (1)
+            cRT.anchorMin = new Vector2(0, 1); 
+            cRT.anchorMax = new Vector2(1, 1); 
+            cRT.pivot = new Vector2(0.5f, 1);
+            
+            // === FIX: Force size to match viewport exactly ===
+            cRT.offsetMin = Vector2.zero;
+            cRT.offsetMax = Vector2.zero;
+            cRT.sizeDelta = new Vector2(0, 0); // Height will be controlled by ContentSizeFitter
+
             var vList = content.AddComponent<VerticalLayoutGroup>();
             vList.childAlignment = TextAnchor.UpperCenter;
-            vList.spacing = 1; vList.childControlWidth = true; vList.childControlHeight = false; vList.childForceExpandWidth = true;
+            vList.spacing = 1; 
+            vList.childControlWidth = true; 
+            vList.childControlHeight = false; 
+            vList.childForceExpandWidth = true;
+            
+            // Add padding so items aren't glued to edges
+            vList.padding = new RectOffset(2, 2, 2, 2); 
+
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
-            scroll.viewport = viewport.GetComponent<RectTransform>(); 
+            
+            scroll.viewport = vpRT; 
             scroll.content = cRT;
         }
 
