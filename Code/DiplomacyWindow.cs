@@ -308,7 +308,7 @@ namespace RulerBox
             var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 15f; sLe.minHeight = 15f; sLe.flexibleHeight = 0;
+            sLe.preferredHeight = 20f; sLe.minHeight = 20f; sLe.flexibleHeight = 0;
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
             sBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
