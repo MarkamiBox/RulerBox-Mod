@@ -268,7 +268,7 @@ namespace RulerBox
             // Background as requested
             var bg = container.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.3f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 4;
