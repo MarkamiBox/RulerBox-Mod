@@ -356,7 +356,9 @@ namespace RulerBox
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = 2; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandWidth = true; v.childForceExpandHeight = true;
             var le = col.AddComponent<LayoutElement>();
-            le.preferredWidth = 100f; le.flexibleWidth = 0f; le.flexibleHeight = 1f;
+            le.preferredWidth = 20f; 
+            le.flexibleWidth = 0f; 
+            le.flexibleHeight = 1f;
 
             var bg = col.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
