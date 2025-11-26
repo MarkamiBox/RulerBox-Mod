@@ -298,7 +298,7 @@ namespace RulerBox
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
-            v.childForceExpandHeight = true;
+            v.childForceExpandHeight = false;
 
             var le = col.AddComponent<LayoutElement>();
             le.flexibleWidth = 1f; 
@@ -308,7 +308,7 @@ namespace RulerBox
             var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 20f; sLe.minHeight = 20f; sLe.flexibleHeight = 0;
+            sLe.preferredHeight = 15f; sLe.minHeight = 15f; sLe.flexibleHeight = 0;
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; }
             sBg.color = new Color(0.2f, 0.2f, 0.2f, 1f);
@@ -499,8 +499,8 @@ namespace RulerBox
             
             // Button Layout Element (Size in the list)
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 20f;
-            le.minHeight = 20f;
+            le.preferredHeight = 16f;
+            le.minHeight = 16f;
             le.flexibleWidth = 1f;
 
             // Button Background
