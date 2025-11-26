@@ -458,6 +458,10 @@ namespace RulerBox
         {
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
             chip.transform.SetParent(parent, false);
+
+            var rt = chip.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(10f, 10f);
+
             var le = chip.AddComponent<LayoutElement>();
             le.minWidth = 9f; 
             le.minHeight = 9f;
