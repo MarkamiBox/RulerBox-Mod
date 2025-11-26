@@ -499,8 +499,8 @@ namespace RulerBox
             
             // Button Layout Element (Size in the list)
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 26f;
-            le.minHeight = 26f;
+            le.preferredHeight = 16f;
+            le.minHeight = 16f;
             le.flexibleWidth = 1f;
 
             // Button Background
