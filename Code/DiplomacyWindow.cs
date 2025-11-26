@@ -493,6 +493,7 @@ namespace RulerBox
             foreach (var k in World.world.kingdoms.list)
             {
                 if (!k.isAlive() || k.data.id == Globals.NEUTRAL_KINGDOM_NUMERIC_ID) continue;
+                if (k == Main.selectedKingdom) continue;
                 if (!string.IsNullOrEmpty(filter) && !k.data.name.ToLower().Contains(filter.ToLower())) continue;
                 CreateKingdomButton(k);
             }
