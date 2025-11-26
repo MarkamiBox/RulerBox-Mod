@@ -474,11 +474,13 @@ namespace RulerBox
             var btnObj = new GameObject("KBtn_" + k.data.name, typeof(RectTransform));
             btnObj.transform.SetParent(kingdomListContent, false);
             
-            // === MAIN SIZE CONTROL ===
+            // Button Layout Element (Size in the list)
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 18f;
+            le.preferredHeight = 26f;
+            le.minHeight = 26f;
             le.flexibleWidth = 1f;
 
+            // Button Background
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 1f);
@@ -491,23 +493,36 @@ namespace RulerBox
                 TopPanelUI.Refresh();
             });
 
+            // === FIX HERE: Layout Group Settings ===
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4;
-            h.padding = new RectOffset(2, 2, 2, 2); 
-            h.childControlWidth = false;
-            h.childForceExpandWidth = false;
+            h.spacing = 6;
+            h.padding = new RectOffset(4, 4, 2, 2);
             h.childAlignment = TextAnchor.MiddleLeft;
+            
+            // IMPORTANT: These must be TRUE for LayoutElements to work
+            h.childControlWidth = true; 
+            h.childControlHeight = true; 
+            h.childForceExpandWidth = false;
+            h.childForceExpandHeight = false;
 
+            // === Flag Container ===
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
-            var fLe = flagObj.AddComponent<LayoutElement>();
-            fLe.preferredWidth = 6f;  // Smaller
-            fLe.preferredHeight = 7f; // Smaller
             
+            var fLe = flagObj.AddComponent<LayoutElement>();
+            // Set strict size for the flag
+            fLe.minWidth = 18f;
+            fLe.minHeight = 22f;
+            fLe.preferredWidth = 18f;
+            fLe.preferredHeight = 22f;
+            fLe.flexibleWidth = 0f; // Don't stretch
+            
+            // Flag Background
             var fBg = flagObj.AddComponent<Image>();
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
 
+            // Flag Icon
             var fIco = new GameObject("Ico", typeof(RectTransform));
             fIco.transform.SetParent(flagObj.transform, false);
             Stretch(fIco.GetComponent<RectTransform>());
@@ -515,10 +530,14 @@ namespace RulerBox
             iImg.sprite = k.getElementIcon();
             if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
 
-            var txt = CreateText(btnObj.transform, k.data.name, 6, FontStyle.Normal, Color.white); // Font size 8
+            // === Name Text ===
+            var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
+            
+            // Text fills remaining space
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
-            txtLE.flexibleWidth = 1f;
+            txtLE.flexibleWidth = 1f; 
+            txtLE.minWidth = 10f;
         }
 
         private static void CreateActionBtn(string label, System.Action onClick)
