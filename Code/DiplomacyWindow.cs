@@ -207,7 +207,7 @@ namespace RulerBox
             v.childForceExpandHeight = true;
 
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 60f; // Slightly smaller than 68f
+            le.preferredHeight = 60f; 
             le.minHeight = 60f;
             le.flexibleHeight = 0;
 
@@ -505,7 +505,7 @@ namespace RulerBox
 
             // Button Background
             var img = btnObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
+            /*if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 1f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -514,7 +514,7 @@ namespace RulerBox
                 Main.selectedKingdom = k;
                 HubUI.Refresh();
                 TopPanelUI.Refresh();
-            });
+            });*/
 
             // === FIX HERE: Layout Group Settings ===
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
