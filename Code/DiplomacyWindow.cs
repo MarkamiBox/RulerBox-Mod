@@ -370,7 +370,8 @@ namespace RulerBox
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
-            scroll.viewport = vpRT; scroll.content = cRT;
+            //scroll.viewport = vpRT; 
+            scroll.content = cRT;
         }
 
         private static void CreateRightColumn(Transform parent)
@@ -400,7 +401,8 @@ namespace RulerBox
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var cRT = content.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
-            scroll.viewport = vpRT; scroll.content = cRT;
+            //scroll.viewport = vpRT; 
+            scroll.content = cRT;
 
             // Static Buttons
             CreateActionBtn("Laws", () => TopPanelUI.OpenEconomicLaws());
