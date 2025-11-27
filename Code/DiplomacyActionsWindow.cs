@@ -333,7 +333,7 @@ namespace RulerBox
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 0.1f;
 
-            // --- 1. DECLARE WAR ---
+            // ---  DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -348,7 +348,7 @@ namespace RulerBox
                     EventsSystem.AllowPlayerWar = true;
                     try
                     {
-                        var warAsset = AssetManager.war_types_library.get("conquest");
+                        var warAsset = AssetManager.war_types_library.get("war_conquest");
                         if (warAsset != null)
                         {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
@@ -376,7 +376,42 @@ namespace RulerBox
                 }
             });
 
-            // --- 2. FORM ALLIANCE ---
+            CreateDiplomacyBtn(col.transform, "Make Peace", new Color(0.2f, 0.4f, 0.8f, 1f), () => {
+                if(Main.selectedKingdom != null && targetKingdom != null)
+                {
+                    if (!Main.selectedKingdom.isEnemy(targetKingdom))
+                    {
+                        WorldTip.showNow("We are not at war.", false, "top", 2f, "#FFFF00");
+                        return;
+                    }
+
+                    // Find the active war object
+                    var wars = World.world.wars.getWars(Main.selectedKingdom);
+                    War activeWar = null;
+                    foreach(var w in wars) {
+                        if (!w.hasEnded() && (w.isAttacker(targetKingdom) || w.isDefender(targetKingdom))) {
+                            activeWar = w;
+                            break;
+                        }
+                    }
+
+                    if (activeWar != null)
+                    {
+                        World.world.wars.endWar(activeWar, WarWinner.Peace);
+                        EventsUI.ShowPopup(
+                            $"Peace treaty signed with {targetKingdom.data.name}.", 
+                            EventButtonType.Peace, targetKingdom, null, null, null
+                        );
+                        Close();
+                    }
+                    else
+                    {
+                        WorldTip.showNow("Could not find active war data.", false, "top", 2f, "#FF0000");
+                    }
+                }
+            });
+
+            // --- FORM ALLIANCE ---
             CreateDiplomacyBtn(col.transform, "Form Alliance", new Color(0.1f, 0.5f, 0.1f, 1f), () => {
                  if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -445,7 +480,7 @@ namespace RulerBox
                 }
             });
 
-            // --- 3. NON-AGGRESSION PACT ---
+            // --- NON-AGGRESSION PACT ---
             CreateDiplomacyBtn(col.transform, "Non-Aggression Pact", new Color(0.1f, 0.4f, 0.5f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
