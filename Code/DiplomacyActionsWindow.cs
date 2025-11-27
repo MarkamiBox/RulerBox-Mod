@@ -168,8 +168,10 @@ namespace RulerBox
             var flagWrapper = new GameObject(name, typeof(RectTransform));
             flagWrapper.transform.SetParent(parent, false);
             var flagLE = flagWrapper.AddComponent<LayoutElement>();
-            flagLE.preferredWidth = 40f; flagLE.preferredHeight = 40f;
-            flagLE.minWidth = 40f; flagLE.minHeight = 40f;
+            flagLE.preferredWidth = 20f; 
+            flagLE.preferredHeight = 20f;
+            flagLE.minWidth = 20f; 
+            flagLE.minHeight = 20f;
             
             var flagBgObj = new GameObject("FlagBG", typeof(RectTransform));
             flagBgObj.transform.SetParent(flagWrapper.transform, false);
