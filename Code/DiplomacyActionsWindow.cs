@@ -47,7 +47,7 @@ namespace RulerBox
             // Background
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
+            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.5f);
 
             // Main Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
@@ -183,9 +183,9 @@ namespace RulerBox
 
             headerKingdomName = CreateText(infoStack.transform, "Kingdom", 9, FontStyle.Bold, Color.white);
             headerKingdomName.alignment = TextAnchor.MiddleCenter;
-            headerRulerInfo = CreateText(infoStack.transform, "Ruler", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+            headerRulerInfo = CreateText(infoStack.transform, "Ruler", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.5f));
             headerRulerInfo.alignment = TextAnchor.MiddleCenter;
-            headerPopInfo = CreateText(infoStack.transform, "Pop", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+            headerPopInfo = CreateText(infoStack.transform, "Pop", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.5f));
             headerPopInfo.alignment = TextAnchor.MiddleCenter;
 
             // Right Flag
@@ -256,7 +256,7 @@ namespace RulerBox
             le.flexibleHeight = 1f;
 
             // Label
-            var label = CreateText(col.transform, "Relations", 8, FontStyle.Bold, new Color(0.8f, 0.8f, 0.8f));
+            var label = CreateText(col.transform, "Relations", 8, FontStyle.Bold, new Color(0.8f, 0.8f, 0.5f));
             label.alignment = TextAnchor.MiddleCenter;
             var lLe = label.gameObject.AddComponent<LayoutElement>();
             lLe.minHeight = 14f; lLe.preferredHeight = 14f; lLe.flexibleHeight = 0;
@@ -426,7 +426,7 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            img.color = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
