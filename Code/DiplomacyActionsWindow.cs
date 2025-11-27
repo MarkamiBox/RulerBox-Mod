@@ -95,6 +95,7 @@ namespace RulerBox
             // Hide main Diplomacy window, show this one
             DiplomacyWindow.SetVisible(false);
             root.SetActive(true);
+            root.transform.SetAsLastSibling();
             
             Refresh();
         }
