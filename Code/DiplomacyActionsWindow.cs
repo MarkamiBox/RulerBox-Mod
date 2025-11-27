@@ -23,8 +23,10 @@ namespace RulerBox
         // Grids for flags (inside the scroll view)
         private static Transform alliesGrid;
         private static Transform warsGrid;
-        
         private static Kingdom targetKingdom;
+        private static Transform alliesContent; 
+        private static Transform warsContent;
+
 
         public static void Initialize(Transform parent)
         {
@@ -231,7 +233,8 @@ namespace RulerBox
 
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 20f; 
-            le.minWidth = 20f; 
+            le.minWidth = 20f;
+            le.flexibleWidth = 1f;
             le.flexibleHeight = 1f;
 
             // Scroll Container
