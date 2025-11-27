@@ -179,6 +179,8 @@ namespace RulerBox
             InvestmentsWindow.SetVisible(false);
             ResourcesTradeWindow.SetVisible(false);
             TradeWindow.SetVisible(false);
+            DiplomacyWindow.SetVisible(false);
+            DiplomacyActionsWindow.Close();
             
             if (currentTab == HubTab.Economy)
             {
