@@ -5,16 +5,10 @@ using UnityEngine;
 
 namespace RulerBox
 {
-    /// <summary>
-    /// Central event logic for RulerBox (war / peace / diplomacy + future random events).
-    /// - Listens to WorldBox diplomacy systems via Harmony patches.
-    /// - Creates slim vertical buttons on the EventsUI bar.
-    /// - Opens a popup window in the center of the screen when you click a button.
-    /// </summary>
     public static class EventsSystem
     {
         public static bool AllowPlayerWar = false;
-        
+        // ruler event data structure       
         private class RulerEvent
         {
             public int Id;
@@ -26,35 +20,27 @@ namespace RulerBox
             public GameObject ButtonGO;
             public string Message;
         }
-
-        private static readonly Dictionary<int, RulerEvent> _events = new Dictionary<int, RulerEvent>();
-        private static int _nextId = 1;
+        private static readonly Dictionary<int, RulerEvent> events = new Dictionary<int, RulerEvent>();
+        private static int nextId = 1;
+        // trigger a trade proposal event
         public static void TriggerTradeProposal(Kingdom other, string resourceId, int amount, bool isSelling, bool isBulk)
         {
             var player = Main.selectedKingdom;
             if (player == null) return;
-
             int price = TradeManager.CalculatePrice(resourceId, amount);
-            
             string actionStr = isSelling ? "sell" : "buy";
             string freqStr = isBulk ? "once" : "every 2 min";
-            
             string msg = $"Proposal: {actionStr} {amount} {resourceId} for {price}g ({freqStr}) with {other.data.name}?";
-            
-            // Create a direct popup without adding a button to the bar first, 
-            // or add a temporary event ID to manage the callback.
-            // We will use ShowPopup directly for immediate feedback as requested.
-            
             EventsUI.ShowPopup(
                 msg,
-                EventButtonType.Diplomacy, // Reuse diplomacy icon
+                EventButtonType.Diplomacy, 
                 other,
                 onOk: null,
                 onAccept: () => 
                 {
                     if (isBulk)
                     {
-                        // One Time
+                        // One-time
                         Kingdom source = isSelling ? player : other;
                         Kingdom target = isSelling ? other : player;
                         bool success = TradeManager.ExecuteOneTimeTrade(source, target, resourceId, amount, price);
@@ -75,10 +61,10 @@ namespace RulerBox
                 refuseLabel: "Cancel"
             );
         }
-
+        // trigger a trade cancelled event
         public static void TriggerTradeCancelled(Kingdom withKingdom, string resource, string reason)
         {
-            int id = _nextId++;
+            int id = nextId++;
             string title = $"Trade ({resource}) cancelled!";
             var evt = new RulerEvent
             {
@@ -87,8 +73,7 @@ namespace RulerBox
                 From = withKingdom,
                 Message = $"Trade for {resource} with {withKingdom.data.name} ended: {reason}"
             };
-
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, title, id);
         }
 
@@ -134,7 +119,7 @@ namespace RulerBox
             if (defender != me)
                 return;
 
-            int id = _nextId++;
+            int id = nextId++;
             string title = $"{attacker.data.name} declared war on us";
             var evt = new RulerEvent
             {
@@ -145,7 +130,7 @@ namespace RulerBox
                 War = war
             };
 
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.War, title, id);
         }
 
@@ -195,7 +180,7 @@ namespace RulerBox
             if (other == null || other == me)
                 return;
 
-            int id = _nextId++;
+            int id = nextId++;
             string title = $"{other.data.name} has offered peace";
             var evt = new RulerEvent
             {
@@ -207,7 +192,7 @@ namespace RulerBox
                 Message = title
             };
 
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Peace, title, id);
         }
 
@@ -232,7 +217,7 @@ namespace RulerBox
             // "Other" is the kingdom that is not us.
             Kingdom other = meIsK1 ? k2 : k1;
 
-            int id = _nextId++;
+            int id = nextId++;
             string title = $"{other.data.name} wants to form an alliance";
             var evt = new RulerEvent
             {
@@ -244,7 +229,7 @@ namespace RulerBox
                 Message = title
             };
 
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Diplomacy, title, id);
         }
 
@@ -254,7 +239,7 @@ namespace RulerBox
         /// </summary>
         public static void OpenEvent(int id)
         {
-            if (!_events.TryGetValue(id, out var evt) || evt == null)
+            if (!events.TryGetValue(id, out var evt) || evt == null)
                 return;
             
             if (evt.ButtonGO != null)
@@ -430,7 +415,7 @@ namespace RulerBox
             string otherName = other != null ? other.data.name : alliance.data.name;
             string title = $"{otherName} removed us from the alliance";
 
-            int id = _nextId++;
+            int id = nextId++;
             var evt = new RulerEvent
             {
                 Id = id,
@@ -441,7 +426,7 @@ namespace RulerBox
                 Message = title
             };
 
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, title, id);
         }
 
@@ -464,7 +449,7 @@ namespace RulerBox
             string otherName = other != null ? other.data.name : alliance.data.name;
             string title = $"Our alliance with {otherName} has been dissolved";
 
-            int id = _nextId++;
+            int id = nextId++;
             var evt = new RulerEvent
             {
                 Id = id,
@@ -475,14 +460,14 @@ namespace RulerBox
                 Message = title
             };
 
-            _events[id] = evt;
+            events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, title, id);
         }
 
 
         private static void CloseEvent(int id)
         {
-            if (_events.TryGetValue(id, out var evt) && evt != null)
+            if (events.TryGetValue(id, out var evt) && evt != null)
             {
                 if (evt.ButtonGO != null)
                 {
@@ -490,7 +475,7 @@ namespace RulerBox
                     evt.ButtonGO = null;
                 }
             }
-            _events.Remove(id);
+            events.Remove(id);
             EventsUI.HidePopup();
         }
 
@@ -516,7 +501,7 @@ namespace RulerBox
             if (def == null) return;
 
             // --- Spawn Event ---
-            int id = _nextId++;
+            int id = nextId++;
             var rulerEvt = new RulerEvent
             {
                 Id       = id,
@@ -528,7 +513,7 @@ namespace RulerBox
                 Message  = def.Title
             };
 
-            _events[id] = rulerEvt;
+            events[id] = rulerEvt;
             randomEventPerId[id] = def; // Store the EventDef
 
             // Add button to UI
