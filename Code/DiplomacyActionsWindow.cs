@@ -257,7 +257,7 @@ namespace RulerBox
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 0f; // Takes remaining height
+            listLe.flexibleHeight = 0.3f; // Takes remaining height
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { 
                 lBg.sprite = windowInnerSprite; 
@@ -336,8 +336,8 @@ namespace RulerBox
             col.transform.SetParent(parent, false);
 
             var v = col.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 6; 
-            v.padding = new RectOffset(0,0,10,0);
+            v.spacing = 2; 
+            v.padding = new RectOffset(0,0,5,0);
             v.childControlWidth = true; 
             v.childControlHeight = true; 
             v.childForceExpandWidth = true; 
@@ -346,7 +346,7 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 110f; 
             le.flexibleWidth = 0f; 
-            le.flexibleHeight = 0.5f;
+            le.flexibleHeight = 0.2f;
 
             // Action Buttons (Colors Preserved)
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
