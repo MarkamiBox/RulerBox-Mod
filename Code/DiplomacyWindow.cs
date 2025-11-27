@@ -489,27 +489,27 @@ namespace RulerBox
             var btnObj = new GameObject("KBtn_" + k.data.name, typeof(RectTransform));
             btnObj.transform.SetParent(kingdomListContent, false);
             
-            // Button Layout
+            // 1. Layout Element for the list
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 16f;
-            le.minHeight = 16f;
+            le.preferredHeight = 28f; // Slightly taller for better click area
+            le.minHeight = 28f;
             le.flexibleWidth = 1f;
 
-            // Button Background (Target Graphic)
+            // 2. Background Image (The HITBOX)
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 0.5f);
-            img.raycastTarget = true; // This MUST be true for the button to work
+            img.raycastTarget = true; // MUST BE TRUE to catch the click
 
-            // Button Component
+            // 3. Button Component
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
-                Debug.Log("Button Clicked for: " + k.data.name); 
+                // Debug.Log("Clicked Kingdom: " + k.data.name); // Uncomment to debug
                 DiplomacyActionsWindow.Open(k);
             });
 
-            // Layout Group
+            // 4. Horizontal Layout for content
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 6;
             h.padding = new RectOffset(4, 4, 2, 2);
@@ -519,7 +519,7 @@ namespace RulerBox
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
 
-            // === Flag Container ===
+            // --- FLAG CONTAINER ---
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
             
@@ -528,28 +528,29 @@ namespace RulerBox
             fLe.minHeight = 22f;
             fLe.preferredWidth = 18f;
             fLe.preferredHeight = 22f;
-            fLe.flexibleWidth = 0f; 
-            
-            // Flag Background - BLOCK RAYCASTS FALSE
+            fLe.flexibleWidth = 0f;
+
+            // Flag Background (Visual only, no click)
             var fBg = flagObj.AddComponent<Image>();
-            fBg.raycastTarget = false; 
+            fBg.raycastTarget = false; // CRITICAL
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
 
-            // Flag Icon - BLOCK RAYCASTS FALSE
+            // Flag Icon (Visual only, no click)
             var fIco = new GameObject("Ico", typeof(RectTransform));
             fIco.transform.SetParent(flagObj.transform, false);
             Stretch(fIco.GetComponent<RectTransform>());
             
             var iImg = fIco.AddComponent<Image>();
-            iImg.raycastTarget = false;
+            iImg.raycastTarget = false; // CRITICAL
             iImg.sprite = k.getElementIcon();
             if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
 
-            // Name Text - BLOCK RAYCASTS FALSE
+            // --- NAME TEXT ---
+            // CreateText helper usually sets raycastTarget=true for Text. We must disable it.
             var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
-            txt.raycastTarget = false; // Ensure text doesn't block click
+            txt.raycastTarget = false; // CRITICAL: Text blocks clicks by default in Unity UI
             
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
             txtLE.flexibleWidth = 1f; 
