@@ -224,11 +224,11 @@ namespace RulerBox
             col.transform.SetParent(parent, false);
             
             var v = col.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4;
+            v.spacing = 2;
             v.padding = new RectOffset(4, 4, 4, 4);
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = true;
+            v.childControlWidth = false;
+            v.childControlHeight = false;
+            v.childForceExpandWidth = false;
             v.childForceExpandHeight = false;
 
             var le = col.AddComponent<LayoutElement>();
