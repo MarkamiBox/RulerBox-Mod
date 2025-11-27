@@ -448,25 +448,29 @@ namespace RulerBox
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = borderColor;
+            // Button
+            var btn = chip.AddComponent<Button>();
+            btn.onClick.AddListener(() => { 
+                Debug.Log("Clicked flag for: " + k.data.name);
+                DiplomacyActionsWindow.Open(k);
+            });
             // Icon Container
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(chip.transform, false);
             Stretch(iconObj.GetComponent<RectTransform>(), 1);
             // Icon and Background
             var fBg = iconObj.AddComponent<Image>();
+            fBg.raycastTarget = false;
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
             var ico = new GameObject("Ico", typeof(RectTransform));
             ico.transform.SetParent(iconObj.transform, false);
             Stretch(ico.GetComponent<RectTransform>());
             var img = ico.AddComponent<Image>();
+            img.raycastTarget = false;
             img.sprite = k.getElementIcon();
             if (k.kingdomColor != null) img.color = k.kingdomColor.getColorBanner();
-            // Button
-            var btn = chip.AddComponent<Button>();
-            btn.onClick.AddListener(() => { 
-                DiplomacyActionsWindow.Open(k);
-            });
+            else img.color = Color.white;
         }
         // Refresh Kingdom Search List
         private static void RefreshSearchList(string filter)
