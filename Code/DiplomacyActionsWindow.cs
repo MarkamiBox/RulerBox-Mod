@@ -20,7 +20,7 @@ namespace RulerBox
         private static Text headerRulerInfo;
         private static Text headerPopInfo;
 
-        // These transform references point to the "Grid" game object where flags go
+        // Grids for flags (inside the scroll view)
         private static Transform alliesGrid;
         private static Transform warsGrid;
         
@@ -78,7 +78,7 @@ namespace RulerBox
             // === 2. HEADER PANEL ===
             CreateHeader(root.transform);
 
-            // === 3. SPLIT SECTION (Relations & Buttons) ===
+            // === 3. SPLIT SECTION (Left: Relations | Right: Buttons) ===
             CreateSplitSection(root.transform);
 
             // === 4. BOTTOM CLOSE BUTTON ===
@@ -112,7 +112,7 @@ namespace RulerBox
         {
             if (!IsVisible() || targetKingdom == null) return;
 
-            // --- Update Header Info ---
+            // --- 1. Header Update ---
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
 
@@ -132,7 +132,7 @@ namespace RulerBox
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {targetKingdom.getPopulationTotal()}";
 
-            // --- Update Flags ---
+            // --- 2. Relations List Update ---
             RefreshRelationsList();
         }
 
@@ -160,7 +160,7 @@ namespace RulerBox
             var le = container.AddComponent<LayoutElement>();
             le.preferredHeight = 50f;
             le.minHeight = 50f;
-            le.flexibleHeight = 0; // FIXED: Fixed height
+            le.flexibleHeight = 0;
 
             CreateFlag(container.transform, "FlagLeft", out headerLeftFlagBg, out headerLeftFlagIcon);
 
@@ -212,15 +212,16 @@ namespace RulerBox
             bg.color = new Color(0.15f, 0.15f, 0.15f, 0.3f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 2;
-            h.padding = new RectOffset(2, 2, 2, 2);
+            h.spacing = 4;
+            h.padding = new RectOffset(4, 4, 4, 4);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = true;
 
+            // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
-            le.flexibleHeight = 0.5f; // FIXED: Fills available vertical space
+            le.flexibleHeight = 1f; 
 
             // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
@@ -246,7 +247,7 @@ namespace RulerBox
             le.flexibleHeight = 1f;
 
             // Label
-            var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.5f));
+            var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.9f));
             label.alignment = TextAnchor.MiddleCenter;
             var lLe = label.gameObject.AddComponent<LayoutElement>();
             lLe.minHeight = 16f; lLe.preferredHeight = 16f; lLe.flexibleHeight = 0;
@@ -324,7 +325,7 @@ namespace RulerBox
             grid.spacing = new Vector2(4, 4);
             grid.constraint = GridLayoutGroup.Constraint.Flexible;
 
-            // CRITICAL FIX: The Grid needs a ContentSizeFitter to have height in a Vertical Layout
+            // FIX: Grid needs ContentSizeFitter to expand properly in a Vertical Layout
             var fitter = gridObj.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -349,12 +350,30 @@ namespace RulerBox
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 1f;
 
-            // Action Buttons
+            // Action Buttons (Colors Preserved)
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
-                    World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, AssetManager.war_types_library.get("conquest"), true);
-                    WorldTip.showNow("War Declared!", false, "top", 2f, "#FF0000");
+                    // FIX: Enable AllowPlayerWar so the patch lets us start a war
+                    EventsSystem.AllowPlayerWar = true;
+                    try
+                    {
+                        var warAsset = AssetManager.war_types_library.get("conquest");
+                        if (warAsset != null)
+                        {
+                            World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
+                            WorldTip.showNow("War Declared!", false, "top", 2f, "#FF0000");
+                        }
+                        else
+                        {
+                            WorldTip.showNow("Error: War asset not found", false, "top", 2f, "#FF0000");
+                        }
+                    }
+                    finally
+                    {
+                        EventsSystem.AllowPlayerWar = false; // Reset
+                    }
+                    
                     Refresh();
                     DiplomacyWindow.Refresh(Main.selectedKingdom);
                 }
@@ -366,6 +385,10 @@ namespace RulerBox
                     if(World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom) == null) 
                     {
                          WorldTip.showNow("Alliance Proposal Sent (Simulated)", false, "top", 2f, "#00FF00");
+                    }
+                    else
+                    {
+                        WorldTip.showNow("Already have relations!", false, "top", 2f, "#FFFF00");
                     }
                 }
             });
@@ -411,7 +434,7 @@ namespace RulerBox
             var le = row.AddComponent<LayoutElement>();
             le.preferredHeight = 24f; 
             le.minHeight = 24f; 
-            le.flexibleHeight = 0; // FIXED: Fixed height to prevent stretching
+            le.flexibleHeight = 0; // Fix: Prevents stretching vertically
 
             var btnObj = new GameObject("CloseBtn", typeof(RectTransform));
             btnObj.transform.SetParent(row.transform, false);
@@ -477,7 +500,7 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // No LayoutElement needed because GridLayoutGroup on parent controls child size
+            // Layout size controlled by Grid
             
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
@@ -485,7 +508,7 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 2); // small padding
+            Stretch(iconObj.GetComponent<RectTransform>(), 2); 
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
@@ -493,7 +516,7 @@ namespace RulerBox
 
             var btn = flagObj.AddComponent<Button>();
             btn.onClick.AddListener(() => {
-                 Open(k); // Click flag to inspect THAT kingdom
+                 Open(k);
             });
         }
 
