@@ -284,14 +284,14 @@ namespace RulerBox
                 sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; 
             }
             sBg.color = new Color(0.2f, 0.2f, 0.2f, 0.3f);
-            /*searchInput = searchObj.AddComponent<InputField>();
-            var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
+            searchInput = searchObj.AddComponent<InputField>();
+            /*var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
             Stretch(phText.rectTransform, 4);
             searchInput.placeholder = phText;
             var txtText = CreateText(searchObj.transform, "", 9, FontStyle.Normal, Color.white);
             Stretch(txtText.rectTransform, 4);
-            searchInput.textComponent = txtText;
-            searchInput.onValueChanged.AddListener(RefreshSearchList);*/
+            searchInput.textComponent = txtText;*/
+            searchInput.onValueChanged.AddListener(RefreshSearchList);
             // List Scroll Container
             var listObj = new GameObject("KingdomList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
