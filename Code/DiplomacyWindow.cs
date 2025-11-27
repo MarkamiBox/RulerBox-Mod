@@ -505,6 +505,7 @@ namespace RulerBox
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
                 // Open the new window
+                // Debug.Log("Clicked kingdom: " + k.data.name); // Helpful for debugging
                 DiplomacyActionsWindow.Open(k);
             });
 
@@ -531,7 +532,7 @@ namespace RulerBox
             
             // Flag Background
             var fBg = flagObj.AddComponent<Image>();
-            fBg.raycastTarget = false; // <--- FIX: Allow click to pass through
+            fBg.raycastTarget = false; // <--- CRITICAL FIX: Must be false to let click through to button
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
 
@@ -541,13 +542,15 @@ namespace RulerBox
             Stretch(fIco.GetComponent<RectTransform>());
             
             var iImg = fIco.AddComponent<Image>();
-            iImg.raycastTarget = false; // <--- FIX: Allow click to pass through
+            iImg.raycastTarget = false; // <--- CRITICAL FIX: Must be false to let click through to button
             iImg.sprite = k.getElementIcon();
             if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
 
             // Name Text 
             var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
+            // Text also needs to ignore raycast just in case, though usually texts don't block unless they have raycastTarget=true (default false for simple text, but true for Text component)
+            txt.raycastTarget = false; 
             
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
             txtLE.flexibleWidth = 1f; 
