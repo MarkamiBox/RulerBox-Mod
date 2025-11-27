@@ -132,7 +132,7 @@ namespace RulerBox
             
             var bg = container.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.5f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(8, 8, 4, 4);
@@ -372,7 +372,7 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(color.r * 0.7f, color.g * 0.7f, color.b * 0.7f, 1f); // Darker bg
+            img.color = new Color(color.r * 0.7f, color.g * 0.7f, color.b * 0.7f, 0.5f); // Darker bg
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -399,7 +399,7 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            img.color = new Color(0.3f, 0.3f, 0.3f, 0.5f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
