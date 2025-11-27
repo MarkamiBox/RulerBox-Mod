@@ -238,16 +238,8 @@ namespace RulerBox
             le.flexibleWidth = 1f;
             le.flexibleHeight = 1f;
 
-            // --- 1. ALLIES HEADER ---
-            var t1 = CreateText(col.transform, "Allies", 8, FontStyle.Bold, new Color(0.8f, 1f, 0.8f));
-            t1.alignment = TextAnchor.MiddleLeft;
-
             // --- 2. ALLIES ROW (Horizontal Scroll) ---
             alliesContent = CreateSingleRelationRow(col.transform, "AlliesRow", new Color(0, 0.3f, 0, 0.2f), 32f);
-
-            // --- 3. WARS HEADER ---
-            var t2 = CreateText(col.transform, "Active Wars", 8, FontStyle.Bold, new Color(1f, 0.8f, 0.8f));
-            t2.alignment = TextAnchor.MiddleLeft;
 
             // --- 4. WARS ROW (Horizontal Scroll) ---
             warsContent = CreateSingleRelationRow(col.transform, "WarsRow", new Color(0.3f, 0, 0, 0.2f), 32f);
@@ -458,7 +450,7 @@ namespace RulerBox
 
             // Increased font slightly (5->9) so it is readable on the smaller button, 
             // but the physical button size is strictly reduced as requested.
-            var txt = CreateText(btnObj.transform, label, 9, FontStyle.Bold, Color.white);
+            var txt = CreateText(btnObj.transform, label, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
         }
@@ -507,27 +499,33 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // Layout size set to 22 (Small but visible)
+            var rt = flagObj.GetComponent<RectTransform>();
+            rt.sizeDelta = new Vector2(22f, 22f); 
+
+            // Keep LayoutElement for safety (helps the parent ContentSizeFitter calculate total width)
             var le = flagObj.AddComponent<LayoutElement>();
-            le.minWidth = 22f; 
+            le.minWidth = 22f;
             le.minHeight = 22f;
             le.preferredWidth = 22f;
             le.preferredHeight = 22f;
 
+            // Background
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) bg.color = k.kingdomColor.getColorMain32();
 
+            // Icon Container
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            // UNCOMMENTED STRETCH: This fixes the issue of the flag icon being "too big"
-            // It now forces the icon to scale down to the 22x22 container size.
+            // Stretch the icon to fill the 22x22 box (with 1px padding)
             Stretch(iconObj.GetComponent<RectTransform>(), 1); 
 
+            // Icon Image
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
             if (k.kingdomColor != null) ico.color = k.kingdomColor.getColorBanner();
 
+            // Button
             var btn = flagObj.AddComponent<Button>();
             btn.onClick.AddListener(() => {
                  Open(k);
