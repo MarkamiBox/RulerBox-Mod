@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using System;
 
 namespace RulerBox
 {
@@ -404,8 +405,10 @@ namespace RulerBox
                                 null, 
                                 // Accept (Pay)
                                 () => {
-                                    KingdomMetricsSystem.Data myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
-                                    if(myData.Treasury >= goldDemand) {
+                                    // Use standard reflection or access to treasury if KingdomMetricsSystem isn't available directly yet
+                                    // Assuming you have KingdomMetricsSystem available:
+                                    var myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
+                                    if(myData != null && myData.Treasury >= goldDemand) {
                                         myData.Treasury -= goldDemand;
                                         
                                         EventsSystem.IsPlayerInitiated = true;
@@ -450,7 +453,8 @@ namespace RulerBox
                         return;
                     }
 
-                    Action makeAlliance = () => {
+                    // FIX: Explicitly use System.Action here to resolve the compiler error
+                    System.Action makeAlliance = () => {
                         bool success = false;
                         EventsSystem.IsPlayerInitiated = true; // Block event popup from patch
 
@@ -492,8 +496,8 @@ namespace RulerBox
                             null,
                             // Pay
                             () => {
-                                KingdomMetricsSystem.Data myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
-                                if(myData.Treasury >= goldDemand) {
+                                var myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
+                                if(myData != null && myData.Treasury >= goldDemand) {
                                     myData.Treasury -= goldDemand;
                                     makeAlliance.Invoke();
                                 } else {
