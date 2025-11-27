@@ -207,6 +207,8 @@ namespace RulerBox
             le.preferredHeight = 75f; 
             le.minHeight = 75f; 
             le.flexibleHeight = 0f; 
+            le.preferredWidth = 20f; 
+            le.minWidth = 20f; 
 
             // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
@@ -230,7 +232,6 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 20f; 
             le.minWidth = 20f; 
-            le.flexibleWidth = 0f; 
             le.flexibleHeight = 1f;
 
             // Scroll Container
