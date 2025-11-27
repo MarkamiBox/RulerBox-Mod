@@ -57,18 +57,6 @@ namespace RulerBox
             rootV.childControlHeight = true;
             rootV.childForceExpandWidth = true;
             rootV.childForceExpandHeight = false;
-
-            // === 1. TITLE ===
-            var titleGO = new GameObject("Title", typeof(RectTransform));
-            titleGO.transform.SetParent(root.transform, false);
-            var titleText = titleGO.AddComponent<Text>();
-            titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            titleText.text = "Diplomatic Actions";
-            titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.color = Color.white;
-            titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 10;
-            titleText.resizeTextMaxSize = 14;
             
             var titleLE = titleGO.AddComponent<LayoutElement>();
             titleLE.minHeight = 24f;
@@ -344,7 +332,7 @@ namespace RulerBox
             v.childForceExpandHeight = false;
             
             var le = col.AddComponent<LayoutElement>();
-            le.preferredWidth = 110f; 
+            le.preferredWidth = 60f; 
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 0.1f;
 
