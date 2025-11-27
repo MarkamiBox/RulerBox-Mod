@@ -488,28 +488,23 @@ namespace RulerBox
         {
             var btnObj = new GameObject("KBtn_" + k.data.name, typeof(RectTransform));
             btnObj.transform.SetParent(kingdomListContent, false);
-            
-            // 1. Layout Element for the list
+            // Button Layout Element (Size in the list)
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 28f; // Slightly taller for better click area
-            le.minHeight = 28f;
+            le.preferredHeight = 16f;
+            le.minHeight = 16f;
             le.flexibleWidth = 1f;
-
-            // 2. Background Image (The HITBOX)
+            // Button Background
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 0.5f);
-            img.raycastTarget = true; // MUST BE TRUE to catch the click
-
-            // 3. Button Component
+            // Button
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
-                Debug.Log("Clicked Kingdom: " + k.data.name); // Uncomment to debug
+                Debug.Log("Clicked flag for: " + k.data.name);
                 DiplomacyActionsWindow.Open(k);
             });
-
-            // 4. Horizontal Layout for content
+            // Layout Group Settings
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 6;
             h.padding = new RectOffset(4, 4, 2, 2);
@@ -518,40 +513,29 @@ namespace RulerBox
             h.childControlHeight = true; 
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
-
-            // --- FLAG CONTAINER ---
+            // Flag Container 
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
-            
             var fLe = flagObj.AddComponent<LayoutElement>();
             fLe.minWidth = 18f;
             fLe.minHeight = 22f;
             fLe.preferredWidth = 18f;
             fLe.preferredHeight = 22f;
-            fLe.flexibleWidth = 0f;
-
-            // Flag Background (Visual only, no click)
+            fLe.flexibleWidth = 0f; 
+            // Flag Background
             var fBg = flagObj.AddComponent<Image>();
-            fBg.raycastTarget = false; // CRITICAL
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
-
-            // Flag Icon (Visual only, no click)
+            // Flag Icon
             var fIco = new GameObject("Ico", typeof(RectTransform));
             fIco.transform.SetParent(flagObj.transform, false);
             Stretch(fIco.GetComponent<RectTransform>());
-            
             var iImg = fIco.AddComponent<Image>();
-            iImg.raycastTarget = false; // CRITICAL
             iImg.sprite = k.getElementIcon();
             if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
-
-            // --- NAME TEXT ---
-            // CreateText helper usually sets raycastTarget=true for Text. We must disable it.
+            // Name Text 
             var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
-            txt.raycastTarget = false; // CRITICAL: Text blocks clicks by default in Unity UI
-            
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
             txtLE.flexibleWidth = 1f; 
             txtLE.minWidth = 10f;
