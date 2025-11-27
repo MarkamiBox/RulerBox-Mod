@@ -8,6 +8,7 @@ namespace RulerBox
     public static class EventsSystem
     {
         public static bool AllowPlayerWar = false;
+        public static bool IsPlayerInitiated = false;
         // ruler event data structure       
         private class RulerEvent
         {
@@ -103,10 +104,12 @@ namespace RulerBox
         // Called when a war is declared against our focused kingdom.
         public static void OnWarDeclared(Kingdom attacker, Kingdom defender, War war)
         {
+            if (IsPlayerInitiated) return;
+
             var me = Main.selectedKingdom;
             if (me == null || defender == null || attacker == null || war == null)
                 return;
-            if (AllowPlayerWar) return;
+
             // Only show event when THIS war is against the focused kingdom.
             if (defender != me)
                 return;
@@ -126,7 +129,8 @@ namespace RulerBox
         // Called when a war involving our focused kingdom ends with peace.
         public static void OnWarEndedWithPeace(War war)
         {
-            if (AllowPlayerWar) return;
+            if (IsPlayerInitiated) return;
+
             var me = Main.selectedKingdom;
             if (me == null || war == null)
                 return;
@@ -176,7 +180,8 @@ namespace RulerBox
         // Called when an alliance is formed that includes our focused kingdom.
         public static void OnAllianceFormed(Alliance alliance, Kingdom k1, Kingdom k2)
         {
-            if (AllowPlayerWar) return;
+            if (IsPlayerInitiated) return;
+            
             var me = Main.selectedKingdom;
             if (me == null || alliance == null || k1 == null || k2 == null)
                 return;
@@ -538,7 +543,6 @@ namespace RulerBox
         {
             if (__result == null || pKingdom == null || pKingdom2 == null)
                 return;
-
             EventsSystem.OnAllianceFormed(__result, pKingdom, pKingdom2);
         }
     }

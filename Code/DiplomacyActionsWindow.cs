@@ -339,21 +339,20 @@ namespace RulerBox
                         WorldTip.showNow("We are already at war!", false, "top", 2f, "#FF0000");
                         return;
                     }
-
-                    // Enable flags so the patch allows the war and prevents duplicate popups
                     EventsSystem.AllowPlayerWar = true;
+                    EventsSystem.IsPlayerInitiated = true;
                     try {
-                        var warAsset = AssetManager.war_types_library.get("war_whisper");
+                        // FIXED: Changed from "war_whisper" to "whisper_of_war" which is the standard Spite/War asset
+                        var warAsset = AssetManager.war_types_library.get("whisper_of_war");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
-                            
-                            // Show simple notification, no buttons needed
                             EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
                             Close();
                         }
-                    }
+                    } 
                     finally { 
                         EventsSystem.AllowPlayerWar = false; 
+                        EventsSystem.IsPlayerInitiated = false;
                     }
                 }
                 Refresh();
