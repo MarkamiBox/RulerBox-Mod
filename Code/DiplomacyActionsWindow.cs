@@ -257,7 +257,7 @@ namespace RulerBox
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 0.3f; // Takes remaining height
+            listLe.flexibleHeight = 0.1f; // Takes remaining height
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { 
                 lBg.sprite = windowInnerSprite; 
@@ -346,7 +346,7 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 110f; 
             le.flexibleWidth = 0f; 
-            le.flexibleHeight = 0.2f;
+            le.flexibleHeight = 0.1f;
 
             // Action Buttons (Colors Preserved)
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
@@ -414,7 +414,7 @@ namespace RulerBox
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            var txt = CreateText(btnObj.transform, label, 7, FontStyle.Bold, Color.white);
+            var txt = CreateText(btnObj.transform, label, 5, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
         }
@@ -449,7 +449,7 @@ namespace RulerBox
             btn.targetGraphic = img;
             btn.onClick.AddListener(Close);
 
-            var txt = CreateText(btnObj.transform, "Back", 10, FontStyle.Normal, Color.white);
+            var txt = CreateText(btnObj.transform, "Back", 7, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
         }
