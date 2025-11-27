@@ -435,39 +435,39 @@ namespace RulerBox
         {
             var chip = new GameObject("Rel_" + k.data.name, typeof(RectTransform));
             chip.transform.SetParent(parent, false);
-            // Chip Size
-            var rt = chip.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(20f, 20f);
-            // Layout Element
+            
             var le = chip.AddComponent<LayoutElement>();
-            le.minWidth = 9f; 
-            le.minHeight = 9f;
-            le.preferredWidth = 9f; 
-            le.preferredHeight = 9f;
-            // Background
+            le.minWidth = 18f; le.minHeight = 18f;
+            le.preferredWidth = 18f; le.preferredHeight = 18f;
+
             var bg = chip.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = borderColor;
-            // Button
+
+            // === BUTTON SETUP ===
             var btn = chip.AddComponent<Button>();
+            btn.targetGraphic = bg;
             btn.onClick.AddListener(() => { 
-                Debug.Log("Clicked flag for: " + k.data.name);
-                DiplomacyActionsWindow.Open(k);
+                // Debug.Log("Clicked flag for: " + k.data.name); // Uncomment to test
+                DiplomacyActionsWindow.Open(k); 
             });
-            // Icon Container
+
+            // === ICONS (Disable Raycast so they don't block the button) ===
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(chip.transform, false);
             Stretch(iconObj.GetComponent<RectTransform>(), 1);
-            // Icon and Background
+
             var fBg = iconObj.AddComponent<Image>();
-            fBg.raycastTarget = false;
+            fBg.raycastTarget = false; // CRITICAL FIX
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
+
             var ico = new GameObject("Ico", typeof(RectTransform));
             ico.transform.SetParent(iconObj.transform, false);
             Stretch(ico.GetComponent<RectTransform>());
+            
             var img = ico.AddComponent<Image>();
-            img.raycastTarget = false;
+            img.raycastTarget = false; // CRITICAL FIX
             img.sprite = k.getElementIcon();
             if (k.kingdomColor != null) img.color = k.kingdomColor.getColorBanner();
             else img.color = Color.white;
