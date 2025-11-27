@@ -489,27 +489,27 @@ namespace RulerBox
             var btnObj = new GameObject("KBtn_" + k.data.name, typeof(RectTransform));
             btnObj.transform.SetParent(kingdomListContent, false);
             
-            // Button Layout Element (Size in the list)
+            // Button Layout
             var le = btnObj.AddComponent<LayoutElement>();
             le.preferredHeight = 16f;
             le.minHeight = 16f;
             le.flexibleWidth = 1f;
-            
-            // Button Background
+
+            // Button Background (Target Graphic)
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
             img.color = new Color(0.2f, 0.2f, 0.22f, 0.5f);
-            
-            // Button
+            img.raycastTarget = true; // This MUST be true for the button to work
+
+            // Button Component
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
-                // Open the new window
-                // Debug.Log("Clicked kingdom: " + k.data.name); // Helpful for debugging
+                Debug.Log("Button Clicked for: " + k.data.name); 
                 DiplomacyActionsWindow.Open(k);
             });
 
-            // Layout Group Settings
+            // Layout Group
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 6;
             h.padding = new RectOffset(4, 4, 2, 2);
@@ -518,8 +518,8 @@ namespace RulerBox
             h.childControlHeight = true; 
             h.childForceExpandWidth = false;
             h.childForceExpandHeight = false;
-            
-            // Flag Container 
+
+            // === Flag Container ===
             var flagObj = new GameObject("Flag", typeof(RectTransform));
             flagObj.transform.SetParent(btnObj.transform, false);
             
@@ -530,27 +530,26 @@ namespace RulerBox
             fLe.preferredHeight = 22f;
             fLe.flexibleWidth = 0f; 
             
-            // Flag Background
+            // Flag Background - BLOCK RAYCASTS FALSE
             var fBg = flagObj.AddComponent<Image>();
-            fBg.raycastTarget = false; // <--- CRITICAL FIX: Must be false to let click through to button
+            fBg.raycastTarget = false; 
             fBg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) fBg.color = k.kingdomColor.getColorMain32();
 
-            // Flag Icon
+            // Flag Icon - BLOCK RAYCASTS FALSE
             var fIco = new GameObject("Ico", typeof(RectTransform));
             fIco.transform.SetParent(flagObj.transform, false);
             Stretch(fIco.GetComponent<RectTransform>());
             
             var iImg = fIco.AddComponent<Image>();
-            iImg.raycastTarget = false; // <--- CRITICAL FIX: Must be false to let click through to button
+            iImg.raycastTarget = false;
             iImg.sprite = k.getElementIcon();
             if (k.kingdomColor != null) iImg.color = k.kingdomColor.getColorBanner();
 
-            // Name Text 
+            // Name Text - BLOCK RAYCASTS FALSE
             var txt = CreateText(btnObj.transform, k.data.name, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
-            // Text also needs to ignore raycast just in case, though usually texts don't block unless they have raycastTarget=true (default false for simple text, but true for Text component)
-            txt.raycastTarget = false; 
+            txt.raycastTarget = false; // Ensure text doesn't block click
             
             var txtLE = txt.gameObject.AddComponent<LayoutElement>();
             txtLE.flexibleWidth = 1f; 
