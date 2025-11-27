@@ -568,7 +568,7 @@ namespace RulerBox
             if(alliesContent == null || warsContent == null) return;
 
             // Clear existing children
-            foreach (Transform t in alliesContent) UnityEngine.tObject.Destroy(t.gameObject);
+            foreach (Transform t in alliesContent) UnityEngine.Object.Destroy(t.gameObject);
             foreach (Transform t in warsContent) UnityEngine.Object.Destroy(t.gameObject);
 
             // Populate Allies
