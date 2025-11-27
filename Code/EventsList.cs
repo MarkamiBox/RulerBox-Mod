@@ -6,31 +6,30 @@ namespace RulerBox
 {
     public static class EventsList
     {
-        // Helper to access data quickly
+        // Helper to get KingdomMetricsSystem data
         private static KingdomMetricsSystem.Data GetData(Kingdom k)
         {
             return KingdomMetricsSystem.Get(k);
         }
-
-        public class EventDef
+        // Event Definitions
+        public class EventDef  
         {
             public string Id;
             public string Title;
             public string Text;
-            public string ImagePath; // Optional if you have images
+            public string ImagePath; // Optional image
             public Func<Kingdom, bool> Trigger;
             public List<EventOption> Options = new List<EventOption>();
         }
-
+        // Event Option Definition
         public class EventOption
         {
             public string Text;
             public string Tooltip;
             public Action<Kingdom> Action;
         }
-
         public static readonly List<EventDef> Definitions = new List<EventDef>();
-
+        // Static constructor to initialize events
         static EventsList()
         {
             // ==========================================
@@ -66,7 +65,6 @@ namespace RulerBox
                     }
                 }
             });
-
             // 2. Hyperinflation (Crisis)
             Definitions.Add(new EventDef
             {
@@ -89,9 +87,8 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             long debt = Math.Abs(d.Treasury);
-                            d.Treasury -= (long)(debt * 2f); // Dig hole deeper visually or wipe it? 
-                            // Based on text "Crippled economy":
-                            d.Treasury = -5000; // Reset to a flat debt
+                            d.Treasury -= (long)(debt * 2f); 
+                            //d.Treasury = -5000; // Reset to a flat debt
                             d.Stability -= 20f;
                             d.ActiveEffects.Add(new TimedEffect(120f, -0.2f)); // Negative drift
                         }
@@ -110,7 +107,6 @@ namespace RulerBox
                     }
                 }
             });
-
             // 3. IMF Intervention
             Definitions.Add(new EventDef
             {
@@ -143,11 +139,9 @@ namespace RulerBox
                     }
                 }
             });
-
             // ==========================================
             // UNREST & STRIKES
             // ==========================================
-
             // 4. Strikers Make Demands
             Definitions.Add(new EventDef
             {
@@ -181,7 +175,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Stability -= 10f;
-                            d.TaxRateLocal *= 0.8f; // Temp reduction logic would need a restore timer, simply hitting stab here
+                            d.TaxRateLocal *= 0.8f;
                             d.ActiveEffects.Add(new TimedEffect(60f, -0.2f));
                         }
                     },
@@ -194,13 +188,11 @@ namespace RulerBox
                             var d = GetData(k);
                             d.Stability -= 3f;
                             d.WarExhaustion += 0.5f;
-                            // Kill some population/manpower
                             d.ManpowerCurrent = (long)(d.ManpowerCurrent * 0.95f);
                         }
                     }
                 }
             });
-
             // 5. Mass Demonstrations
             Definitions.Add(new EventDef
             {
@@ -238,11 +230,9 @@ namespace RulerBox
                     }
                 }
             });
-
             // ==========================================
             // WAR & MILITARY
             // ==========================================
-
             // 6. Widespread Mutinies
             Definitions.Add(new EventDef
             {
@@ -276,7 +266,6 @@ namespace RulerBox
                     }
                 }
             });
-
             // 7. The Last Stand (Desperation Bonus)
             Definitions.Add(new EventDef
             {
@@ -305,11 +294,9 @@ namespace RulerBox
                     }
                 }
             });
-
             // ==========================================
             // INSURGENCY
             // ==========================================
-
             // 8. Spread of Insurgency
             Definitions.Add(new EventDef
             {
@@ -337,7 +324,6 @@ namespace RulerBox
                     }
                 }
             });
-
             // 9. Capital Bombing (Insurgency Event)
             Definitions.Add(new EventDef
             {
@@ -371,11 +357,9 @@ namespace RulerBox
                     }
                 }
             });
-
             // ==========================================
             // CORRUPTION & SCANDALS
             // ==========================================
-
             // 10. Public Scandal
             Definitions.Add(new EventDef
             {
@@ -408,7 +392,6 @@ namespace RulerBox
                     }
                 }
             });
-
             // 11. Corporate Dealing
             Definitions.Add(new EventDef
             {
@@ -437,8 +420,7 @@ namespace RulerBox
                     }
                 }
             });
-
-            // 12. A New Researcher (Utility)
+            // 12. A New Researcher
             Definitions.Add(new EventDef
             {
                 Id = "util_researcher",
@@ -455,11 +437,6 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 800;
-                            // Assuming TechSpeedMultiplier exists on the data class:
-                            // d.TechSpeedMultiplier += 0.1f; // Example boost
-                            // Fallback to a single-use tech gain if multiplier doesn't exist:
-                            // d.ResearchPoints += 300; 
-                            // Since we don't know the exact metrics system, we'll keep the action brief.
                         }
                     },
                     new EventOption
@@ -471,7 +448,7 @@ namespace RulerBox
                 }
             });
         }
-
+        // Method to get a random valid event for a kingdom
         public static EventDef GetRandomEvent(Kingdom k)
         {
             var valid = new List<EventDef>();
