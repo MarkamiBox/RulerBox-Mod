@@ -212,15 +212,15 @@ namespace RulerBox
             bg.color = new Color(0.15f, 0.15f, 0.15f, 0.3f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 6;
-            h.padding = new RectOffset(4, 4, 4, 4);
+            h.spacing = 2;
+            h.padding = new RectOffset(2, 2, 2, 2);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = true;
 
             var le = container.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f; // FIXED: Fills available vertical space
+            le.flexibleHeight = 0.5f; // FIXED: Fills available vertical space
 
             // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
