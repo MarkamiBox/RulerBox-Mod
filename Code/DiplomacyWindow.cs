@@ -273,7 +273,7 @@ namespace RulerBox
             le.flexibleWidth = 1f; 
             le.flexibleHeight = 1f;
             // Search Bar
-            /*var searchObj = new GameObject("SearchBox", typeof(RectTransform));
+            var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
             sLe.preferredHeight = 20f; 
@@ -284,7 +284,7 @@ namespace RulerBox
                 sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; 
             }
             sBg.color = new Color(0.2f, 0.2f, 0.2f, 0.3f);
-            searchInput = searchObj.AddComponent<InputField>();
+            /*searchInput = searchObj.AddComponent<InputField>();
             var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
             Stretch(phText.rectTransform, 4);
             searchInput.placeholder = phText;
