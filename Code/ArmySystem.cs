@@ -103,11 +103,10 @@ namespace RulerBox
         // Attempt to recruit an actor as a soldier
         private static void TryRecruit(Actor a)
         {
-            // Eligibility Check: Adult, not king/leader, not already soldier
+            // Eligibility Check: Adult, not king/leader, not already soldier, City capacity
             if (!a.isAdult()) return;
             if (a.isKing() || a.isCityLeader()) return;
             if (SoldierJobHelper.IsSoldier(a)) return;
-            // Check City capacity (Hard limit)
             if (a.city == null) return;
             // Check Manpower (Currency)
             var d = KingdomMetricsSystem.Get(a.kingdom);
@@ -126,36 +125,36 @@ namespace RulerBox
         {
             if (!SoldierJobHelper.IsSoldier(a)) return;
             a.setProfession(UnitProfession.Unit); // Revert to citizen
-            var d = KingdomMetricsSystem.Get(a.kingdom);             // Refund Manpower
+            var d = KingdomMetricsSystem.Get(a.kingdom); // Refund Manpower
             if (UnityEngine.Random.value < 0.33f)
             {
                 d.ManpowerCurrent++;
             }
             a.startColorEffect();
         }
-
+        // Update guard orders for soldiers
         private static void UpdateGuardOrders()
         {
-             if (guardOrders.Count == 0) return;
-             List<Actor> toRemove = new List<Actor>();
-
-             foreach (var kvp in guardOrders)
-             {
-                 var actor = kvp.Key;
-                 var order = kvp.Value;
-
-                 if (actor == null || actor.hasDied() || actor.kingdom != Main.selectedKingdom || !SoldierJobHelper.IsSoldier(actor))
-                 {
-                     toRemove.Add(actor);
-                     continue;
-                 }
-                 if (order.HomeTile == null) { toRemove.Add(actor); continue; }
-
-                 if (actor.current_tile != null)
-                 {
+            if (guardOrders.Count == 0) return;
+            List<Actor> toRemove = new List<Actor>();
+            // Iterate through guard orders
+            foreach (var kvp in guardOrders)
+            {
+                var actor = kvp.Key;
+                var order = kvp.Value;
+                if (actor == null || actor.hasDied() || actor.kingdom != Main.selectedKingdom || !SoldierJobHelper.IsSoldier(actor))
+                {
+                    toRemove.Add(actor);
+                    continue;
+                }
+                if (order.HomeTile == null) { 
+                    toRemove.Add(actor); 
+                    continue; 
+                }
+                if (actor.current_tile != null)
+                {
                      int distSq = Toolbox.SquaredDistTile(actor.current_tile, order.HomeTile);
                      int maxSq = order.RadiusTiles * order.RadiusTiles;
-
                      if (distSq > maxSq)
                      {
                          try { actor.cancelAllBeh(); } catch {}
@@ -163,16 +162,15 @@ namespace RulerBox
                      }
                  }
              }
-
              foreach(var a in toRemove) guardOrders.Remove(a);
         }
-
+        // Set guard point for currently selected soldiers
         private static void SetGuardPointForSelection()
         {
             if (lastSelection.Count == 0) return;
             WorldTile tile = World.world?.getMouseTilePos();
             if (tile == null) return;
-
+            // Assign guard orders
             int count = 0;
             foreach(var a in lastSelection)
             {
@@ -185,7 +183,7 @@ namespace RulerBox
             }
             WorldTip.showNow($"Guard point set for {count} soldiers", false, "top", 2f, "#9EE07A");
         }
-
+        // Clear guard points for currently selected soldiers
         private static void ClearGuardPointForSelection()
         {
             if (lastSelection.Count == 0) return;
@@ -196,7 +194,7 @@ namespace RulerBox
             }
             WorldTip.showNow($"Guard cleared for {count} soldiers", false, "top", 2f, "#9EE07A");
         }
-
+        // Issue move order to an actor
         private static void IssueMoveOrder(Actor actor, WorldTile tile)
         {
             if (actor == null || tile == null || miSetTileTarget == null) return;
