@@ -73,13 +73,21 @@ namespace RulerBox
         // ================================================================================================
         public static void SetVisible(bool visible)
         {
-            if (root != null) root.SetActive(visible);
+            if (root != null) 
+            {
+                root.SetActive(visible);
+                if (visible)
+                {
+                    // Reset cache so list rebuilds immediately on open
+                    lastSearchFilter = null; 
+                    lastKingdomCount = -1;
+                }
+            }
         }
         public static bool IsVisible() => root != null && root.activeSelf;
         public static void Refresh(Kingdom k)
         {
             if (!IsVisible() || k == null) return;
-
             // --- 1. Header Updates (Safe to update every frame for smooth visuals) ---
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
@@ -88,18 +96,14 @@ namespace RulerBox
                 mainColor = k.kingdomColor.getColorMain32();
                 bannerColor = k.kingdomColor.getColorBanner();
             }
-
             if (headerLeftFlagBg) { headerLeftFlagBg.color = mainColor; headerLeftFlagBg.sprite = k.getElementBackground(); }
             if (headerLeftFlagIcon) { headerLeftFlagIcon.color = bannerColor; headerLeftFlagIcon.sprite = k.getElementIcon(); }
-
             if (headerRightFlagBg) { headerRightFlagBg.color = mainColor; headerRightFlagBg.sprite = k.getElementBackground(); }
             if (headerRightFlagIcon) { headerRightFlagIcon.color = bannerColor; headerRightFlagIcon.sprite = k.getElementIcon(); }
-
             headerKingdomName.text = k.data.name;
             string ruler = k.king != null ? k.king.getName() : "None";
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {k.getPopulationTotal()}";
-
             // --- 2. List Rebuild Throttling (THE FIX) ---
             // Only check for list changes every 0.2 seconds to allow clicks to register
             refreshTimer += Time.unscaledDeltaTime;
@@ -107,18 +111,15 @@ namespace RulerBox
             {
                 refreshTimer = 0f;
                 RefreshRelations(k);
-
                 if (searchInput)
                 {
                     string currentFilter = searchInput.text;
                     // Check if the number of kingdoms in the world has changed (e.g. one died or spawned)
                     int currentCount = World.world.kingdoms.list.Count;
-
                     // Only destroy/recreate buttons if the filter changed OR the kingdom count changed
                     if (currentFilter != lastSearchFilter || currentCount != lastKingdomCount)
                     {
                         RefreshSearchList(currentFilter);
-                        
                         // Update cache
                         lastSearchFilter = currentFilter;
                         lastKingdomCount = currentCount;
