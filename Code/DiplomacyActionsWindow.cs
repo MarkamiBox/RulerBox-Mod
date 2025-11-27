@@ -46,7 +46,7 @@ namespace RulerBox
             // Background (Similar to Diplomacy Window)
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f); // Slightly different tint to distinguish
+            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.5f); // Slightly different tint to distinguish
 
             // Main Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
@@ -57,33 +57,12 @@ namespace RulerBox
             rootV.childControlHeight = true;
             rootV.childForceExpandWidth = true;
             rootV.childForceExpandHeight = false;
-
-            // === 1. TITLE ===
-            var titleGO = new GameObject("Title", typeof(RectTransform));
-            titleGO.transform.SetParent(root.transform, false);
-            var titleText = titleGO.AddComponent<Text>();
-            titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            titleText.text = "Diplomatic Actions";
-            titleText.alignment = TextAnchor.MiddleCenter;
-            titleText.color = Color.white;
-            titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 10;
-            titleText.resizeTextMaxSize = 14;
-            
-            var titleLE = titleGO.AddComponent<LayoutElement>();
-            titleLE.minHeight = 20f;
-            titleLE.preferredHeight = 20f;
-            titleLE.flexibleHeight = 0;
-
             // === 2. HEADER PANEL (Target Kingdom Info) ===
             CreateHeader(root.transform);
-
             // === 3. SPLIT SECTION (Relations Left | Actions Right) ===
             CreateSplitSection(root.transform);
-
             // === 4. BOTTOM CLOSE BUTTON ===
             CreateBottomBar(root.transform);
-
             root.SetActive(false);
         }
 
