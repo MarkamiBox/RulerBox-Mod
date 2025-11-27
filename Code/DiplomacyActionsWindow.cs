@@ -518,7 +518,7 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 2); 
+            Stretch(iconObj.GetComponent<RectTransform>(), 1); 
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
