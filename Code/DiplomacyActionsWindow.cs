@@ -381,7 +381,7 @@ namespace RulerBox
         private static void CreateDiplomacyBtn(string label, Color color, System.Action onClick)
         {
             var btnObj = new GameObject("Btn_" + label, typeof(RectTransform));
-            btnObj.transform.SetParent(actionsListContent ?? root.transform.Find("SplitView/RightCol"), false); // Fallback find if static init order issue
+            btnObj.transform.SetParent(root.transform.Find("SplitView/RightCol"), false); // Fallback find if static init order issue
             
             if(btnObj.transform.parent == null) return; // Safety
 
