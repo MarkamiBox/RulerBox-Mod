@@ -43,10 +43,10 @@ namespace RulerBox
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
-            // Background (Similar to Diplomacy Window)
+            // Background
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f); // Slightly different tint to distinguish
+            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f);
 
             // Main Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
@@ -75,10 +75,10 @@ namespace RulerBox
             titleLE.preferredHeight = 20f;
             titleLE.flexibleHeight = 0;
 
-            // === 2. HEADER PANEL (Target Kingdom Info) ===
+            // === 2. HEADER PANEL ===
             CreateHeader(root.transform);
 
-            // === 3. SPLIT SECTION (Relations Left | Actions Right) ===
+            // === 3. SPLIT SECTION ===
             CreateSplitSection(root.transform);
 
             // === 4. BOTTOM CLOSE BUTTON ===
@@ -113,7 +113,7 @@ namespace RulerBox
         {
             if (!IsVisible() || targetKingdom == null) return;
 
-            // 1. Header
+            // 1. Header Logic
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
 
@@ -123,21 +123,18 @@ namespace RulerBox
                 bannerColor = targetKingdom.kingdomColor.getColorBanner();
             }
 
-            // Left Flag
             if (headerLeftFlagBg) { headerLeftFlagBg.color = mainColor; headerLeftFlagBg.sprite = targetKingdom.getElementBackground(); }
             if (headerLeftFlagIcon) { headerLeftFlagIcon.color = bannerColor; headerLeftFlagIcon.sprite = targetKingdom.getElementIcon(); }
 
-            // Right Flag
             if (headerRightFlagBg) { headerRightFlagBg.color = mainColor; headerRightFlagBg.sprite = targetKingdom.getElementBackground(); }
             if (headerRightFlagIcon) { headerRightFlagIcon.color = bannerColor; headerRightFlagIcon.sprite = targetKingdom.getElementIcon(); }
 
-            // Text
             headerKingdomName.text = targetKingdom.data.name;
             string ruler = targetKingdom.king != null ? targetKingdom.king.getName() : "None";
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {targetKingdom.getPopulationTotal()}";
 
-            // 2. Relations (Left Column)
+            // 2. Relations
             RefreshRelationsList();
         }
 
@@ -147,7 +144,6 @@ namespace RulerBox
 
         private static void CreateHeader(Transform parent)
         {
-            // Same structure as DiplomacyWindow header
             var container = new GameObject("HeaderPanel", typeof(RectTransform));
             container.transform.SetParent(parent, false);
             
@@ -168,10 +164,8 @@ namespace RulerBox
             le.minHeight = 50f;
             le.flexibleHeight = 0;
 
-            // Left Flag
             CreateFlag(container.transform, "FlagLeft", out headerLeftFlagBg, out headerLeftFlagIcon);
 
-            // Info Text Stack
             var infoStack = new GameObject("InfoStack", typeof(RectTransform));
             infoStack.transform.SetParent(container.transform, false);
             var v = infoStack.AddComponent<VerticalLayoutGroup>();
@@ -188,7 +182,6 @@ namespace RulerBox
             headerPopInfo = CreateText(infoStack.transform, "Pop", 6, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
             headerPopInfo.alignment = TextAnchor.MiddleCenter;
 
-            // Right Flag
             CreateFlag(container.transform, "FlagRight", out headerRightFlagBg, out headerRightFlagIcon);
         }
 
@@ -213,6 +206,7 @@ namespace RulerBox
 
         private static void CreateSplitSection(Transform parent)
         {
+            // Note: Named "SplitSection" here. The Find() call must match this.
             var container = new GameObject("SplitSection", typeof(RectTransform));
             container.transform.SetParent(parent, false);
 
@@ -231,10 +225,7 @@ namespace RulerBox
             var le = container.AddComponent<LayoutElement>();
             le.flexibleHeight = 1f;
 
-            // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
-
-            // === Right Column (Action Buttons) ===
             CreateRightColumn(container.transform);
         }
 
@@ -254,13 +245,11 @@ namespace RulerBox
             le.flexibleWidth = 1f; 
             le.flexibleHeight = 1f;
 
-            // Label
             var label = CreateText(col.transform, "Relations", 8, FontStyle.Bold, new Color(0.8f, 0.8f, 0.8f));
             label.alignment = TextAnchor.MiddleCenter;
             var lLe = label.gameObject.AddComponent<LayoutElement>();
             lLe.minHeight = 14f; lLe.preferredHeight = 14f; lLe.flexibleHeight = 0;
 
-            // Scroll Container for Allies and Wars
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
@@ -298,7 +287,6 @@ namespace RulerBox
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
 
-            // Create containers inside the scroll for Allies and Wars
             alliesContent = CreateRelationSubSection(relationsContent, "Allies", new Color(0, 0.3f, 0, 0.2f));
             warsContent = CreateRelationSubSection(relationsContent, "Wars", new Color(0.3f, 0, 0, 0.2f));
         }
@@ -320,11 +308,9 @@ namespace RulerBox
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = bgCol;
 
-            // Title
             var txt = CreateText(section.transform, title, 8, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleLeft;
             
-            // Grid for flags
             var gridObj = new GameObject("Grid", typeof(RectTransform));
             gridObj.transform.SetParent(section.transform, false);
             var grid = gridObj.AddComponent<GridLayoutGroup>();
@@ -358,17 +344,15 @@ namespace RulerBox
                     World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, AssetManager.war_types_library.get("conquest"), true);
                     WorldTip.showNow("War Declared!", false, "top", 2f, "#FF0000");
                     Refresh();
-                    DiplomacyWindow.Refresh(Main.selectedKingdom); // Refresh main window too
+                    DiplomacyWindow.Refresh(Main.selectedKingdom);
                 }
             });
 
             CreateDiplomacyBtn("Form Alliance", Color.green, () => {
                  if(Main.selectedKingdom != null && targetKingdom != null)
                 {
-                    // Simplified alliance check/creation
-                    if(World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom) == null) // No relation?
+                    if(World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom) == null)
                     {
-                         // Need Alliance Manager access usually, simplified:
                          WorldTip.showNow("Alliance Proposal Sent (Simulated)", false, "top", 2f, "#00FF00");
                     }
                 }
@@ -382,9 +366,11 @@ namespace RulerBox
         private static void CreateDiplomacyBtn(string label, Color color, System.Action onClick)
         {
             var btnObj = new GameObject("Btn_" + label, typeof(RectTransform));
-            btnObj.transform.SetParent(root.transform.Find("SplitView/RightCol"), false); // Fallback find if static init order issue
             
-            if(btnObj.transform.parent == null) return; // Safety
+            // FIX: Corrected the Find path from "SplitView/RightCol" to "SplitSection/RightCol"
+            btnObj.transform.SetParent(root.transform.Find("SplitSection/RightCol"), false);
+            
+            if(btnObj.transform.parent == null) return; 
 
             var le = btnObj.AddComponent<LayoutElement>();
             le.preferredHeight = 30f; 
@@ -393,7 +379,7 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(color.r * 0.7f, color.g * 0.7f, color.b * 0.7f, 1f); // Darker bg
+            img.color = new Color(color.r * 0.7f, color.g * 0.7f, color.b * 0.7f, 1f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -431,17 +417,11 @@ namespace RulerBox
             Stretch(txt.rectTransform);
         }
 
-        // ================================================================================================
-        // REFRESH LOGIC
-        // ================================================================================================
-
         private static void RefreshRelationsList()
         {
-            // Clear grids
             foreach (Transform t in alliesContent) Object.Destroy(t.gameObject);
             foreach (Transform t in warsContent) Object.Destroy(t.gameObject);
 
-            // Allies
             if (targetKingdom.hasAlliance())
             {
                 foreach (var ally in targetKingdom.getAlliance().kingdoms_list)
@@ -451,7 +431,6 @@ namespace RulerBox
                 }
             }
 
-            // Wars
             var wars = World.world.wars.getWars(targetKingdom);
             foreach (var war in wars)
             {
@@ -473,31 +452,23 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // No LayoutElement needed here because GridLayoutGroup controls size (18x18)
-            
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) bg.color = k.kingdomColor.getColorMain32();
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 1); // 1px padding
+            Stretch(iconObj.GetComponent<RectTransform>(), 1);
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
             if (k.kingdomColor != null) ico.color = k.kingdomColor.getColorBanner();
 
-            // Optional: Add tooltip or click to inspect that kingdom recursively?
             var btn = flagObj.AddComponent<Button>();
             btn.onClick.AddListener(() => {
-                 // Recursively open for this new kingdom?
                  Open(k);
             });
         }
-
-        // ================================================================================================
-        // HELPERS
-        // ================================================================================================
 
         private static Text CreateText(Transform parent, string content, int size, FontStyle style, Color col)
         {
