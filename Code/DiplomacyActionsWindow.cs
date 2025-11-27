@@ -82,7 +82,7 @@ namespace RulerBox
             CreateSplitSection(root.transform);
 
             // === 4. BOTTOM CLOSE BUTTON ===
-            CreateBottomBar(root.transform);
+            //CreateBottomBar(root.transform);
 
             root.SetActive(false);
         }
@@ -221,7 +221,7 @@ namespace RulerBox
 
             // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
-            le.flexibleHeight = 0.5f; 
+            le.flexibleHeight = 0.2f; 
 
             // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
