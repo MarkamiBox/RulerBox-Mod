@@ -258,23 +258,21 @@ namespace RulerBox
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
             listLe.flexibleHeight = 0.5f; // Takes remaining height
-            
             var lBg = listObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; }
+            if (windowInnerSprite != null) { 
+                lBg.sprite = windowInnerSprite; 
+                lBg.type = Image.Type.Sliced; 
+            }
             lBg.color = new Color(0, 0, 0, 0.2f);
-
             var scroll = listObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(listObj.transform, false);
             Stretch(viewport.GetComponent<RectTransform>());
             viewport.AddComponent<RectMask2D>();
-
             var content = new GameObject("Content", typeof(RectTransform));
             content.transform.SetParent(viewport.transform, false);
-            
             var vList = content.AddComponent<VerticalLayoutGroup>();
             vList.childAlignment = TextAnchor.UpperLeft;
             vList.spacing = 4; 
@@ -283,14 +281,13 @@ namespace RulerBox
             vList.childControlHeight = true;
             vList.childForceExpandWidth = true;
             vList.childForceExpandHeight = false;
-
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
-
+            cRT.anchorMin = new Vector2(0, 1); 
+            cRT.anchorMax = new Vector2(1, 1); 
+            cRT.pivot = new Vector2(0.5f, 1);
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
-
             // Create Subsections
             alliesGrid = CreateRelationSubSection(content.transform, "Allies", new Color(0, 0.3f, 0, 0.2f));
             warsGrid = CreateRelationSubSection(content.transform, "Wars", new Color(0.3f, 0, 0, 0.2f));
@@ -349,7 +346,7 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 110f; 
             le.flexibleWidth = 0f; 
-            le.flexibleHeight = 1f;
+            le.flexibleHeight = 0.5f;
 
             // Action Buttons (Colors Preserved)
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
