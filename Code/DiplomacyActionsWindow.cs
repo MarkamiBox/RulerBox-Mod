@@ -257,7 +257,7 @@ namespace RulerBox
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 0.5f; // Takes remaining height
+            listLe.flexibleHeight = 0f; // Takes remaining height
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { 
                 lBg.sprite = windowInnerSprite; 
