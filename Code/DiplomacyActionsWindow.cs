@@ -228,8 +228,8 @@ namespace RulerBox
             v.childForceExpandHeight = false;
 
             var le = col.AddComponent<LayoutElement>();
-            le.preferredWidth = 50f; 
-            le.minWidth = 50f; 
+            le.preferredWidth = 20f; 
+            le.minWidth = 20f; 
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 1f;
 
