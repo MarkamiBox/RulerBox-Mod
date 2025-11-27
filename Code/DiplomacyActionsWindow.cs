@@ -287,7 +287,7 @@ namespace RulerBox
             v.spacing = 4;
             v.padding = new RectOffset(4, 4, 4, 4);
             v.childControlWidth = true;
-            v.childControlHeight = false;
+            v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
 
@@ -324,7 +324,7 @@ namespace RulerBox
             v.spacing = 2; 
             v.padding = new RectOffset(0,0,5,0);
             v.childControlWidth = true; 
-            v.childControlHeight = false; 
+            v.childControlHeight = true; 
             v.childForceExpandWidth = true; 
             v.childForceExpandHeight = false;
             
