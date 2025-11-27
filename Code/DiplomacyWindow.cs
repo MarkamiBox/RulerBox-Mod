@@ -501,9 +501,8 @@ namespace RulerBox
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => {
-                Main.selectedKingdom = k;
-                HubUI.Refresh();
-                TopPanelUI.Refresh();
+                Debug.Log("Clicked flag for: " + k.data.name);
+                DiplomacyActionsWindow.Open(k);
             });
             // Layout Group Settings
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
