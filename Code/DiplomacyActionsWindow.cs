@@ -472,7 +472,7 @@ namespace RulerBox
                             WorldTip.showNow("Conflicting alliances.", false, "top", 2f, "#FFFF00");
                         }
 
-                        EventsSystem.IsPlayerInitiated = false;
+                        EventsSystem.AllowPlayerWar = false;
 
                         if (success) {
                             WorldTip.showNow("Alliance formed!", false, "top", 2f, "#9EE07A");
