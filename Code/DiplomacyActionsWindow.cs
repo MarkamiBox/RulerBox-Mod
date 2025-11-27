@@ -224,11 +224,11 @@ namespace RulerBox
             col.transform.SetParent(parent, false);
             
             var v = col.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 2;
+            v.spacing = 4;
             v.padding = new RectOffset(4, 4, 4, 4);
-            v.childControlWidth = false;
-            v.childControlHeight = false;
-            v.childForceExpandWidth = false;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
 
             var le = col.AddComponent<LayoutElement>();
@@ -335,7 +335,6 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 60f; 
             le.flexibleWidth = 0f; 
-            le.flexibleHeight = 0f;
 
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
@@ -505,7 +504,6 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // CRITICAL ADDITION: Layout Element to define size in Horizontal Group
             var le = flagObj.AddComponent<LayoutElement>();
             le.minWidth = 15f;
             le.minHeight = 15f;
@@ -518,7 +516,7 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 1); 
+            //Stretch(iconObj.GetComponent<RectTransform>(), 1); 
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
