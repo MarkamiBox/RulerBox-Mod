@@ -55,6 +55,7 @@ namespace RulerBox
             EconomicLawsWindow.Initialize(contentContainer.transform);
             InvestmentsWindow.Initialize(contentContainer.transform); 
             DiplomacyWindow.Initialize(contentContainer.transform);
+            DiplomacyActionsWindow.Initialize(contentContainer.transform);
             TechnologyWindow.Initialize(contentContainer.transform);
 
             SetTab(HubTab.Economy);
