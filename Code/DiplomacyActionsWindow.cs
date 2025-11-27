@@ -428,7 +428,7 @@ namespace RulerBox
                     var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
                     int score = opinion != null ? opinion.total : 0;
 
-                    if (score < 20)
+                    if (score < 30)
                     {
                         WorldTip.showNow($"They refuse the alliance! (Opinion: {score}/20)", false, "top", 2f, "#FF5A5A");
                         return;
@@ -495,6 +495,8 @@ namespace RulerBox
                         WorldTip.showNow($"They distrust us too much for a pact. (Opinion: {score})", false, "top", 2f, "#FF5A5A");
                         return;
                     }
+
+                    World.world.diplomacy.eventFriendship(Main.selectedKingdom);
 
                     // 2. Execute Pact Logic (Simulated + Event)
                     // We can simulate the "Prevent Attack" by giving a temporary relation boost or simply Roleplaying it via the event system
