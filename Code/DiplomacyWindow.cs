@@ -276,8 +276,8 @@ namespace RulerBox
             var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
-            sLe.preferredHeight = 17f; 
-            sLe.minHeight = 17f; 
+            sLe.preferredHeight = 20f; 
+            sLe.minHeight = 20f; 
             sLe.flexibleHeight = 0;
             var sBg = searchObj.AddComponent<Image>();
             if (windowInnerSprite != null) { 
