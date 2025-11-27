@@ -20,10 +20,10 @@ namespace RulerBox
         private static Text headerRulerInfo;
         private static Text headerPopInfo;
 
+        // These transform references point to the "Grid" game object where flags go
         private static Transform alliesGrid;
         private static Transform warsGrid;
-        private static Transform rightColumn; // Reference for buttons
-
+        
         private static Kingdom targetKingdom;
 
         public static void Initialize(Transform parent)
@@ -36,7 +36,7 @@ namespace RulerBox
             root = new GameObject("DiplomacyActionsRoot", typeof(RectTransform));
             root.transform.SetParent(parent, false);
 
-            // Stretch to fill the content container completely
+            // Stretch to fill parent completely
             var rt = root.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
@@ -51,8 +51,8 @@ namespace RulerBox
             // Main Vertical Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
             rootV.childAlignment = TextAnchor.UpperCenter;
-            rootV.spacing = 6;
-            rootV.padding = new RectOffset(6, 6, 6, 6);
+            rootV.spacing = 4;
+            rootV.padding = new RectOffset(4, 4, 4, 4);
             rootV.childControlWidth = true;
             rootV.childControlHeight = true;
             rootV.childForceExpandWidth = true;
@@ -67,8 +67,8 @@ namespace RulerBox
             titleText.alignment = TextAnchor.MiddleCenter;
             titleText.color = Color.white;
             titleText.resizeTextForBestFit = true;
-            titleText.resizeTextMinSize = 12;
-            titleText.resizeTextMaxSize = 16;
+            titleText.resizeTextMinSize = 10;
+            titleText.resizeTextMaxSize = 14;
             
             var titleLE = titleGO.AddComponent<LayoutElement>();
             titleLE.minHeight = 24f;
@@ -78,7 +78,7 @@ namespace RulerBox
             // === 2. HEADER PANEL ===
             CreateHeader(root.transform);
 
-            // === 3. SPLIT SECTION (Left: Relations | Right: Buttons) ===
+            // === 3. SPLIT SECTION (Relations & Buttons) ===
             CreateSplitSection(root.transform);
 
             // === 4. BOTTOM CLOSE BUTTON ===
@@ -112,7 +112,7 @@ namespace RulerBox
         {
             if (!IsVisible() || targetKingdom == null) return;
 
-            // --- Header Update ---
+            // --- Update Header Info ---
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
 
@@ -132,7 +132,7 @@ namespace RulerBox
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {targetKingdom.getPopulationTotal()}";
 
-            // --- Relations List Update ---
+            // --- Update Flags ---
             RefreshRelationsList();
         }
 
@@ -160,7 +160,7 @@ namespace RulerBox
             var le = container.AddComponent<LayoutElement>();
             le.preferredHeight = 50f;
             le.minHeight = 50f;
-            le.flexibleHeight = 0; // Fixes height
+            le.flexibleHeight = 0; // FIXED: Fixed height
 
             CreateFlag(container.transform, "FlagLeft", out headerLeftFlagBg, out headerLeftFlagIcon);
 
@@ -220,12 +220,12 @@ namespace RulerBox
             h.childForceExpandHeight = true;
 
             var le = container.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f; // Takes all remaining vertical space
+            le.flexibleHeight = 1f; // FIXED: Fills available vertical space
 
-            // === Left Column (Lists) ===
+            // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
 
-            // === Right Column (Buttons) ===
+            // === Right Column (Action Buttons) ===
             CreateRightColumn(container.transform);
         }
 
@@ -246,7 +246,7 @@ namespace RulerBox
             le.flexibleHeight = 1f;
 
             // Label
-            var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.9f));
+            var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.5f));
             label.alignment = TextAnchor.MiddleCenter;
             var lLe = label.gameObject.AddComponent<LayoutElement>();
             lLe.minHeight = 16f; lLe.preferredHeight = 16f; lLe.flexibleHeight = 0;
@@ -255,7 +255,7 @@ namespace RulerBox
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 1f; // Fills vertical space
+            listLe.flexibleHeight = 1f; // Takes remaining height
             
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; }
@@ -289,7 +289,7 @@ namespace RulerBox
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
 
-            // Create Subsections (References stored for Refresh)
+            // Create Subsections
             alliesGrid = CreateRelationSubSection(content.transform, "Allies", new Color(0, 0.3f, 0, 0.2f));
             warsGrid = CreateRelationSubSection(content.transform, "Wars", new Color(0.3f, 0, 0, 0.2f));
         }
@@ -300,7 +300,7 @@ namespace RulerBox
             section.transform.SetParent(parent, false);
             
             var v = section.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 2;
+            v.spacing = 4;
             v.padding = new RectOffset(4, 4, 4, 4);
             v.childControlWidth = true;
             v.childControlHeight = true;
@@ -320,11 +320,11 @@ namespace RulerBox
             gridObj.transform.SetParent(section.transform, false);
             
             var grid = gridObj.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(22, 22); // Slightly bigger flags
+            grid.cellSize = new Vector2(22, 22);
             grid.spacing = new Vector2(4, 4);
             grid.constraint = GridLayoutGroup.Constraint.Flexible;
 
-            // FIX: ContentSizeFitter ensures the grid has height, otherwise it's 0 and invisible
+            // CRITICAL FIX: The Grid needs a ContentSizeFitter to have height in a Vertical Layout
             var fitter = gridObj.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
@@ -335,7 +335,6 @@ namespace RulerBox
         {
             var col = new GameObject("RightCol", typeof(RectTransform));
             col.transform.SetParent(parent, false);
-            rightColumn = col.transform;
 
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = 6; 
@@ -350,7 +349,7 @@ namespace RulerBox
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 1f;
 
-            // Action Buttons (Parented directly here)
+            // Action Buttons
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -379,7 +378,7 @@ namespace RulerBox
         private static void CreateDiplomacyBtn(Transform parent, string label, Color color, System.Action onClick)
         {
             var btnObj = new GameObject("Btn_" + label, typeof(RectTransform));
-            btnObj.transform.SetParent(parent, false); // Direct parenting
+            btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
             le.preferredHeight = 35f; 
@@ -412,7 +411,7 @@ namespace RulerBox
             var le = row.AddComponent<LayoutElement>();
             le.preferredHeight = 24f; 
             le.minHeight = 24f; 
-            le.flexibleHeight = 0; // Fix: Prevents stretching vertically
+            le.flexibleHeight = 0; // FIXED: Fixed height to prevent stretching
 
             var btnObj = new GameObject("CloseBtn", typeof(RectTransform));
             btnObj.transform.SetParent(row.transform, false);
@@ -442,11 +441,11 @@ namespace RulerBox
         {
             if(alliesGrid == null || warsGrid == null) return;
 
-            // Clear grids
+            // Clear existing children
             foreach (Transform t in alliesGrid) Object.Destroy(t.gameObject);
             foreach (Transform t in warsGrid) Object.Destroy(t.gameObject);
 
-            // Allies
+            // Populate Allies
             if (targetKingdom.hasAlliance())
             {
                 foreach (var ally in targetKingdom.getAlliance().kingdoms_list)
@@ -456,7 +455,7 @@ namespace RulerBox
                 }
             }
 
-            // Wars
+            // Populate Wars
             var wars = World.world.wars.getWars(targetKingdom);
             foreach (var war in wars)
             {
@@ -478,7 +477,7 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // Layout handled by Grid
+            // No LayoutElement needed because GridLayoutGroup on parent controls child size
             
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
@@ -486,7 +485,7 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            Stretch(iconObj.GetComponent<RectTransform>(), 2); // padding
+            Stretch(iconObj.GetComponent<RectTransform>(), 2); // small padding
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
@@ -494,7 +493,7 @@ namespace RulerBox
 
             var btn = flagObj.AddComponent<Button>();
             btn.onClick.AddListener(() => {
-                 Open(k);
+                 Open(k); // Click flag to inspect THAT kingdom
             });
         }
 
