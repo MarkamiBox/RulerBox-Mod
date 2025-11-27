@@ -22,10 +22,11 @@ namespace RulerBox
 
         void Awake()
         {
+            // Setup
             instance = this;
             Config.show_console_on_error = false;
             ModPath = AppDomain.CurrentDomain.BaseDirectory;
-
+            //UI Initialization
             HubUI.Initialize();
             EventsUI.Initialize();
             TopPanelUI.Initialize();
@@ -33,23 +34,19 @@ namespace RulerBox
 
         private void Update()
         {
-            if (Input.GetKeyDown(KeyCode.K)) SelectKingdom();
-
-            if (Main.selectedKingdom != null)
+            if (Input.GetKeyDown(KeyCode.K)) SelectKingdom();   // Select kingdom on key press
+            if (Main.selectedKingdom != null)   // Update systems if a kingdom is selected
             {
                 if (!Main.selectedKingdom.isAlive() || Main.selectedKingdom.data == null)
                 {
                     ClearSelection();
                     return;
                 }
-
+                // Update various systems
                 ArmySystem.Tick(Time.unscaledDeltaTime);
-
                 if (World.world.isPaused()) return;
-                
-                float dt = World.world.delta_time; 
+                float dt = World.world.delta_time; // Use game time
                 if (dt <= 0f) return;
-
                 KingdomMetricsSystem.Tick(dt);
                 HubUI.Refresh();
                 TopPanelUI.Refresh();
@@ -58,31 +55,26 @@ namespace RulerBox
                 DiplomacyWindow.Refresh(Main.selectedKingdom);
             }
         }
-
+        // Select the kingdom under the mouse cursor
         private void SelectKingdom()
         {
             var pTile = World.world.getMouseTilePos();
             Kingdom kingdom = null;
-
             if (pTile != null && !World.world.isBusyWithUI())
             {
                 var city = pTile.zone?.city;
                 kingdom = city?.kingdom;
             }
-
             if (kingdom == null)
             {
                 WorldTip.showNow("No kingdom found under cursor.", false, "top", 2f, "#ff0000ff");
                 return;
             }
-
             selectedKingdom = kingdom;
             SelectedMetas.selected_kingdom = kingdom;
             kingdom.addTrait("tax_rate_tribute_low"); 
-
             HubUI.SetVisibility(true);
             EventsUI.SetVisible(true);
-
             WorldTip.showNow($"<b>RulerBox</b>: Focused <b>{kingdom.data.name}</b>", false, "top", 2f, "#9EE07A");
         }
 
