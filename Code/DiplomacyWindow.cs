@@ -465,9 +465,7 @@ namespace RulerBox
             // Button
             var btn = chip.AddComponent<Button>();
             btn.onClick.AddListener(() => { 
-                Main.selectedKingdom = k; 
-                HubUI.Refresh(); 
-                TopPanelUI.Refresh(); 
+                DiplomacyActionsWindow.Open(k);
             });
         }
         // Refresh Kingdom Search List
