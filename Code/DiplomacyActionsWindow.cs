@@ -276,44 +276,45 @@ namespace RulerBox
 
         private static Transform CreateRelationSubSection(Transform parent, string title, Color bgCol)
         {
-            var section = new GameObject(title + "Section", typeof(RectTransform));
-            section.transform.SetParent(parent, false);
-            
-            var v = section.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4;
-            v.padding = new RectOffset(4, 4, 4, 4);
-            v.childControlWidth = false;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = false;
-            v.childForceExpandHeight = false;
-            v.preferredWidth = 20f; 
-            v.minWidth = 20f; 
-
-            var bg = section.AddComponent<Image>();
-            if (windowInnerSprite != null) { 
-                bg.sprite = windowInnerSprite; 
-                bg.type = Image.Type.Sliced; 
-            }
-            bg.color = bgCol;
-
-            // Title
-            var txt = CreateText(section.transform, title, 9, FontStyle.Bold, Color.white);
-            txt.alignment = TextAnchor.MiddleLeft;
-            
-            // Grid for flags
-            var gridObj = new GameObject("Grid", typeof(RectTransform));
-            gridObj.transform.SetParent(section.transform, false);
-            
-            var grid = gridObj.AddComponent<GridLayoutGroup>();
-            grid.cellSize = new Vector2(22, 22);
-            grid.spacing = new Vector2(4, 4);
-            grid.constraint = GridLayoutGroup.Constraint.Flexible;
-
-            // FIX: Grid needs ContentSizeFitter to expand properly in a Vertical Layout
-            //var fitter = gridObj.AddComponent<ContentSizeFitter>();
-            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-
-            return gridObj.transform;
+            var rowObj = new GameObject(name, typeof(RectTransform));
+            rowObj.transform.SetParent(parent, false);
+            // Background
+            var bg = rowObj.AddComponent<Image>();
+            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
+            bg.color = tint;
+            // ScrollRect
+            var scroll = rowObj.AddComponent<ScrollRect>();
+            scroll.horizontal = true; scroll.vertical = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            // Viewport
+            var viewport = new GameObject("Viewport", typeof(RectTransform));
+            viewport.transform.SetParent(rowObj.transform, false);
+            Stretch(viewport.GetComponent<RectTransform>(), 1);
+            viewport.AddComponent<RectMask2D>();
+            viewport.AddComponent<Image>().color = Color.clear;
+            // CONTENT
+            var contentObj = new GameObject("Content", typeof(RectTransform));
+            contentObj.transform.SetParent(viewport.transform, false);
+            // Layout
+            var h = contentObj.AddComponent<HorizontalLayoutGroup>();
+            h.childAlignment = TextAnchor.MiddleLeft;
+            h.spacing = 2;
+            h.childControlWidth = false; 
+            h.childControlHeight = false;
+            h.childForceExpandWidth = false; 
+            h.childForceExpandHeight = false;
+            // RectTransform
+            var cRT = contentObj.GetComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
+            cRT.pivot = new Vector2(0, 0.5f);
+            // Force size to match viewport height
+            var fitter = contentObj.AddComponent<ContentSizeFitter>();
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            // Link ScrollRect
+            scroll.viewport = viewport.GetComponent<RectTransform>();
+            scroll.content = cRT;
+            return contentObj.transform;
         }
 
         private static void CreateRightColumn(Transform parent)
