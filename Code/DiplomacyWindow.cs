@@ -31,6 +31,10 @@ namespace RulerBox
         private static Text textWarExhaustion;
         private static Text textPoliticalPower;
         private static Text textStability;
+        // --- Optimization Variables ---
+        private static string lastSearchFilter = null;
+        private static int lastKingdomCount = -1;
+        private static float refreshTimer = 0f;
         // ================================================================================================
         public static void Initialize(Transform parent)
         {
@@ -75,6 +79,8 @@ namespace RulerBox
         public static void Refresh(Kingdom k)
         {
             if (!IsVisible() || k == null) return;
+
+            // --- 1. Header Updates (Safe to update every frame for smooth visuals) ---
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
             if (k.kingdomColor != null)
@@ -82,22 +88,43 @@ namespace RulerBox
                 mainColor = k.kingdomColor.getColorMain32();
                 bannerColor = k.kingdomColor.getColorBanner();
             }
-            // Left Flag
+
             if (headerLeftFlagBg) { headerLeftFlagBg.color = mainColor; headerLeftFlagBg.sprite = k.getElementBackground(); }
             if (headerLeftFlagIcon) { headerLeftFlagIcon.color = bannerColor; headerLeftFlagIcon.sprite = k.getElementIcon(); }
-            // Right Flag
+
             if (headerRightFlagBg) { headerRightFlagBg.color = mainColor; headerRightFlagBg.sprite = k.getElementBackground(); }
             if (headerRightFlagIcon) { headerRightFlagIcon.color = bannerColor; headerRightFlagIcon.sprite = k.getElementIcon(); }
-            // Text
+
             headerKingdomName.text = k.data.name;
             string ruler = k.king != null ? k.king.getName() : "None";
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {k.getPopulationTotal()}";
-            // Relations
-            RefreshRelations(k);
-            // Lists
-            if (searchInput) RefreshSearchList(searchInput.text);
-            // Note: Action buttons are static for now
+
+            // --- 2. List Rebuild Throttling (THE FIX) ---
+            // Only check for list changes every 0.2 seconds to allow clicks to register
+            refreshTimer += Time.unscaledDeltaTime;
+            if (refreshTimer > 0.2f)
+            {
+                refreshTimer = 0f;
+                RefreshRelations(k);
+
+                if (searchInput)
+                {
+                    string currentFilter = searchInput.text;
+                    // Check if the number of kingdoms in the world has changed (e.g. one died or spawned)
+                    int currentCount = World.world.kingdoms.list.Count;
+
+                    // Only destroy/recreate buttons if the filter changed OR the kingdom count changed
+                    if (currentFilter != lastSearchFilter || currentCount != lastKingdomCount)
+                    {
+                        RefreshSearchList(currentFilter);
+                        
+                        // Update cache
+                        lastSearchFilter = currentFilter;
+                        lastKingdomCount = currentCount;
+                    }
+                }
+            }
         }
         // ================================================================================================
         // UI CONSTRUCTION
