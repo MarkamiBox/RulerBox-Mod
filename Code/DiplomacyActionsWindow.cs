@@ -270,50 +270,84 @@ namespace RulerBox
             scroll.viewport = viewport.GetComponent<RectTransform>();
             scroll.content = cRT;
             // Create Subsections
-            alliesGrid = CreateRelationSubSection(content.transform, "Allies", new Color(0, 0.3f, 0, 0.2f));
-            warsGrid = CreateRelationSubSection(content.transform, "Wars", new Color(0.3f, 0, 0, 0.2f));
+            alliesContent = CreateSingleRelationRow(content.transform, "AlliesRow", new Color(0, 0.3f, 0, 0.2f), 32f);
+            warsContent = CreateSingleRelationRow(content.transform, "WarsRow", new Color(0.3f, 0, 0, 0.2f), 32f);
         }
 
-        private static Transform CreateRelationSubSection(Transform parent, string title, Color bgCol)
+        private static Transform CreateSingleRelationRow(Transform parent, string name, Color tint, float height)
         {
-            var rowObj = new GameObject(title, typeof(RectTransform));
+            // 1. ROOT OBJECT
+            var rowObj = new GameObject(name, typeof(RectTransform));
             rowObj.transform.SetParent(parent, false);
+
+            // Layout Element: CRITICAL for making this work inside a VerticalLayoutGroup
+            var le = rowObj.AddComponent<LayoutElement>();
+            le.minHeight = height;
+            le.preferredHeight = height;
+            le.flexibleHeight = 0;
+            le.flexibleWidth = 1; // Stretch width
+
             // Background
             var bg = rowObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = bgCol;
+            if (windowInnerSprite != null) { 
+                bg.sprite = windowInnerSprite; 
+                bg.type = Image.Type.Sliced; 
+            }
+            bg.color = tint;
+
             // ScrollRect
             var scroll = rowObj.AddComponent<ScrollRect>();
-            scroll.horizontal = true; scroll.vertical = false;
+            scroll.horizontal = true; 
+            scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            // Viewport
+            scroll.scrollSensitivity = 25f; // Nicer scrolling speed
+            scroll.viewport = null; // We will set this shortly
+
+            // 2. VIEWPORT (Masks the content)
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(rowObj.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>(), 1);
+            
+            // Stretch Viewport to fill the Row
+            var vRT = viewport.GetComponent<RectTransform>();
+            vRT.anchorMin = Vector2.zero;
+            vRT.anchorMax = Vector2.one;
+            vRT.sizeDelta = Vector2.zero;
+            vRT.pivot = new Vector2(0, 0.5f);
+
             viewport.AddComponent<RectMask2D>();
-            viewport.AddComponent<Image>().color = Color.clear;
-            // CONTENT
+            var vImg = viewport.AddComponent<Image>();
+            vImg.color = Color.clear; // Transparent raycast target allows dragging
+            
+            // 3. CONTENT (Where items go)
             var contentObj = new GameObject("Content", typeof(RectTransform));
             contentObj.transform.SetParent(viewport.transform, false);
-            // Layout
+
+            // Horizontal Layout
             var h = contentObj.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
-            h.spacing = 2;
+            h.spacing = 4;
+            h.padding = new RectOffset(4, 4, 0, 0); // Add padding on left/right
             h.childControlWidth = false; 
             h.childControlHeight = false;
             h.childForceExpandWidth = false; 
             h.childForceExpandHeight = false;
-            // RectTransform
-            var cRT = contentObj.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 0); cRT.anchorMax = new Vector2(0, 1);
-            cRT.pivot = new Vector2(0, 0.5f);
-            // Force size to match viewport height
+
+            // Content Size Fitter (Expands width based on children)
             var fitter = contentObj.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained; // Height is controlled by parent
+
+            // Content RectTransform Setup
+            var cRT = contentObj.GetComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 0); 
+            cRT.anchorMax = new Vector2(0, 1); // Stretch vertically within viewport
+            cRT.pivot = new Vector2(0, 0.5f);
+            cRT.sizeDelta = Vector2.zero; // Reset offsets
+
             // Link ScrollRect
-            scroll.viewport = viewport.GetComponent<RectTransform>();
+            scroll.viewport = vRT;
             scroll.content = cRT;
+
             return contentObj.transform;
         }
 
