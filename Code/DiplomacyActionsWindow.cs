@@ -131,7 +131,7 @@ namespace RulerBox
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
             h.padding = new RectOffset(8, 8, 4, 4);
-            h.spacing = 10;
+            h.spacing = 5;
             h.childAlignment = TextAnchor.MiddleCenter;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -168,10 +168,10 @@ namespace RulerBox
             var flagWrapper = new GameObject(name, typeof(RectTransform));
             flagWrapper.transform.SetParent(parent, false);
             var flagLE = flagWrapper.AddComponent<LayoutElement>();
-            flagLE.preferredWidth = 20f; 
-            flagLE.preferredHeight = 20f;
-            flagLE.minWidth = 20f; 
-            flagLE.minHeight = 20f;
+            flagLE.preferredWidth = 40f; 
+            flagLE.preferredHeight = 40f;
+            flagLE.minWidth = 40f; 
+            flagLE.minHeight = 40f;
             
             var flagBgObj = new GameObject("FlagBG", typeof(RectTransform));
             flagBgObj.transform.SetParent(flagWrapper.transform, false);
