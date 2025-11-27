@@ -367,7 +367,6 @@ namespace RulerBox
         {
             var btnObj = new GameObject("Btn_" + label, typeof(RectTransform));
             
-            // FIX: Corrected the Find path from "SplitView/RightCol" to "SplitSection/RightCol"
             btnObj.transform.SetParent(root.transform.Find("SplitSection/RightCol"), false);
             
             if(btnObj.transform.parent == null) return; 
