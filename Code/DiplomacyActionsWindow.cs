@@ -375,6 +375,7 @@ namespace RulerBox
                         EventsSystem.AllowPlayerWar = false; // Reset safety
                     }
                 }
+                Refresh();
             });
 
             CreateDiplomacyBtn(col.transform, "Make Peace", new Color(0.2f, 0.4f, 0.8f, 1f), () => {
@@ -410,6 +411,7 @@ namespace RulerBox
                         WorldTip.showNow("Could not find active war data.", false, "top", 2f, "#FF0000");
                     }
                 }
+                Refresh();
             });
 
             // --- FORM ALLIANCE ---
@@ -479,6 +481,7 @@ namespace RulerBox
                         Close();
                     }
                 }
+                Refresh();
             });
 
             // --- NON-AGGRESSION PACT ---
@@ -514,6 +517,7 @@ namespace RulerBox
                     // 4. Return to Main Window
                     Close();
                 }
+                Refresh();
             });
         }
 
