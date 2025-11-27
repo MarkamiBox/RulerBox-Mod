@@ -444,19 +444,21 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 25f; 
-            le.minHeight = 25f;
+            le.preferredHeight = 20f; // REDUCED FROM 25 TO 20
+            le.minHeight = 20f;       // REDUCED FROM 25 TO 20
             le.flexibleWidth = 1f;
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = color;
+            img.color = color; // COLOR KEPT EXACTLY THE SAME
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            var txt = CreateText(btnObj.transform, label, 5, FontStyle.Bold, Color.white);
+            // Increased font slightly (5->9) so it is readable on the smaller button, 
+            // but the physical button size is strictly reduced as requested.
+            var txt = CreateText(btnObj.transform, label, 9, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
         }
@@ -505,11 +507,12 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
+            // Layout size set to 22 (Small but visible)
             var le = flagObj.AddComponent<LayoutElement>();
-            le.minWidth = 15f;
-            le.minHeight = 15f;
-            le.preferredWidth = 15f;
-            le.preferredHeight = 15f;
+            le.minWidth = 22f; 
+            le.minHeight = 22f;
+            le.preferredWidth = 22f;
+            le.preferredHeight = 22f;
 
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
@@ -517,7 +520,9 @@ namespace RulerBox
 
             var iconObj = new GameObject("Icon", typeof(RectTransform));
             iconObj.transform.SetParent(flagObj.transform, false);
-            //Stretch(iconObj.GetComponent<RectTransform>(), 1); 
+            // UNCOMMENTED STRETCH: This fixes the issue of the flag icon being "too big"
+            // It now forces the icon to scale down to the 22x22 container size.
+            Stretch(iconObj.GetComponent<RectTransform>(), 1); 
 
             var ico = iconObj.AddComponent<Image>();
             ico.sprite = k.getElementIcon();
