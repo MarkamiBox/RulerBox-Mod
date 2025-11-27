@@ -402,8 +402,8 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 35f; 
-            le.minHeight = 35f;
+            le.preferredHeight = 25f; 
+            le.minHeight = 25f;
             le.flexibleWidth = 1f;
 
             var img = btnObj.AddComponent<Image>();
@@ -414,7 +414,7 @@ namespace RulerBox
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            var txt = CreateText(btnObj.transform, label, 10, FontStyle.Bold, Color.white);
+            var txt = CreateText(btnObj.transform, label, 7, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
         }
