@@ -273,7 +273,7 @@ namespace RulerBox
             le.flexibleWidth = 1f; 
             le.flexibleHeight = 1f;
             // Search Bar
-            var searchObj = new GameObject("SearchBox", typeof(RectTransform));
+            /*var searchObj = new GameObject("SearchBox", typeof(RectTransform));
             searchObj.transform.SetParent(col.transform, false);
             var sLe = searchObj.AddComponent<LayoutElement>();
             sLe.preferredHeight = 20f; 
@@ -291,7 +291,7 @@ namespace RulerBox
             var txtText = CreateText(searchObj.transform, "", 9, FontStyle.Normal, Color.white);
             Stretch(txtText.rectTransform, 4);
             searchInput.textComponent = txtText;
-            searchInput.onValueChanged.AddListener(RefreshSearchList);
+            searchInput.onValueChanged.AddListener(RefreshSearchList);*/
             // List Scroll Container
             var listObj = new GameObject("KingdomList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
