@@ -326,7 +326,7 @@ namespace RulerBox
 
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = 2; 
-            v.padding = new RectOffset(0,0,5,0);
+            v.padding = new RectOffset(0,0,5,5);
             v.childControlWidth = true; 
             v.childControlHeight = true; 
             v.childForceExpandWidth = true; 
@@ -335,7 +335,7 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 60f; 
             le.flexibleWidth = 0f; 
-            le.flexibleHeight = 0.1f;
+            le.flexibleHeight = 0f;
 
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
