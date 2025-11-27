@@ -70,6 +70,7 @@ namespace RulerBox
         public static void Open(Kingdom k)
         {
             if (root == null) return;
+            if(k == Main.selectedKingdom) return;
             targetKingdom = k;
             
             DiplomacyWindow.SetVisible(false);
