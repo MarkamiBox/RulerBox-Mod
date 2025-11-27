@@ -8,21 +8,21 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
-
+        // ================== ECONOMIC LAWS WINDOW ==================
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-
+            // Root container
             root = new GameObject("EconomicLawsRoot");
             root.transform.SetParent(parent, false);
-
+            // Full stretch
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
-
+            // Vertical layout
             var v = root.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 6;
@@ -31,7 +31,6 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
-
             // Title text top center
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(root.transform, false);
@@ -43,18 +42,16 @@ namespace RulerBox
             title.resizeTextForBestFit = true;
             title.resizeTextMinSize = 8;
             title.resizeTextMaxSize = 12;
-
             var titleLE = titleGO.AddComponent<LayoutElement>();
             titleLE.preferredHeight = 20f;
-
             // Scroll container
             var scrollGO = new GameObject("LawsScroll");
             scrollGO.transform.SetParent(root.transform, false);
-
+            // Scroll Rect
             var scrollLE = scrollGO.AddComponent<LayoutElement>();
             scrollLE.preferredHeight = 140f;
             scrollLE.flexibleHeight = 1f;
-
+            // Background
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
             {
@@ -62,16 +59,15 @@ namespace RulerBox
                 bgImg.type = Image.Type.Sliced;
                 bgImg.color = Color.white;
             }
-            else
-            {
+            /*else
+            {                                                       To Remove: Darken bg even without sprite
                 //bgImg.color = new Color(0f, 0f, 0f, 0.35f);
-            }
-
+            }*/
+            // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
-
             // Viewport
             var viewportGO = new GameObject("Viewport");
             viewportGO.transform.SetParent(scrollGO.transform, false);
@@ -80,13 +76,11 @@ namespace RulerBox
             viewportRT.anchorMax = new Vector2(1f, 1f);
             viewportRT.offsetMin = new Vector2(2f, 4.5f);
             viewportRT.offsetMax = new Vector2(-2f, -4f);
-
             var viewportImg = viewportGO.AddComponent<Image>();
             viewportImg.color = new Color(0f, 0f, 0f, 0.01f);
-
+            // Mask
             var mask = viewportGO.AddComponent<Mask>();
             mask.showMaskGraphic = false;
-
             // Content inside scroll
             var contentGO = new GameObject("Content");
             contentGO.transform.SetParent(viewportGO.transform, false);
@@ -96,7 +90,7 @@ namespace RulerBox
             contentRT.pivot     = new Vector2(0.5f, 1f);
             contentRT.anchoredPosition = Vector2.zero;
             contentRT.sizeDelta = new Vector2(0f, 0f);
-
+            // Vertical Layout for content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVL.childAlignment = TextAnchor.UpperLeft;
             contentVL.spacing = 4;
@@ -105,40 +99,31 @@ namespace RulerBox
             contentVL.childControlHeight = true;
             contentVL.childForceExpandWidth = true;
             contentVL.childForceExpandHeight = false;
-
+            // Content Size Fitter
             var fitter = contentGO.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-
+            // Assign to ScrollRect
             scrollRect.viewport = viewportRT;
             scrollRect.content  = contentRT;
-
             // Add all laws
             AddLawRow(contentRT, "taxation", "Taxation Laws",
                 "Minimum", "Low", "Normal", "High", "Maximum");
-
             AddLawRow(contentRT, "military_spending",   "Military Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "security_spending",   "Security Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "government_spending", "Government Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "welfare_spending", "Healthcare Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "education_spending",  "Education Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "research_spending",   "Research Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
             AddLawRow(contentRT, "anti_corruption",     "Anti Corruption Spending",
                 "None", "Low", "Medium", "High", "Maximum");
-
-            // Bottom: back button centered
+            // Bottom
             var bottomRow = new GameObject("BottomRow");
             bottomRow.transform.SetParent(root.transform, false);
             var bottomHL = bottomRow.AddComponent<HorizontalLayoutGroup>();
@@ -148,32 +133,30 @@ namespace RulerBox
             bottomHL.childControlHeight = true;
             bottomHL.childForceExpandWidth = false;
             bottomHL.childForceExpandHeight = false;
-
+            // Layout Element
             var bottomLE = bottomRow.AddComponent<LayoutElement>();
             bottomLE.preferredHeight = 26f;
-
+            // Back Button
             BuildBackButton(bottomRow.transform, "Back", () => TopPanelUI.ReturnToEconomyMain());
-
             root.SetActive(false);
         }
-
+        // Show or hide the window
         public static void SetVisible(bool visible)
         {
             if (root != null) root.SetActive(visible);
         }
-
+        // Check if window is visible
         public static bool IsVisible()
         {
             return root != null && root.activeSelf;
         }
-
+        // Refresh the displayed laws based on kingdom data
         public static void Refresh(Kingdom k)
         {
             if (!IsVisible() || k == null) return;
-
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
-
+            // Update highlights
             Transform content = root.transform.Find("LawsScroll/Viewport/Content");
             if (content != null) {
                 UpdateRowHighlight(content, "TaxationLawsRow", d.TaxationLevel);
@@ -186,12 +169,12 @@ namespace RulerBox
                 UpdateRowHighlight(content, "AntiCorruptionSpendingRow", d.AntiCorruption);
             }
         }
-
+        // Add a law row with buttons for each level
         private static void AddLawRow(Transform parent, string lawId, string displayName, params string[] levels)
         {
             var rowGO = new GameObject(displayName.Replace(" ", "") + "Row");
             rowGO.transform.SetParent(parent, false);
-
+            // Vertical Layout for row
             var v = rowGO.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperLeft;
             v.spacing = 2;
@@ -199,10 +182,9 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandWidth = false;
             v.childForceExpandHeight = false;
-
+            // Layout Element for row
             var rowLE = rowGO.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 30f;
-
             // Law label
             var labelGO = new GameObject("Label");
             labelGO.transform.SetParent(rowGO.transform, false);
@@ -214,11 +196,10 @@ namespace RulerBox
             label.resizeTextForBestFit = true;
             label.resizeTextMinSize = 7;
             label.resizeTextMaxSize = 10;
-
             // Buttons row
             var buttonsRow = new GameObject("ButtonsRow");
             buttonsRow.transform.SetParent(rowGO.transform, false);
-
+            // Horizontal Layout for buttons
             var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 2;
@@ -227,47 +208,43 @@ namespace RulerBox
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = false;
             h.padding = new RectOffset(2, 2, 0, 0);
-
             var buttonsLE = buttonsRow.AddComponent<LayoutElement>();
             buttonsLE.preferredHeight = 18f;
-
+            // Create buttons for each level
             foreach (var level in levels)
             {
                 CreateLawButton(buttonsRow.transform, lawId, level);
             }
         }
-
+        // Create a button for a specific law level
         private static void CreateLawButton(Transform parent, string lawId, string level)
         {
             var go = new GameObject(level.Replace(" ", "") + "Btn");
             go.transform.SetParent(parent, false);
-
+            // Background Image
             var img = go.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
             img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
-
+            // Layout Element
             var le = go.AddComponent<LayoutElement>();
             le.preferredHeight = 16f;
             le.flexibleWidth = 1f;
-
+            // Button
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() =>
             {
                 var k = Main.selectedKingdom;
                 if (k == null) return;
-
                 var d = KingdomMetricsSystem.Get(k);
                 if (d == null) return;
-
                 SetActiveLaw(d, lawId, level);
                 TopPanelUI.Refresh(); 
                 EconomicLawsWindow.Refresh(k);
-
                 WorldTip.showNow($"Set {lawId} -> {level}", false, "top", 1f, "#9EE07A");
             });
-
+            // Text
             var txtGO = new GameObject("Text");
             txtGO.transform.SetParent(go.transform, false);
             var txt = txtGO.AddComponent<Text>();
@@ -278,35 +255,34 @@ namespace RulerBox
             txt.resizeTextForBestFit = true;
             txt.resizeTextMinSize = 6;
             txt.resizeTextMaxSize = 8;
-
+            // Stretch Text
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
-
             // Attach Tooltip
             ChipTooltips.AttachSimpleTooltip(go, () => GetLawTooltip(lawId, level));
         }
-
+        // Build a back button at the bottom
         private static void BuildBackButton(Transform parent, string label, Action onClick)
         {
             var go = new GameObject(label.Replace(" ", "") + "Button");
             go.transform.SetParent(parent, false);
-
+            // Background Image
             var img = go.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
             img.color = Color.white;
-
+            // Layout Element
             var le = go.AddComponent<LayoutElement>();
             le.preferredWidth = 90;
             le.preferredHeight = 20;
-
+            // Button
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
-
+            // Text
             var txtGO = new GameObject("Text");
             txtGO.transform.SetParent(go.transform, false);
             var txt = txtGO.AddComponent<Text>();
@@ -317,14 +293,14 @@ namespace RulerBox
             txt.resizeTextForBestFit = true;
             txt.resizeTextMinSize = 6;
             txt.resizeTextMaxSize = 8;
-
+            // Stretch Text
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
         }
-
+        // Set the active law level in kingdom data
         private static void SetActiveLaw(KingdomMetricsSystem.Data d, string lawId, string lvl)
         {
             switch (lawId)
@@ -339,7 +315,7 @@ namespace RulerBox
                 case "anti_corruption": d.AntiCorruption = lvl; break;
             }
         }
-
+        // Update the highlight of buttons in a law row
         private static void UpdateRowHighlight(Transform content, string rowName, string activeLevel) {
             var row = content.Find(rowName);
             if (row != null) {
@@ -358,19 +334,15 @@ namespace RulerBox
                 }
             }
         }
-
-        // ================== HIGH-STAKES EXACT TOOLTIPS ==================
+        // Generate tooltip text for a law level
         private static string GetLawTooltip(string lawId, string level)
         {
-            // Calc cost dynamically for display
             var k = Main.selectedKingdom;
             if (k == null) return "";
             var d = KingdomMetricsSystem.Get(k);
-
             float pct = 0f;
             string lvl = level.ToLowerInvariant();
             string id  = lawId.ToLowerInvariant();
-            
             // 1) Calculate Cost Percentage
             if (id != "taxation") 
             {
@@ -380,7 +352,6 @@ namespace RulerBox
                 else if (lvl == "medium") pct = 0.10f;
                 else if (lvl == "high") pct = 0.15f;
                 else if (lvl == "maximum") pct = 0.20f;
-                
                 // Specific overrides
                 if (id == "military_spending") 
                     pct = lvl switch { "none"=>0f, "low"=>0.35f, "medium"=>0.40f, "high"=>0.45f, "maximum"=>0.50f, _=>0f };
@@ -391,11 +362,9 @@ namespace RulerBox
                 else if (id == "research_spending")
                     pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
             }
-
-            // [UPDATED] Cost String Logic: Explicit "No Upkeep Cost" for None
+            // Cost String
             long costVal = (long)(d.Income * pct);
             string costStr;
-            
             if (id == "taxation")
             {
                  costStr = "Effect on Income";
@@ -405,10 +374,8 @@ namespace RulerBox
                  if (pct <= 0f) costStr = "No Upkeep Cost";
                  else costStr = $"Cost: ${costVal} ({pct*100:0.##}% of Income)";
             }
-            
             string effects = "Effects:\n";
-
-            // 2) Effects Strings
+            // Effects Strings
             switch(id) 
             {
                 case "taxation":
@@ -477,7 +444,7 @@ namespace RulerBox
                     };
                     break;
 
-                case "welfare_spending": // Healthcare
+                case "welfare_spending": 
                     effects += lvl switch {
                         "none"    => "Base (No active spending)",
                         "low"     => "Plague Resist: 20%\nStability: -5.0",
@@ -499,7 +466,6 @@ namespace RulerBox
                     };
                     break;
             }
-
             return $"<b>{level} {lawId.Replace("_", " ").ToUpper()}</b>\n{costStr}\n\n{effects}";
         }
     }
