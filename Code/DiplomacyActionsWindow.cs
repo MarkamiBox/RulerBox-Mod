@@ -57,11 +57,6 @@ namespace RulerBox
             rootV.childControlHeight = true;
             rootV.childForceExpandWidth = true;
             rootV.childForceExpandHeight = false;
-            
-            var titleLE = titleGO.AddComponent<LayoutElement>();
-            titleLE.minHeight = 24f;
-            titleLE.preferredHeight = 24f;
-            titleLE.flexibleHeight = 0;
 
             // === 2. HEADER PANEL ===
             CreateHeader(root.transform);
