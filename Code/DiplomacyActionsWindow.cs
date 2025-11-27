@@ -212,8 +212,8 @@ namespace RulerBox
             bg.color = new Color(0.15f, 0.15f, 0.15f, 0.3f);
 
             var h = container.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4;
-            h.padding = new RectOffset(4, 4, 4, 4);
+            h.spacing = 2;
+            h.padding = new RectOffset(2, 2, 2, 2);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = true;
@@ -221,7 +221,7 @@ namespace RulerBox
 
             // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f; 
+            le.flexibleHeight = 0.5f; 
 
             // === Left Column (Relations List) ===
             CreateLeftColumn(container.transform);
