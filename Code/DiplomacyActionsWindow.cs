@@ -250,13 +250,14 @@ namespace RulerBox
             var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.9f));
             label.alignment = TextAnchor.MiddleCenter;
             var lLe = label.gameObject.AddComponent<LayoutElement>();
-            lLe.minHeight = 16f; lLe.preferredHeight = 16f; lLe.flexibleHeight = 0;
-
+            lLe.minHeight = 8f; 
+            lLe.preferredHeight = 8f; 
+            lLe.flexibleHeight = 0;
             // Scroll Container
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
             var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 1f; // Takes remaining height
+            listLe.flexibleHeight = 0.5f; // Takes remaining height
             
             var lBg = listObj.AddComponent<Image>();
             if (windowInnerSprite != null) { lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; }
