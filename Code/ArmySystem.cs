@@ -6,6 +6,7 @@ using System.Linq;
 
 namespace RulerBox
 {
+    // Different army selection modes
     public enum ArmySelectionMode
     {
         Normal,     // Standard control
@@ -21,21 +22,20 @@ namespace RulerBox
             public WorldTile HomeTile;
             public int RadiusTiles;
         }
-        //
         private static readonly Dictionary<Actor, GuardOrder> guardOrders = new Dictionary<Actor, GuardOrder>();
-        private static readonly List<Actor> _lastSelection = new List<Actor>();
-        private static readonly MethodInfo _miSetTileTarget = AccessTools.Method(typeof(Actor), "setTileTarget", new[] { typeof(WorldTile) });
+        private static readonly List<Actor> lastSelection = new List<Actor>();
+        private static readonly MethodInfo miSetTileTarget = AccessTools.Method(typeof(Actor), "setTileTarget", new[] { typeof(WorldTile) });
         private const int DefaultGuardRadiusTiles = 5;
         public static ArmySelectionMode CurrentMode = ArmySelectionMode.Normal;
 
+        // Main tick function
         public static void Tick(float dt)
         {
             if (Main.selectedKingdom == null) return;
-
             HandleHotkeys();
             UpdateGuardOrders();
         }
-
+        // Handle hotkey inputs
         private static void HandleHotkeys()
         {
             // Mode Switching (Single Button Cycle)
@@ -55,7 +55,6 @@ namespace RulerBox
                 }
                 ShowModeTip();
             }
-
             // Guard Commands (Only in Normal Mode)
             if (CurrentMode == ArmySelectionMode.Normal)
             {
@@ -63,7 +62,7 @@ namespace RulerBox
                 if (Input.GetKeyDown(KeyCode.M)) ClearGuardPointForSelection();
             }
         }
-
+        // Display current mode tip
         private static void ShowModeTip()
         {
             string msg = "Mode: Normal (Control)";
@@ -76,25 +75,20 @@ namespace RulerBox
             }
             WorldTip.showNow(msg, false, "top", 2f, color);
         }
-
+        // Handle new selection of actors
         public static void OnNewSelection(IEnumerable<Actor> actors)
         {
-            _lastSelection.Clear();
+            lastSelection.Clear();
             if (actors == null) return;
-
             var k = Main.selectedKingdom;
             if (k == null) return;
-
-            // Filter list based on current mode
-            List<Actor> processed = new List<Actor>();
-
+            List<Actor> processed = new List<Actor>(); // Filter list based on current mode
             foreach (Actor a in actors)
             {
                 if (a == null || a.hasDied() || a.kingdom != k) continue;
-
                 if (CurrentMode == ArmySelectionMode.Normal)
                 {
-                    if (SoldierJobHelper.IsSoldier(a)) _lastSelection.Add(a);
+                    if (SoldierJobHelper.IsSoldier(a)) lastSelection.Add(a);
                 }
                 else if (CurrentMode == ArmySelectionMode.Recruit)
                 {
@@ -106,17 +100,15 @@ namespace RulerBox
                 }
             }
         }
-
+        // Attempt to recruit an actor as a soldier
         private static void TryRecruit(Actor a)
         {
             // Eligibility Check: Adult, not king/leader, not already soldier
             if (!a.isAdult()) return;
             if (a.isKing() || a.isCityLeader()) return;
             if (SoldierJobHelper.IsSoldier(a)) return;
-            
-            // Check City capacity (Hard limit - though we boosted cap via patch, it must exist)
+            // Check City capacity (Hard limit)
             if (a.city == null) return;
-            
             // Check Manpower (Currency)
             var d = KingdomMetricsSystem.Get(a.kingdom);
             if (d.ManpowerCurrent < 1) 
@@ -124,33 +116,21 @@ namespace RulerBox
                 // Optional: Fail feedback
                 return;
             }
-
-            // Execute Recruit
-            // Force job to warrior
+            // Execute Recruit -> Force job to warrior
             a.setProfession(UnitProfession.Warrior);
-            // Update Manpower
-            d.ManpowerCurrent--; 
-            
-            // FX
+            d.ManpowerCurrent--;             
             a.startColorEffect();
         }
-
+        // Attempt to dismiss an actor from soldier role
         private static void TryDismiss(Actor a)
         {
             if (!SoldierJobHelper.IsSoldier(a)) return;
-
-            // Execute Dismiss
             a.setProfession(UnitProfession.Unit); // Revert to citizen
-            
-            // Refund Manpower
-            var d = KingdomMetricsSystem.Get(a.kingdom);
-            // Add 1/3 of a "manpower point" back. Since manpower is long/int, we can probabilistic add 1
+            var d = KingdomMetricsSystem.Get(a.kingdom);             // Refund Manpower
             if (UnityEngine.Random.value < 0.33f)
             {
                 d.ManpowerCurrent++;
             }
-
-            // FX
             a.startColorEffect();
         }
 
@@ -189,12 +169,12 @@ namespace RulerBox
 
         private static void SetGuardPointForSelection()
         {
-            if (_lastSelection.Count == 0) return;
+            if (lastSelection.Count == 0) return;
             WorldTile tile = World.world?.getMouseTilePos();
             if (tile == null) return;
 
             int count = 0;
-            foreach(var a in _lastSelection)
+            foreach(var a in lastSelection)
             {
                 if (a == null || a.hasDied()) continue;
                 if (!guardOrders.ContainsKey(a)) guardOrders[a] = new GuardOrder();
@@ -208,9 +188,9 @@ namespace RulerBox
 
         private static void ClearGuardPointForSelection()
         {
-            if (_lastSelection.Count == 0) return;
+            if (lastSelection.Count == 0) return;
             int count = 0;
-            foreach(var a in _lastSelection)
+            foreach(var a in lastSelection)
             {
                 if(guardOrders.Remove(a)) count++;
             }
@@ -219,8 +199,8 @@ namespace RulerBox
 
         private static void IssueMoveOrder(Actor actor, WorldTile tile)
         {
-            if (actor == null || tile == null || _miSetTileTarget == null) return;
-            try { _miSetTileTarget.Invoke(actor, new object[] { tile }); } catch { }
+            if (actor == null || tile == null || miSetTileTarget == null) return;
+            try { miSetTileTarget.Invoke(actor, new object[] { tile }); } catch { }
         }
     }
 }
