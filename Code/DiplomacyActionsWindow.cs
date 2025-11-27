@@ -204,8 +204,8 @@ namespace RulerBox
 
             // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 70f; 
-            le.minHeight = 70f; 
+            le.preferredHeight = 90f; 
+            le.minHeight = 90f; 
             le.flexibleHeight = 0f; 
 
             // === Left Column (Relations List) ===
