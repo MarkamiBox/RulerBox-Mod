@@ -20,13 +20,11 @@ namespace RulerBox
         private static Text headerRulerInfo;
         private static Text headerPopInfo;
 
-        // Grids for flags (inside the scroll view)
-        private static Transform alliesGrid;
-        private static Transform warsGrid;
-        private static Kingdom targetKingdom;
+        // Content Transforms for the horizontal rows
         private static Transform alliesContent; 
         private static Transform warsContent;
-
+        
+        private static Kingdom targetKingdom;
 
         public static void Initialize(Transform parent)
         {
@@ -48,7 +46,7 @@ namespace RulerBox
             // Background
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.5f);
+            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f); // Increased opacity slightly for readability
 
             // Main Vertical Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
@@ -65,9 +63,6 @@ namespace RulerBox
 
             // === 3. SPLIT SECTION (Left: Relations | Right: Buttons) ===
             CreateSplitSection(root.transform);
-
-            // === 4. BOTTOM CLOSE BUTTON ===
-            //CreateBottomBar(root.transform);
 
             root.SetActive(false);
         }
@@ -204,7 +199,6 @@ namespace RulerBox
             h.childForceExpandWidth = true;
             h.childForceExpandHeight = true;
 
-            // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
             le.preferredHeight = 75f; 
             le.minHeight = 75f; 
@@ -219,13 +213,17 @@ namespace RulerBox
             CreateRightColumn(container.transform);
         }
 
+        // ====================================================================================
+        // UPDATED CREATE LEFT COLUMN
+        // ====================================================================================
         private static void CreateLeftColumn(Transform parent)
         {
             var col = new GameObject("LeftCol", typeof(RectTransform));
             col.transform.SetParent(parent, false);
             
             var v = col.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 2;
+            v.spacing = 4;
+            v.padding = new RectOffset(4, 4, 4, 4);
             v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
@@ -237,80 +235,51 @@ namespace RulerBox
             le.flexibleWidth = 1f;
             le.flexibleHeight = 1f;
 
-            // Scroll Container
-            var listObj = new GameObject("RelationsList", typeof(RectTransform));
-            listObj.transform.SetParent(col.transform, false);
-            var listLe = listObj.AddComponent<LayoutElement>();
-            listLe.flexibleHeight = 0.1f; // Takes remaining height
-            var lBg = listObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { 
-                lBg.sprite = windowInnerSprite; 
-                lBg.type = Image.Type.Sliced; 
-            }
-            lBg.color = new Color(0, 0, 0, 0.2f);
-            var scroll = listObj.AddComponent<ScrollRect>();
-            scroll.vertical = true; scroll.horizontal = false;
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            var viewport = new GameObject("Viewport", typeof(RectTransform));
-            viewport.transform.SetParent(listObj.transform, false);
-            Stretch(viewport.GetComponent<RectTransform>());
-            viewport.AddComponent<RectMask2D>();
-            var content = new GameObject("Content", typeof(RectTransform));
-            content.transform.SetParent(viewport.transform, false);
-            var vList = content.AddComponent<VerticalLayoutGroup>();
-            vList.childAlignment = TextAnchor.UpperLeft;
-            vList.spacing = 4; 
-            vList.padding = new RectOffset(4,4,4,4);
-            vList.childControlWidth = true; 
-            vList.childControlHeight = true;
-            vList.childForceExpandWidth = true;
-            vList.childForceExpandHeight = false;
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            var cRT = content.GetComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); 
-            cRT.anchorMax = new Vector2(1, 1); 
-            cRT.pivot = new Vector2(0.5f, 1);
-            scroll.viewport = viewport.GetComponent<RectTransform>();
-            scroll.content = cRT;
-            // Create Subsections
-            alliesContent = CreateSingleRelationRow(content.transform, "AlliesRow", new Color(0, 0.3f, 0, 0.2f), 32f);
-            warsContent = CreateSingleRelationRow(content.transform, "WarsRow", new Color(0.3f, 0, 0, 0.2f), 32f);
+            // --- 1. ALLIES HEADER ---
+            var t1 = CreateText(col.transform, "Allies", 8, FontStyle.Bold, new Color(0.8f, 1f, 0.8f));
+            t1.alignment = TextAnchor.MiddleLeft;
+
+            // --- 2. ALLIES ROW (Horizontal Scroll) ---
+            alliesContent = CreateSingleRelationRow(col.transform, "AlliesRow", new Color(0, 0.3f, 0, 0.2f), 32f);
+
+            // --- 3. WARS HEADER ---
+            var t2 = CreateText(col.transform, "Active Wars", 8, FontStyle.Bold, new Color(1f, 0.8f, 0.8f));
+            t2.alignment = TextAnchor.MiddleLeft;
+
+            // --- 4. WARS ROW (Horizontal Scroll) ---
+            warsContent = CreateSingleRelationRow(col.transform, "WarsRow", new Color(0.3f, 0, 0, 0.2f), 32f);
+
+            // --- 5. SPACER (Pushes content to top) ---
+            var spacer = new GameObject("Spacer", typeof(RectTransform));
+            spacer.transform.SetParent(col.transform, false);
+            var spacerLE = spacer.AddComponent<LayoutElement>();
+            spacerLE.flexibleHeight = 1f; 
         }
 
         private static Transform CreateSingleRelationRow(Transform parent, string name, Color tint, float height)
         {
-            // 1. ROOT OBJECT
             var rowObj = new GameObject(name, typeof(RectTransform));
             rowObj.transform.SetParent(parent, false);
 
-            // Layout Element: CRITICAL for making this work inside a VerticalLayoutGroup
             var le = rowObj.AddComponent<LayoutElement>();
             le.minHeight = height;
             le.preferredHeight = height;
             le.flexibleHeight = 0;
-            le.flexibleWidth = 1; // Stretch width
+            le.flexibleWidth = 1;
 
-            // Background
             var bg = rowObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { 
-                bg.sprite = windowInnerSprite; 
-                bg.type = Image.Type.Sliced; 
-            }
+            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = tint;
 
-            // ScrollRect
             var scroll = rowObj.AddComponent<ScrollRect>();
             scroll.horizontal = true; 
             scroll.vertical = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 25f; // Nicer scrolling speed
-            scroll.viewport = null; // We will set this shortly
+            scroll.scrollSensitivity = 25f;
 
-            // 2. VIEWPORT (Masks the content)
             var viewport = new GameObject("Viewport", typeof(RectTransform));
             viewport.transform.SetParent(rowObj.transform, false);
             
-            // Stretch Viewport to fill the Row
             var vRT = viewport.GetComponent<RectTransform>();
             vRT.anchorMin = Vector2.zero;
             vRT.anchorMax = Vector2.one;
@@ -318,36 +287,30 @@ namespace RulerBox
             vRT.pivot = new Vector2(0, 0.5f);
 
             viewport.AddComponent<RectMask2D>();
-            var vImg = viewport.AddComponent<Image>();
-            vImg.color = Color.clear; // Transparent raycast target allows dragging
+            viewport.AddComponent<Image>().color = Color.clear;
             
-            // 3. CONTENT (Where items go)
             var contentObj = new GameObject("Content", typeof(RectTransform));
             contentObj.transform.SetParent(viewport.transform, false);
 
-            // Horizontal Layout
             var h = contentObj.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 4;
-            h.padding = new RectOffset(4, 4, 0, 0); // Add padding on left/right
+            h.padding = new RectOffset(4, 4, 0, 0);
             h.childControlWidth = false; 
             h.childControlHeight = false;
             h.childForceExpandWidth = false; 
             h.childForceExpandHeight = false;
 
-            // Content Size Fitter (Expands width based on children)
             var fitter = contentObj.AddComponent<ContentSizeFitter>();
             fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained; // Height is controlled by parent
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained; 
 
-            // Content RectTransform Setup
             var cRT = contentObj.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 0); 
-            cRT.anchorMax = new Vector2(0, 1); // Stretch vertically within viewport
+            cRT.anchorMax = new Vector2(0, 1);
             cRT.pivot = new Vector2(0, 0.5f);
-            cRT.sizeDelta = Vector2.zero; // Reset offsets
+            cRT.sizeDelta = Vector2.zero;
 
-            // Link ScrollRect
             scroll.viewport = vRT;
             scroll.content = cRT;
 
@@ -372,187 +335,101 @@ namespace RulerBox
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 0.1f;
 
-            // ---  DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
-                    // 1. Check if already at war
-                    if (Main.selectedKingdom.isEnemy(targetKingdom))
-                    {
+                    if (Main.selectedKingdom.isEnemy(targetKingdom)) {
                         WorldTip.showNow("We are already at war!", false, "top", 2f, "#FF0000");
                         return;
                     }
 
-                    // 2. Execute War Logic
                     EventsSystem.AllowPlayerWar = true;
-                    try
-                    {
+                    try {
                         var warAsset = AssetManager.war_types_library.get("war_conquest");
-                        if (warAsset != null)
-                        {
+                        if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
-                            
-                            // 3. Show Event Window
-                            EventsUI.ShowPopup(
-                                $"War declared on {targetKingdom.data.name}!", 
-                                EventButtonType.War, 
-                                targetKingdom, 
-                                null, null, null // No buttons needed for simple notification, uses default OK
-                            );
-
-                            // 4. Return to Main Window
+                            EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
                             Close();
                         }
-                        else
-                        {
-                            WorldTip.showNow("Error: War asset not found", false, "top", 2f, "#FF0000");
-                        }
-                    }
-                    finally
-                    {
-                        EventsSystem.AllowPlayerWar = false; // Reset safety
-                    }
+                    } finally { EventsSystem.AllowPlayerWar = false; }
                 }
                 Refresh();
             });
 
             CreateDiplomacyBtn(col.transform, "Make Peace", new Color(0.2f, 0.4f, 0.8f, 1f), () => {
-                if(Main.selectedKingdom != null && targetKingdom != null)
-                {
-                    if (!Main.selectedKingdom.isEnemy(targetKingdom))
-                    {
+                if(Main.selectedKingdom != null && targetKingdom != null) {
+                    if (!Main.selectedKingdom.isEnemy(targetKingdom)) {
                         WorldTip.showNow("We are not at war.", false, "top", 2f, "#FFFF00");
                         return;
                     }
-
-                    // Find the active war object
                     var wars = World.world.wars.getWars(Main.selectedKingdom);
                     War activeWar = null;
                     foreach(var w in wars) {
                         if (!w.hasEnded() && (w.isAttacker(targetKingdom) || w.isDefender(targetKingdom))) {
-                            activeWar = w;
-                            break;
+                            activeWar = w; break;
                         }
                     }
-
-                    if (activeWar != null)
-                    {
+                    if (activeWar != null) {
                         World.world.wars.endWar(activeWar, WarWinner.Peace);
-                        EventsUI.ShowPopup(
-                            $"Peace treaty signed with {targetKingdom.data.name}.", 
-                            EventButtonType.Peace, targetKingdom, null, null, null
-                        );
+                        EventsUI.ShowPopup($"Peace treaty signed with {targetKingdom.data.name}.", EventButtonType.Peace, targetKingdom, null, null, null);
                         Close();
-                    }
-                    else
-                    {
-                        WorldTip.showNow("Could not find active war data.", false, "top", 2f, "#FF0000");
                     }
                 }
                 Refresh();
             });
 
-            // --- FORM ALLIANCE ---
             CreateDiplomacyBtn(col.transform, "Form Alliance", new Color(0.1f, 0.5f, 0.1f, 1f), () => {
-                 if(Main.selectedKingdom != null && targetKingdom != null)
-                {
-                    // 1. Check if enemies
-                    if (Main.selectedKingdom.isEnemy(targetKingdom))
-                    {
+                 if(Main.selectedKingdom != null && targetKingdom != null) {
+                    if (Main.selectedKingdom.isEnemy(targetKingdom)) {
                         WorldTip.showNow("We are at war! Make peace first.", false, "top", 2f, "#FF5A5A");
                         return;
                     }
-
-                    // 2. Check Relations (Opinion)
                     var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
-                    // Calculate opinion score (API: KingdomOpinion getOpinion(Kingdom pMain, Kingdom pTarget))
                     var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
                     int score = opinion != null ? opinion.total : 0;
 
-                    if (score < 30)
-                    {
-                        WorldTip.showNow($"They refuse the alliance! (Opinion: {score}/20)", false, "top", 2f, "#FF5A5A");
+                    if (score < 30) {
+                        WorldTip.showNow($"They refuse! (Opinion: {score}/30)", false, "top", 2f, "#FF5A5A");
                         return;
                     }
 
-                    // 3. Execute Alliance Logic
                     bool success = false;
-                    
-                    // Case A: Neither has alliance -> Create New
-                    if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance())
-                    {
+                    if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
                         World.world.alliances.newAlliance(Main.selectedKingdom, targetKingdom);
                         success = true;
                     }
-                    // Case B: Player has alliance -> Invite Target
-                    else if (Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance())
-                    {
-                        var alliance = Main.selectedKingdom.getAlliance();
-                        alliance.join(targetKingdom);
+                    else if (Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
+                        Main.selectedKingdom.getAlliance().join(targetKingdom);
                         success = true;
                     }
-                    // Case C: Target has alliance -> Player joins Target
-                    else if (!Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance())
-                    {
-                        var alliance = targetKingdom.getAlliance();
-                        alliance.join(Main.selectedKingdom);
+                    else if (!Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance()) {
+                        targetKingdom.getAlliance().join(Main.selectedKingdom);
                         success = true;
                     }
-                    // Case D: Both have alliances -> Fail (too complex to merge for simple button)
-                    else
-                    {
+                    else {
                         WorldTip.showNow("Both kingdoms are already in different alliances.", false, "top", 2f, "#FFFF00");
                         return;
                     }
 
-                    if (success)
-                    {
-                        // 4. Show Event Window
-                        EventsUI.ShowPopup(
-                            $"Alliance formed with {targetKingdom.data.name}!", 
-                            EventButtonType.Diplomacy, 
-                            targetKingdom, 
-                            null, null, null
-                        );
-
-                        // 5. Return to Main Window
+                    if (success) {
+                        EventsUI.ShowPopup($"Alliance formed with {targetKingdom.data.name}!", EventButtonType.Diplomacy, targetKingdom, null, null, null);
                         Close();
                     }
                 }
                 Refresh();
             });
 
-            // --- NON-AGGRESSION PACT ---
-            CreateDiplomacyBtn(col.transform, "Non-Aggression Pact", new Color(0.1f, 0.4f, 0.5f, 1f), () => {
-                if(Main.selectedKingdom != null && targetKingdom != null)
-                {
-                    // 1. Check Relations
+            CreateDiplomacyBtn(col.transform, "Non-Aggression", new Color(0.1f, 0.4f, 0.5f, 1f), () => {
+                if(Main.selectedKingdom != null && targetKingdom != null) {
                     var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
                     var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
                     int score = opinion != null ? opinion.total : 0;
-
-                    // Threshold lower than alliance, but must be positive
-                    if (score < 0)
-                    {
-                        WorldTip.showNow($"They distrust us too much for a pact. (Opinion: {score})", false, "top", 2f, "#FF5A5A");
+                    if (score < 0) {
+                        WorldTip.showNow($"They distrust us. (Opinion: {score})", false, "top", 2f, "#FF5A5A");
                         return;
                     }
-
                     World.world.diplomacy.eventFriendship(Main.selectedKingdom);
-
-                    // 2. Execute Pact Logic (Simulated + Event)
-                    // We can simulate the "Prevent Attack" by giving a temporary relation boost or simply Roleplaying it via the event system
-                    // Since specific "Prevent Attack" logic requires deep AI patches, we mark it as signed visually.
-                    
-                    // 3. Show Event Window
-                    EventsUI.ShowPopup(
-                        $"Non-Aggression Pact signed with {targetKingdom.data.name}.\nThey will think twice before attacking.", 
-                        EventButtonType.Peace, 
-                        targetKingdom, 
-                        null, null, null
-                    );
-
-                    // 4. Return to Main Window
+                    EventsUI.ShowPopup($"Non-Aggression Pact signed with {targetKingdom.data.name}.", EventButtonType.Peace, targetKingdom, null, null, null);
                     Close();
                 }
                 Refresh();
@@ -582,52 +459,17 @@ namespace RulerBox
             Stretch(txt.rectTransform);
         }
 
-        private static void CreateBottomBar(Transform parent)
-        {
-            var row = new GameObject("BottomBar", typeof(RectTransform));
-            row.transform.SetParent(parent, false);
-            
-            var h = row.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleCenter;
-            h.childControlHeight = true;
-            h.childControlWidth = false;
-
-            var le = row.AddComponent<LayoutElement>();
-            le.preferredHeight = 24f; 
-            le.minHeight = 24f; 
-            le.flexibleHeight = 0; // Fix: Prevents stretching vertically
-
-            var btnObj = new GameObject("CloseBtn", typeof(RectTransform));
-            btnObj.transform.SetParent(row.transform, false);
-            
-            var ble = btnObj.AddComponent<LayoutElement>();
-            ble.preferredWidth = 100f; 
-            ble.preferredHeight = 22f;
-
-            var img = btnObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = new Color(0.3f, 0.3f, 0.3f, 0.5f);
-
-            var btn = btnObj.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(Close);
-
-            var txt = CreateText(btnObj.transform, "Back", 7, FontStyle.Normal, Color.white);
-            txt.alignment = TextAnchor.MiddleCenter;
-            Stretch(txt.rectTransform);
-        }
-
         // ================================================================================================
         // REFRESH LOGIC
         // ================================================================================================
 
         private static void RefreshRelationsList()
         {
-            if(alliesGrid == null || warsGrid == null) return;
+            if(alliesContent == null || warsContent == null) return;
 
             // Clear existing children
-            foreach (Transform t in alliesGrid) Object.Destroy(t.gameObject);
-            foreach (Transform t in warsGrid) Object.Destroy(t.gameObject);
+            foreach (Transform t in alliesContent) Object.Destroy(t.gameObject);
+            foreach (Transform t in warsContent) Object.Destroy(t.gameObject);
 
             // Populate Allies
             if (targetKingdom.hasAlliance())
@@ -635,7 +477,7 @@ namespace RulerBox
                 foreach (var ally in targetKingdom.getAlliance().kingdoms_list)
                 {
                     if (ally != targetKingdom && ally.isAlive())
-                        CreateSmallFlag(ally, alliesGrid);
+                        CreateSmallFlag(ally, alliesContent);
                 }
             }
 
@@ -650,7 +492,7 @@ namespace RulerBox
                     foreach (var enemy in enemies)
                     {
                         if (enemy != targetKingdom && enemy.isAlive())
-                            CreateSmallFlag(enemy, warsGrid);
+                            CreateSmallFlag(enemy, warsContent);
                     }
                 }
             }
@@ -661,8 +503,13 @@ namespace RulerBox
             var flagObj = new GameObject("Flag_" + k.data.name, typeof(RectTransform));
             flagObj.transform.SetParent(parent, false);
             
-            // Layout size controlled by Grid
-            
+            // CRITICAL ADDITION: Layout Element to define size in Horizontal Group
+            var le = flagObj.AddComponent<LayoutElement>();
+            le.minWidth = 30f;
+            le.minHeight = 30f;
+            le.preferredWidth = 30f;
+            le.preferredHeight = 30f;
+
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
             if (k.kingdomColor != null) bg.color = k.kingdomColor.getColorMain32();
