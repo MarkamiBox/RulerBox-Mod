@@ -230,7 +230,7 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 50f; 
             le.minWidth = 50f; 
-            le.flexibleWidth = 0.2f; 
+            le.flexibleWidth = 0f; 
             le.flexibleHeight = 1f;
 
             // Scroll Container
