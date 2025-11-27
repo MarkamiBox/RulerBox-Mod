@@ -153,16 +153,16 @@ namespace RulerBox
                 }
                 if (actor.current_tile != null)
                 {
-                     int distSq = Toolbox.SquaredDistTile(actor.current_tile, order.HomeTile);
-                     int maxSq = order.RadiusTiles * order.RadiusTiles;
-                     if (distSq > maxSq)
-                     {
-                         try { actor.cancelAllBeh(); } catch {}
-                         IssueMoveOrder(actor, order.HomeTile);
-                     }
-                 }
-             }
-             foreach(var a in toRemove) guardOrders.Remove(a);
+                    int distSq = Toolbox.SquaredDistTile(actor.current_tile, order.HomeTile);
+                    int maxSq = order.RadiusTiles * order.RadiusTiles;
+                    if (distSq > maxSq)
+                    {
+                        try { actor.cancelAllBeh(); } catch {}
+                        IssueMoveOrder(actor, order.HomeTile);
+                    }
+                }
+            }
+            foreach(var a in toRemove) guardOrders.Remove(a);
         }
         // Set guard point for currently selected soldiers
         private static void SetGuardPointForSelection()
