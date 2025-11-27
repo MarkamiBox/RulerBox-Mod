@@ -319,7 +319,7 @@ namespace RulerBox
 
             var v = col.AddComponent<VerticalLayoutGroup>();
             v.spacing = 2; 
-            v.padding = new RectOffset(0,0,5,5);
+            v.padding = new RectOffset(0,0,5,0);
             v.childControlWidth = true; 
             v.childControlHeight = true; 
             v.childForceExpandWidth = true; 
@@ -328,7 +328,9 @@ namespace RulerBox
             var le = col.AddComponent<LayoutElement>();
             le.preferredWidth = 60f; 
             le.flexibleWidth = 0f; 
+            le.flexibleHeight = 0.1f;
 
+            // --- DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -337,25 +339,36 @@ namespace RulerBox
                         return;
                     }
 
+                    // Enable flags so the patch allows the war and prevents duplicate popups
                     EventsSystem.AllowPlayerWar = true;
+                    EventsSystem.IsPlayerInitiated = true; 
                     try {
                         var warAsset = AssetManager.war_types_library.get("war_conquest");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
+                            
+                            // Show simple notification, no buttons needed
                             EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
                             Close();
                         }
-                    } finally { EventsSystem.AllowPlayerWar = false; }
+                    } 
+                    finally { 
+                        EventsSystem.AllowPlayerWar = false; 
+                        EventsSystem.IsPlayerInitiated = false;
+                    }
                 }
                 Refresh();
             });
 
+            // --- MAKE PEACE (With Gold Demands) ---
             CreateDiplomacyBtn(col.transform, "Make Peace", new Color(0.2f, 0.4f, 0.8f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null) {
                     if (!Main.selectedKingdom.isEnemy(targetKingdom)) {
                         WorldTip.showNow("We are not at war.", false, "top", 2f, "#FFFF00");
                         return;
                     }
+
+                    // Find active war
                     var wars = World.world.wars.getWars(Main.selectedKingdom);
                     War activeWar = null;
                     foreach(var w in wars) {
@@ -363,66 +376,153 @@ namespace RulerBox
                             activeWar = w; break;
                         }
                     }
+
                     if (activeWar != null) {
-                        World.world.wars.endWar(activeWar, WarWinner.Peace);
-                        EventsUI.ShowPopup($"Peace treaty signed with {targetKingdom.data.name}.", EventButtonType.Peace, targetKingdom, null, null, null);
-                        Close();
+                        // CALCULATE SCORE
+                        int myPower = Main.selectedKingdom.countTotalWarriors();
+                        int theirPower = targetKingdom.countTotalWarriors();
+                        
+                        // Case 1: We are stronger (Accept immediately)
+                        if(myPower >= theirPower) 
+                        {
+                            EventsSystem.IsPlayerInitiated = true;
+                            World.world.wars.endWar(activeWar, WarWinner.Peace);
+                            EventsSystem.IsPlayerInitiated = false;
+
+                            EventsUI.ShowPopup($"{targetKingdom.data.name} accepts your terms of peace.", EventButtonType.Peace, targetKingdom, null, null, null);
+                            Close();
+                        }
+                        // Case 2: We are weaker (They demand Gold)
+                        else 
+                        {
+                            int goldDemand = Mathf.Clamp((theirPower - myPower) * 5, 100, 5000); // Calculate demand
+                            
+                            EventsUI.ShowPopup(
+                                $"{targetKingdom.data.name} is winning the war!\nThey demand {goldDemand} gold reparations for peace.", 
+                                EventButtonType.Peace, 
+                                targetKingdom, 
+                                null, 
+                                // Accept (Pay)
+                                () => {
+                                    KingdomMetricsSystem.Data myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
+                                    if(myData.Treasury >= goldDemand) {
+                                        myData.Treasury -= goldDemand;
+                                        
+                                        EventsSystem.IsPlayerInitiated = true;
+                                        World.world.wars.endWar(activeWar, WarWinner.Peace);
+                                        EventsSystem.IsPlayerInitiated = false;
+
+                                        WorldTip.showNow($"Paid {goldDemand}g. War ended.", false, "top", 2f, "#9EE07A");
+                                        Close();
+                                    } else {
+                                        WorldTip.showNow($"Not enough gold! Need {goldDemand}g.", false, "top", 2f, "#FF0000");
+                                    }
+                                }, 
+                                // Refuse
+                                () => {
+                                    WorldTip.showNow("Demands refused. The war continues.", false, "top", 2f, "#FF5A5A");
+                                }, 
+                                "Pay & End War", 
+                                "Refuse"
+                            );
+                        }
                     }
                 }
                 Refresh();
             });
 
+            // --- FORM ALLIANCE (With Opinion Check) ---
             CreateDiplomacyBtn(col.transform, "Form Alliance", new Color(0.1f, 0.5f, 0.1f, 1f), () => {
                  if(Main.selectedKingdom != null && targetKingdom != null) {
                     if (Main.selectedKingdom.isEnemy(targetKingdom)) {
                         WorldTip.showNow("We are at war! Make peace first.", false, "top", 2f, "#FF5A5A");
                         return;
                     }
+
+                    // Check Relations
                     var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
-                    var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
+                    var opinion = relation?.getOpinion(targetKingdom, Main.selectedKingdom); // What THEY think of US
                     int score = opinion != null ? opinion.total : 0;
 
-                    if (score < 30) {
-                        WorldTip.showNow($"They refuse! (Opinion: {score}/30)", false, "top", 2f, "#FF5A5A");
+                    // 1. Refuse if score is too low
+                    if (score < 0) {
+                        EventsUI.ShowPopup($"{targetKingdom.data.name} refuses!\nThey despise us too much (Opinion: {score}).", EventButtonType.Random, targetKingdom, null, null, null);
                         return;
                     }
 
-                    bool success = false;
-                    if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
-                        World.world.alliances.newAlliance(Main.selectedKingdom, targetKingdom);
-                        success = true;
+                    Action makeAlliance = () => {
+                        bool success = false;
+                        EventsSystem.IsPlayerInitiated = true; // Block event popup from patch
+
+                        if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
+                            World.world.alliances.newAlliance(Main.selectedKingdom, targetKingdom);
+                            success = true;
+                        }
+                        else if (Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
+                            Main.selectedKingdom.getAlliance().join(targetKingdom);
+                            success = true;
+                        }
+                        else if (!Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance()) {
+                            targetKingdom.getAlliance().join(Main.selectedKingdom);
+                            success = true;
+                        }
+                        else {
+                            WorldTip.showNow("Conflicting alliances.", false, "top", 2f, "#FFFF00");
+                        }
+
+                        EventsSystem.IsPlayerInitiated = false;
+
+                        if (success) {
+                            WorldTip.showNow("Alliance formed!", false, "top", 2f, "#9EE07A");
+                            Close();
+                        }
+                    };
+
+                    // 2. Accept directly if score is high
+                    if (score >= 30) {
+                        makeAlliance.Invoke();
                     }
-                    else if (Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
-                        Main.selectedKingdom.getAlliance().join(targetKingdom);
-                        success = true;
-                    }
-                    else if (!Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance()) {
-                        targetKingdom.getAlliance().join(Main.selectedKingdom);
-                        success = true;
-                    }
+                    // 3. Ask for gift if score is neutral (0 to 30)
                     else {
-                        WorldTip.showNow("Both kingdoms are already in different alliances.", false, "top", 2f, "#FFFF00");
-                        return;
-                    }
-
-                    if (success) {
-                        EventsUI.ShowPopup($"Alliance formed with {targetKingdom.data.name}!", EventButtonType.Diplomacy, targetKingdom, null, null, null);
-                        Close();
+                        int goldDemand = (30 - score) * 10; 
+                        EventsUI.ShowPopup(
+                            $"{targetKingdom.data.name} is hesitant (Opinion: {score}).\nThey ask for a gift of {goldDemand} gold to sign the treaty.",
+                            EventButtonType.Diplomacy,
+                            targetKingdom,
+                            null,
+                            // Pay
+                            () => {
+                                KingdomMetricsSystem.Data myData = KingdomMetricsSystem.Get(Main.selectedKingdom);
+                                if(myData.Treasury >= goldDemand) {
+                                    myData.Treasury -= goldDemand;
+                                    makeAlliance.Invoke();
+                                } else {
+                                    WorldTip.showNow("Not enough gold.", false, "top", 2f, "#FF0000");
+                                }
+                            },
+                            // Cancel
+                            null,
+                            "Pay & Sign",
+                            "Cancel"
+                        );
                     }
                 }
                 Refresh();
             });
 
+            // --- NON-AGGRESSION PACT ---
             CreateDiplomacyBtn(col.transform, "Non-Aggression", new Color(0.1f, 0.4f, 0.5f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null) {
                     var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
-                    var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
+                    var opinion = relation?.getOpinion(targetKingdom, Main.selectedKingdom);
                     int score = opinion != null ? opinion.total : 0;
-                    if (score < 0) {
-                        WorldTip.showNow($"They distrust us. (Opinion: {score})", false, "top", 2f, "#FF5A5A");
+
+                    if (score < -50) {
+                        WorldTip.showNow($"They hate us too much! (Opinion: {score})", false, "top", 2f, "#FF5A5A");
                         return;
                     }
-                    World.world.diplomacy.eventFriendship(Main.selectedKingdom);
+
+                    World.world.diplomacy.eventFriendship(Main.selectedKingdom); // Boost opinion mechanics game-side
                     EventsUI.ShowPopup($"Non-Aggression Pact signed with {targetKingdom.data.name}.", EventButtonType.Peace, targetKingdom, null, null, null);
                     Close();
                 }
