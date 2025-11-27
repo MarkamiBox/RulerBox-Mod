@@ -282,13 +282,16 @@ namespace RulerBox
             var v = section.AddComponent<VerticalLayoutGroup>();
             v.spacing = 4;
             v.padding = new RectOffset(4, 4, 4, 4);
-            v.childControlWidth = true;
+            v.childControlWidth = false;
             v.childControlHeight = true;
-            v.childForceExpandWidth = true;
+            v.childForceExpandWidth = false;
             v.childForceExpandHeight = false;
 
             var bg = section.AddComponent<Image>();
-            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
+            if (windowInnerSprite != null) { 
+                bg.sprite = windowInnerSprite; 
+                bg.type = Image.Type.Sliced; 
+            }
             bg.color = bgCol;
 
             // Title
