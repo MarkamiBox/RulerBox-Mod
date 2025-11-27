@@ -46,7 +46,7 @@ namespace RulerBox
             // Background
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.95f); // Increased opacity slightly for readability
+            bg.color = new Color(0.1f, 0.1f, 0.15f, 0.5f); 
 
             // Main Vertical Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
