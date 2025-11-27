@@ -310,8 +310,8 @@ namespace RulerBox
             grid.constraint = GridLayoutGroup.Constraint.Flexible;
 
             // FIX: Grid needs ContentSizeFitter to expand properly in a Vertical Layout
-            var fitter = gridObj.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            //var fitter = gridObj.AddComponent<ContentSizeFitter>();
+            //fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
 
             return gridObj.transform;
         }
