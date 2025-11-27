@@ -286,6 +286,8 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandWidth = false;
             v.childForceExpandHeight = false;
+            v.preferredWidth = 20f; 
+            v.minWidth = 20f; 
 
             var bg = section.AddComponent<Image>();
             if (windowInnerSprite != null) { 
