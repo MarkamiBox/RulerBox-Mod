@@ -202,8 +202,8 @@ namespace RulerBox
             h.childForceExpandHeight = true;
 
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 75f; 
-            le.minHeight = 75f; 
+            le.preferredHeight = 100f; 
+            le.minHeight = 100f; 
             le.flexibleHeight = 0f; 
             le.preferredWidth = 20f; 
             le.minWidth = 20f; 
@@ -507,10 +507,10 @@ namespace RulerBox
             
             // CRITICAL ADDITION: Layout Element to define size in Horizontal Group
             var le = flagObj.AddComponent<LayoutElement>();
-            le.minWidth = 30f;
-            le.minHeight = 30f;
-            le.preferredWidth = 30f;
-            le.preferredHeight = 30f;
+            le.minWidth = 15f;
+            le.minHeight = 15f;
+            le.preferredWidth = 15f;
+            le.preferredHeight = 15f;
 
             var bg = flagObj.AddComponent<Image>();
             bg.sprite = k.getElementBackground();
