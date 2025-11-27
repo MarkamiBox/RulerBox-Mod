@@ -20,7 +20,6 @@ namespace RulerBox
         {
             EnsureTooltip();
             var et = AddOrGetEventTrigger(chip);
-
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener((_) =>
             {
@@ -29,47 +28,41 @@ namespace RulerBox
                 Show();
             });
             et.triggers.Add(enter);
-
             var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
-
+        // Manpower tooltip text
         public static string ManpowerTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
-
             string modeStr = "Normal";
             if (ArmySystem.CurrentMode == ArmySelectionMode.Recruit) 
                 modeStr = "<color=#7CFC00>RECRUIT (Drag civilians)</color>";
             else if (ArmySystem.CurrentMode == ArmySelectionMode.Dismiss) 
                 modeStr = "<color=#FF5A5A>DISMISS (Drag soldiers)</color>";
-
             return
                 $"<b>Manpower Command</b>\n" +
                 $"Current Mode: {modeStr}\n" +
                 $"[B] Cycle Modes (Recruit/Dismiss/Normal)\n\n" +
-                
                 //$"Active Soldiers: {ColorGold(FormatBig(d.Soldiers))}\n" +
                 $"Eligible Civilians: {ColorGold(FormatBig(d.Adults - d.Soldiers))}\n\n" +
-
                 $"<b>Manpower Points (Draft Currency)</b>\n" +
                 $"Available: {ColorGold(FormatBig(d.ManpowerCurrent))}\n" +
                 $"Capacity:  {FormatBig(d.ManpowerMax)}\n\n" +
-                
                 $"<color=#999999>Drafting costs 1 Manpower Point per soldier.\n" +
                 $"Dismissing refunds Manpower Point.</color>";
         }
-
         // ==============================================================================================
         // ECONOMY TOOLTIP
         // ==============================================================================================
+        
+        //  Attach economy tooltip to a chip
         public static void AttachEconomyTooltip(GameObject chip)
         {
             EnsureTooltip();
             var et = AddOrGetEventTrigger(chip);
-
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener((_) =>
             {
@@ -78,24 +71,20 @@ namespace RulerBox
                 Show();
             });
             et.triggers.Add(enter);
-
             var exit = new EventTrigger.Entry { eventID = EventTriggerType.PointerExit };
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
-
+        // Economy tooltip text
         public static string EconomyTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
-
             bool extended = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
             var treasury = Money(d.Treasury, whenPositive: "gold", zeroGold: true);
             var income   = Money(d.Income);
             var expenses = Money(-Math.Abs(d.Expenses));
             var balance  = Money(d.Balance, whenPositive: "gold", zeroGold: true);
-
             if (!extended)
             {
                 // Compact view
@@ -104,7 +93,6 @@ namespace RulerBox
                 {
                     tradeStr = $"\nTrade: {ColorGreen("+" + FormatBig(d.TradeIncome))} / {ColorRed("-" + FormatBig(d.TradeExpenses))}";
                 }
-
                 return
                     $"Treasury: {treasury}\n\n" +
                     $"Income:   {income}\n" +
@@ -113,20 +101,17 @@ namespace RulerBox
                     $"Balance:  {balance}\n\n" +
                     $"<color=#999999>Hold <b>Shift</b> for detailed breakdown</color>";
             }
-
             // ---- Extended breakdown ----
             string taxRateStr   = ColorGold($"{d.TaxRateLocal * 100f:0.##}%");
             string warPenStr    = d.TaxPenaltyFromWar != 0 ? ColorRed($"-{d.TaxPenaltyFromWar:0.##}%") : ColorGold("0%");
             string stabModStr   = d.TaxModifierFromStability != 0 ? (d.TaxModifierFromStability > 0 ? ColorGreen($"+{d.TaxModifierFromStability:0.##}%") : ColorRed($"{d.TaxModifierFromStability:0.##}%")) : ColorGold("0%");
             string cityModStr   = d.TaxModifierFromCities != 0 ? ColorGold($"+{d.TaxModifierFromCities:0.##}%") : ColorGold("0%");
-
             string baseWealth   = Money(SafeLong(d.TaxBaseWealth));
             string incomeBase   = Money(d.IncomeBeforeModifiers);
             string incomeWar    = Money(d.IncomeAfterWarPenalty);
             string incomeStab   = Money(d.IncomeAfterStability);
             string incomeCities = Money(d.IncomeAfterCityBonus);
             string incomeTrade  = Money(d.TradeIncome);
-
             string armyCost     = Money(-Math.Abs(d.ExpensesMilitary));
             string infraCost    = Money(-Math.Abs(d.ExpensesInfrastructure));
             string demoCost     = Money(-Math.Abs(d.ExpensesDemography));
@@ -134,11 +119,9 @@ namespace RulerBox
             string lawsCost     = Money(-Math.Abs(d.ExpensesLawUpkeep));
             string tradeCost    = Money(-Math.Abs(d.TradeExpenses));
             string corruptCost  = Money(-Math.Abs(d.ExpensesCorruption));
-
             return
                 $"Treasury: {treasury}\n" +
                 $"Balance:  {balance}\n\n" +
-
                 $"<b>INCOME</b>\n" +
                 $"- Base taxable wealth: {baseWealth}\n" +
                 $"- Raw tax {taxRateStr}:             {incomeBase}\n" +
@@ -147,7 +130,6 @@ namespace RulerBox
                 $"- After cities bonus ({cityModStr}):  {incomeCities}\n" +
                 $"- Trade Income:                       {incomeTrade}\n" +
                 $"- Final income:       {income}\n\n" +
-
                 $"<b>EXPENSES</b>\n" +
                 $"- Army ({FormatBig(d.Soldiers)} soldiers):        {armyCost}\n" +
                 $"- Infrastructure ({FormatBig(d.Cities)} cities, {FormatBig(d.Buildings)} bld): {infraCost}\n" +
