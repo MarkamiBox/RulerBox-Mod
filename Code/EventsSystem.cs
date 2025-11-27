@@ -8,7 +8,6 @@ namespace RulerBox
     public static class EventsSystem
     {
         public static bool AllowPlayerWar = false;
-        public static bool IsPlayerInitiated = false;
         // ruler event data structure       
         private class RulerEvent
         {
@@ -107,7 +106,7 @@ namespace RulerBox
             var me = Main.selectedKingdom;
             if (me == null || defender == null || attacker == null || war == null)
                 return;
-            if (IsPlayerInitiated) return;
+            if (AllowPlayerWar) return;
             // Only show event when THIS war is against the focused kingdom.
             if (defender != me)
                 return;
@@ -127,7 +126,7 @@ namespace RulerBox
         // Called when a war involving our focused kingdom ends with peace.
         public static void OnWarEndedWithPeace(War war)
         {
-            if (IsPlayerInitiated) return;
+            if (AllowPlayerWar) return;
             var me = Main.selectedKingdom;
             if (me == null || war == null)
                 return;
@@ -177,7 +176,7 @@ namespace RulerBox
         // Called when an alliance is formed that includes our focused kingdom.
         public static void OnAllianceFormed(Alliance alliance, Kingdom k1, Kingdom k2)
         {
-            if (IsPlayerInitiated) return;
+            if (AllowPlayerWar) return;
             var me = Main.selectedKingdom;
             if (me == null || alliance == null || k1 == null || k2 == null)
                 return;
@@ -497,23 +496,20 @@ namespace RulerBox
             // If the player is the attacker
             if (pAttacker != null && pAttacker == Main.selectedKingdom)
             {
-                // If AllowPlayerWar is TRUE (set by our button), allow it.
-                // If FALSE (random AI logic), block it.
-                if (!EventsSystem.AllowPlayerWar)
+                if (EventsSystem.AllowPlayerWar == false)
                 {
                     __result = null; 
                     return false; 
                 }
-                }
-            return true;
             }
+            return true;
+        }
 
         [HarmonyPostfix]
         public static void Postfix(War __result, Kingdom pAttacker, Kingdom pDefender)
         {
             if (__result != null)
             {
-                // Notify system a war started so we can show "Declared War" popup if we are the defender
                 EventsSystem.OnWarDeclared(pAttacker, pDefender, __result);
             }
         }

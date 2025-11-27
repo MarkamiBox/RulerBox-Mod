@@ -342,7 +342,6 @@ namespace RulerBox
 
                     // Enable flags so the patch allows the war and prevents duplicate popups
                     EventsSystem.AllowPlayerWar = true;
-                    EventsSystem.IsPlayerInitiated = true; 
                     try {
                         var warAsset = AssetManager.war_types_library.get("war_whisper");
                         if (warAsset != null) {
@@ -355,7 +354,6 @@ namespace RulerBox
                     }
                     finally { 
                         EventsSystem.AllowPlayerWar = false; 
-                        EventsSystem.IsPlayerInitiated = false;
                     }
                 }
                 Refresh();
@@ -386,9 +384,9 @@ namespace RulerBox
                         // Case 1: We are stronger (Accept immediately)
                         if(myPower >= theirPower) 
                         {
-                            EventsSystem.IsPlayerInitiated = true;
+                            EventsSystem.AllowPlayerWar = true;
                             World.world.wars.endWar(activeWar, WarWinner.Peace);
-                            EventsSystem.IsPlayerInitiated = false;
+                            EventsSystem.AllowPlayerWar = false;
 
                             EventsUI.ShowPopup($"{targetKingdom.data.name} accepts your terms of peace.", EventButtonType.Peace, targetKingdom, null, null, null);
                             Close();
@@ -411,9 +409,9 @@ namespace RulerBox
                                     if(myData != null && myData.Treasury >= goldDemand) {
                                         myData.Treasury -= goldDemand;
                                         
-                                        EventsSystem.IsPlayerInitiated = true;
+                                        EventsSystem.AllowPlayerWar = true;
                                         World.world.wars.endWar(activeWar, WarWinner.Peace);
-                                        EventsSystem.IsPlayerInitiated = false;
+                                        EventsSystem.AllowPlayerWar = false;
 
                                         WorldTip.showNow($"Paid {goldDemand}g. War ended.", false, "top", 2f, "#9EE07A");
                                         Close();
@@ -456,7 +454,7 @@ namespace RulerBox
                     // FIX: Explicitly use System.Action here to resolve the compiler error
                     System.Action makeAlliance = () => {
                         bool success = false;
-                        EventsSystem.IsPlayerInitiated = true; // Block event popup from patch
+                        EventsSystem.AllowPlayerWar = true; // Block event popup from patch
 
                         if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance()) {
                             World.world.alliances.newAlliance(Main.selectedKingdom, targetKingdom);
