@@ -276,12 +276,12 @@ namespace RulerBox
 
         private static Transform CreateRelationSubSection(Transform parent, string title, Color bgCol)
         {
-            var rowObj = new GameObject(name, typeof(RectTransform));
+            var rowObj = new GameObject(title, typeof(RectTransform));
             rowObj.transform.SetParent(parent, false);
             // Background
             var bg = rowObj.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = tint;
+            bg.color = bgCol;
             // ScrollRect
             var scroll = rowObj.AddComponent<ScrollRect>();
             scroll.horizontal = true; scroll.vertical = false;
