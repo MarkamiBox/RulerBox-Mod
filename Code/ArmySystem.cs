@@ -15,16 +15,16 @@ namespace RulerBox
 
     public static class ArmySystem
     {
+        // Data structure for guard orders
         private class GuardOrder
         {
             public WorldTile HomeTile;
             public int RadiusTiles;
         }
-
-        private static readonly Dictionary<Actor, GuardOrder> _guardOrders = new Dictionary<Actor, GuardOrder>();
+        //
+        private static readonly Dictionary<Actor, GuardOrder> guardOrders = new Dictionary<Actor, GuardOrder>();
         private static readonly List<Actor> _lastSelection = new List<Actor>();
         private static readonly MethodInfo _miSetTileTarget = AccessTools.Method(typeof(Actor), "setTileTarget", new[] { typeof(WorldTile) });
-        
         private const int DefaultGuardRadiusTiles = 5;
         public static ArmySelectionMode CurrentMode = ArmySelectionMode.Normal;
 
@@ -156,10 +156,10 @@ namespace RulerBox
 
         private static void UpdateGuardOrders()
         {
-             if (_guardOrders.Count == 0) return;
+             if (guardOrders.Count == 0) return;
              List<Actor> toRemove = new List<Actor>();
 
-             foreach (var kvp in _guardOrders)
+             foreach (var kvp in guardOrders)
              {
                  var actor = kvp.Key;
                  var order = kvp.Value;
@@ -184,7 +184,7 @@ namespace RulerBox
                  }
              }
 
-             foreach(var a in toRemove) _guardOrders.Remove(a);
+             foreach(var a in toRemove) guardOrders.Remove(a);
         }
 
         private static void SetGuardPointForSelection()
@@ -197,9 +197,9 @@ namespace RulerBox
             foreach(var a in _lastSelection)
             {
                 if (a == null || a.hasDied()) continue;
-                if (!_guardOrders.ContainsKey(a)) _guardOrders[a] = new GuardOrder();
-                _guardOrders[a].HomeTile = tile;
-                _guardOrders[a].RadiusTiles = DefaultGuardRadiusTiles;
+                if (!guardOrders.ContainsKey(a)) guardOrders[a] = new GuardOrder();
+                guardOrders[a].HomeTile = tile;
+                guardOrders[a].RadiusTiles = DefaultGuardRadiusTiles;
                 IssueMoveOrder(a, tile);
                 count++;
             }
@@ -212,7 +212,7 @@ namespace RulerBox
             int count = 0;
             foreach(var a in _lastSelection)
             {
-                if(_guardOrders.Remove(a)) count++;
+                if(guardOrders.Remove(a)) count++;
             }
             WorldTip.showNow($"Guard cleared for {count} soldiers", false, "top", 2f, "#9EE07A");
         }
