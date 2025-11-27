@@ -333,11 +333,18 @@ namespace RulerBox
             le.flexibleWidth = 0f; 
             le.flexibleHeight = 0.1f;
 
-            // Action Buttons (Colors Preserved)
+            // --- 1. DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
-                    // FIX: Enable AllowPlayerWar so the patch lets us start a war
+                    // 1. Check if already at war
+                    if (Main.selectedKingdom.isEnemy(targetKingdom))
+                    {
+                        WorldTip.showNow("We are already at war!", false, "top", 2f, "#FF0000");
+                        return;
+                    }
+
+                    // 2. Execute War Logic
                     EventsSystem.AllowPlayerWar = true;
                     try
                     {
@@ -345,7 +352,17 @@ namespace RulerBox
                         if (warAsset != null)
                         {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
-                            WorldTip.showNow("War Declared!", false, "top", 2f, "#FF0000");
+                            
+                            // 3. Show Event Window
+                            EventsUI.ShowPopup(
+                                $"War declared on {targetKingdom.data.name}!", 
+                                EventButtonType.War, 
+                                targetKingdom, 
+                                null, null, null // No buttons needed for simple notification, uses default OK
+                            );
+
+                            // 4. Return to Main Window
+                            Close();
                         }
                         else
                         {
@@ -354,30 +371,111 @@ namespace RulerBox
                     }
                     finally
                     {
-                        EventsSystem.AllowPlayerWar = false; // Reset
+                        EventsSystem.AllowPlayerWar = false; // Reset safety
                     }
-                    
-                    Refresh();
-                    DiplomacyWindow.Refresh(Main.selectedKingdom);
                 }
             });
 
+            // --- 2. FORM ALLIANCE ---
             CreateDiplomacyBtn(col.transform, "Form Alliance", new Color(0.1f, 0.5f, 0.1f, 1f), () => {
                  if(Main.selectedKingdom != null && targetKingdom != null)
                 {
-                    if(World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom) == null) 
+                    // 1. Check if enemies
+                    if (Main.selectedKingdom.isEnemy(targetKingdom))
                     {
-                         WorldTip.showNow("Alliance Proposal Sent (Simulated)", false, "top", 2f, "#00FF00");
+                        WorldTip.showNow("We are at war! Make peace first.", false, "top", 2f, "#FF5A5A");
+                        return;
                     }
+
+                    // 2. Check Relations (Opinion)
+                    var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
+                    // Calculate opinion score (API: KingdomOpinion getOpinion(Kingdom pMain, Kingdom pTarget))
+                    var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
+                    int score = opinion != null ? opinion.total : 0;
+
+                    if (score < 20)
+                    {
+                        WorldTip.showNow($"They refuse the alliance! (Opinion: {score}/20)", false, "top", 2f, "#FF5A5A");
+                        return;
+                    }
+
+                    // 3. Execute Alliance Logic
+                    bool success = false;
+                    
+                    // Case A: Neither has alliance -> Create New
+                    if (!Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance())
+                    {
+                        World.world.alliances.newAlliance(Main.selectedKingdom, targetKingdom);
+                        success = true;
+                    }
+                    // Case B: Player has alliance -> Invite Target
+                    else if (Main.selectedKingdom.hasAlliance() && !targetKingdom.hasAlliance())
+                    {
+                        var alliance = Main.selectedKingdom.getAlliance();
+                        alliance.join(targetKingdom);
+                        success = true;
+                    }
+                    // Case C: Target has alliance -> Player joins Target
+                    else if (!Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance())
+                    {
+                        var alliance = targetKingdom.getAlliance();
+                        alliance.join(Main.selectedKingdom);
+                        success = true;
+                    }
+                    // Case D: Both have alliances -> Fail (too complex to merge for simple button)
                     else
                     {
-                        WorldTip.showNow("Already have relations!", false, "top", 2f, "#FFFF00");
+                        WorldTip.showNow("Both kingdoms are already in different alliances.", false, "top", 2f, "#FFFF00");
+                        return;
+                    }
+
+                    if (success)
+                    {
+                        // 4. Show Event Window
+                        EventsUI.ShowPopup(
+                            $"Alliance formed with {targetKingdom.data.name}!", 
+                            EventButtonType.Diplomacy, 
+                            targetKingdom, 
+                            null, null, null
+                        );
+
+                        // 5. Return to Main Window
+                        Close();
                     }
                 }
             });
 
+            // --- 3. NON-AGGRESSION PACT ---
             CreateDiplomacyBtn(col.transform, "Non-Aggression Pact", new Color(0.1f, 0.4f, 0.5f, 1f), () => {
-                 WorldTip.showNow("Pact Signed (Simulated)", false, "top", 2f, "#00FFFF");
+                if(Main.selectedKingdom != null && targetKingdom != null)
+                {
+                    // 1. Check Relations
+                    var relation = World.world.diplomacy.getRelation(Main.selectedKingdom, targetKingdom);
+                    var opinion = relation?.getOpinion(Main.selectedKingdom, targetKingdom);
+                    int score = opinion != null ? opinion.total : 0;
+
+                    // Threshold lower than alliance, but must be positive
+                    if (score < 0)
+                    {
+                        WorldTip.showNow($"They distrust us too much for a pact. (Opinion: {score})", false, "top", 2f, "#FF5A5A");
+                        return;
+                    }
+
+                    // 2. Execute Pact Logic (Simulated + Event)
+                    // We can simulate the "Prevent Attack" by giving a temporary relation boost or simply Roleplaying it via the event system
+                    // Since specific "Prevent Attack" logic requires deep AI patches, we mark it as signed visually.
+                    
+                    // 3. Show Event Window
+                    EventsUI.ShowPopup(
+                        $"Non-Aggression Pact signed with {targetKingdom.data.name}.\nThey will think twice before attacking.", 
+                        EventButtonType.Peace, 
+                        targetKingdom, 
+                        null, null, null
+                    );
+
+                    // 4. Return to Main Window
+                    Close();
+                }
             });
         }
 
