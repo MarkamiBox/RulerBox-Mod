@@ -55,6 +55,7 @@ namespace RulerBox
                 TopPanelUI.Refresh();
                 EventsSystem.Tick(dt);
                 TradeManager.Tick(dt);
+                DiplomacyWindow.Refresh(Main.selectedKingdom);
             }
         }
 
