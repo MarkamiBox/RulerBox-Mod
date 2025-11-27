@@ -204,8 +204,8 @@ namespace RulerBox
 
             // IMPORTANT: flexibleHeight = 1f to fill the space between header and footer
             var le = container.AddComponent<LayoutElement>();
-            le.preferredHeight = 80f; 
-            le.minHeight = 80f; 
+            le.preferredHeight = 75f; 
+            le.minHeight = 75f; 
             le.flexibleHeight = 0f; 
 
             // === Left Column (Relations List) ===
@@ -228,16 +228,11 @@ namespace RulerBox
             v.childForceExpandHeight = false;
 
             var le = col.AddComponent<LayoutElement>();
-            le.flexibleWidth = 1f; 
+            sLe.preferredWidth = 50f; 
+            sLe.minWidth = 50f; 
+            le.flexibleWidth = 0.2f; 
             le.flexibleHeight = 1f;
 
-            // Label
-            var label = CreateText(col.transform, "Relations", 9, FontStyle.Bold, new Color(0.9f, 0.9f, 0.9f));
-            label.alignment = TextAnchor.MiddleCenter;
-            var lLe = label.gameObject.AddComponent<LayoutElement>();
-            lLe.minHeight = 8f; 
-            lLe.preferredHeight = 8f; 
-            lLe.flexibleHeight = 0;
             // Scroll Container
             var listObj = new GameObject("RelationsList", typeof(RectTransform));
             listObj.transform.SetParent(col.transform, false);
