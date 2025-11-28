@@ -21,16 +21,19 @@ namespace RulerBox
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
             bgSprite          = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.InvHub.png");
             tradeButtonSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.ButtonTrade.png");
-
+            
+            // === ROOT ===
             root = new GameObject("ResourcesTradeWindowRoot");
             root.transform.SetParent(parent, false);
-
+            
+            // Full Stretch
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
+            // Vertical Layout
             var v = root.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 6;
@@ -60,6 +63,7 @@ namespace RulerBox
             scrollLE.preferredHeight = 200f;
             scrollLE.flexibleHeight = 1f;
 
+            // Background
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
             {
@@ -71,11 +75,13 @@ namespace RulerBox
                 bgImg.color = new Color(0f, 0f, 0f, 0.35f);
             }
 
+            // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
+            // Viewport
             var viewportGO = new GameObject("Viewport");
             viewportGO.transform.SetParent(scrollGO.transform, false);
             var viewportRT = viewportGO.AddComponent<RectTransform>();
@@ -86,6 +92,7 @@ namespace RulerBox
             viewportGO.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
             viewportGO.AddComponent<Mask>().showMaskGraphic = false;
 
+            // Content
             var contentGO = new GameObject("Content");
             contentGO.transform.SetParent(viewportGO.transform, false);
             var contentRT = contentGO.AddComponent<RectTransform>();
@@ -93,13 +100,13 @@ namespace RulerBox
             contentRT.anchorMax = new Vector2(1, 1);
             contentRT.pivot = new Vector2(0.5f, 1f);
 
+            // Vertical Layout for Content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVL.childAlignment = TextAnchor.UpperCenter;
             contentVL.spacing = 4;
             contentVL.padding = new RectOffset(4, 4, 2, 2);
             contentVL.childControlWidth = true;
             contentVL.childControlHeight = true;
-            // FIXED: Matches InvestmentsWindow logic to keep cards narrow
             contentVL.childForceExpandWidth = false; 
             contentVL.childForceExpandHeight = false;
 
@@ -122,7 +129,6 @@ namespace RulerBox
             var bottomLE = bottomRow.AddComponent<LayoutElement>();
             bottomLE.preferredHeight = 26f;
 
-            // FIXED: Explicitly close this window when going back
             BuildButton(bottomRow.transform, "Back", () => 
             {
                 SetVisible(false);
@@ -131,7 +137,8 @@ namespace RulerBox
 
             root.SetActive(false);
         }
-
+        
+        // Helpers
         public static void SetVisible(bool visible)
         {
             if (root != null) root.SetActive(visible);
@@ -152,6 +159,7 @@ namespace RulerBox
             }
         }
 
+        // Refreshes the resource list for the given kingdom
         public static void Refresh(Kingdom k)
         {
             if (root == null || k == null) return;
@@ -172,6 +180,7 @@ namespace RulerBox
             }
         }
 
+        // Builds a single resource row
         private static void BuildResourceRow(Transform parent, string resId, KingdomMetricsSystem.Data data)
         {
             var rowGO = new GameObject(resId + "_Row");
