@@ -165,7 +165,7 @@ namespace RulerBox
             Transform content = root.transform.Find("LawsScroll/Viewport/Content");
             if (content != null)
             {
-                UpdateRowHighlight(content, "ConscriptionRow", d.Law_Conscription);
+                UpdateRowHighlight(content, "ConscriptionRow", d.Law_PowerSharing);
                 UpdateRowHighlight(content, "WarBondsRow", d.Law_WarBonds);
                 UpdateRowHighlight(content, "PartyLoyaltyRow", d.Law_PartyLoyalty);
                 UpdateRowHighlight(content, "CentralizationRow", d.Law_Centralization);
@@ -287,7 +287,7 @@ namespace RulerBox
         {
             switch(lawId)
             {
-                case "conscription": d.Law_Conscription = level; break;
+                case "conscription": d.Law_PowerSharing = level; break;
                 case "war_bonds": d.Law_WarBonds = level; break;
                 case "party_loyalty": d.Law_PartyLoyalty = level; break;
                 case "power_sharing": d.Law_Centralization = level; break;
