@@ -21,7 +21,7 @@ namespace RulerBox
             "High Marshall", "Royal Advisor", "Grand Treasurer", "Spymaster", 
             "Chief Justice", "Head of Research", "Fleet Admiral", "High Priest", 
             "Minister of Defense", "Governor", "Diplomat", "Reformer",
-            "Corrupt Official", "Tyrant", "Usurper", "Fanatic" // Added some "flavor" titles
+            "Corrupt Official", "Tyrant", "Usurper", "Fanatic", "Visionary"
         };
 
         public static void Initialize(Transform parent)
@@ -161,8 +161,8 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.minHeight = 52f;
-            le.preferredHeight = 52f;
+            le.minHeight = 54f; // Taller for better avatar fit
+            le.preferredHeight = 54f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
@@ -175,55 +175,65 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 10;
-            h.padding = new RectOffset(8, 8, 6, 6);
+            h.spacing = 8;
+            h.padding = new RectOffset(6, 6, 4, 4);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- AVATAR RENDERING ---
-            var avatarBgObj = new GameObject("AvatarBackground");
-            avatarBgObj.transform.SetParent(btnObj.transform, false);
-            var avatarLE = avatarBgObj.AddComponent<LayoutElement>();
-            avatarLE.minWidth = 44f; 
-            avatarLE.preferredWidth = 44f;
-            avatarLE.minHeight = 44f; 
-            avatarLE.preferredHeight = 44f;
+            // --- AVATAR (FIXED VISIBILITY & COLOR) ---
+            var avatarContainer = new GameObject("AvatarContainer");
+            avatarContainer.transform.SetParent(btnObj.transform, false);
+            
+            var avLe = avatarContainer.AddComponent<LayoutElement>();
+            avLe.minWidth = 46f; avLe.preferredWidth = 46f;
+            avLe.minHeight = 46f; avLe.preferredHeight = 46f;
 
-            var avatarBgImg = avatarBgObj.AddComponent<Image>();
-            avatarBgImg.sprite = Main.selectedKingdom?.getElementIcon();
-            avatarBgImg.color = new Color(0.3f, 0.3f, 0.3f, 1f); // Dark background
+            // 1. Background Circle (Kingdom Icon)
+            var bgImg = avatarContainer.AddComponent<Image>();
+            if (leader.UnitLink != null && leader.UnitLink.kingdom != null)
+                bgImg.sprite = leader.UnitLink.kingdom.getElementIcon();
+            else if (Main.selectedKingdom != null)
+                bgImg.sprite = Main.selectedKingdom.getElementIcon();
+            
+            // Dark grey background for contrast
+            bgImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
 
+            // 2. Unit Sprite Overlay
             if (leader.UnitLink != null)
             {
-                var unitImgObj = new GameObject("UnitSprite");
-                unitImgObj.transform.SetParent(avatarBgObj.transform, false);
+                var spriteObj = new GameObject("UnitSprite");
+                spriteObj.transform.SetParent(avatarContainer.transform, false);
                 
-                var unitRT = unitImgObj.AddComponent<RectTransform>();
-                unitRT.anchorMin = Vector2.zero; unitRT.anchorMax = Vector2.one;
-                unitRT.sizeDelta = Vector2.zero;
+                var rt = spriteObj.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.sizeDelta = Vector2.zero;
+                // Slight padding so it fits inside the circle
+                rt.offsetMin = new Vector2(2,2); rt.offsetMax = new Vector2(-2,-2);
 
-                var unitImg = unitImgObj.AddComponent<Image>();
-                unitImg.preserveAspect = true;
+                var uImg = spriteObj.AddComponent<Image>();
+                uImg.preserveAspect = true;
 
-                try
+                try 
                 {
-                    unitImg.sprite = leader.UnitLink.getSpriteToRender();
+                    // Get the texture
+                    uImg.sprite = leader.UnitLink.getSpriteToRender();
                     
-                    // --- FIX: Use kingdomColor object instead of incorrect ColorAsset method ---
-                    if (leader.UnitLink.kingdom != null && leader.UnitLink.kingdom.kingdomColor != null)
+                    // Apply Kingdom Color correctly
+                    if (leader.UnitLink.kingdom != null)
                     {
-                        unitImg.color = leader.UnitLink.kingdom.kingdomColor.getColorMain(); 
+                        // Safe color retrieval
+                        uImg.color = leader.UnitLink.kingdom.getColor().getColor();
                     }
                     else
                     {
-                        unitImg.color = Color.white;
+                        uImg.color = Color.white;
                     }
-                }
+                } 
                 catch 
-                {
-                   unitImg.color = Color.clear; 
+                { 
+                    uImg.color = Color.white; // Fallback visibility
                 }
             }
 
@@ -233,45 +243,48 @@ namespace RulerBox
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 2;
+            textVL.spacing = 1;
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 7, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 10, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
-            // Format Summary with Colors for Bonus/Malus
             string summary = FormatSummary(leader);
-            CreateText(textStack.transform, summary, 6, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
+            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
         private static void CreateRecruitPanel(Transform parent)
         {
-            var container = CreatePanelBase(parent, "RecruitPanel", 1f);
+            // === EDIT HERE TO CHANGE WIDTH ===
+            // Increase flexibleWidth to make it wider (e.g., 1.5f)
+            var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
             
-            var header = CreateText(container.transform, "Recruit Leaders", 8, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 34f; le.minHeight = 34f;
+            le.preferredHeight = 30f; le.minHeight = 30f;
 
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
 
         private static void CreateActivePanel(Transform parent)
         {
-            var container = CreatePanelBase(parent, "ActivePanel", 0.8f);
+            // === EDIT HERE TO CHANGE WIDTH ===
+            // Increase flexibleWidth to make it wider (e.g., 1.2f)
+            var container = CreatePanelBase(parent, "ActivePanel", 0.9f); 
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 8, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 34f; le.minHeight = 34f;
+            le.preferredHeight = 30f; le.minHeight = 30f;
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
@@ -306,7 +319,6 @@ namespace RulerBox
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 20f;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
@@ -383,32 +395,37 @@ namespace RulerBox
             }
         }
 
-        // --- NEW: GENERATE MIXED STATS (BONUS + MALUS) ---
+        // --- BONUS AND MALUS GENERATION ---
         private static LeaderState CreateRandomLeader(Actor unit)
         {
             string title = RandomTitles[UnityEngine.Random.Range(0, RandomTitles.Length)];
             
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
-            int perks = UnityEngine.Random.Range(1, 3); // 1 to 2 stats
+            
+            // Give 3 modifiers to ensure a mix
+            int perks = 3; 
 
+            // Logic: Guaranteed 2 Bonuses, 1 Malus (or mixed)
             for(int i=0; i<perks; i++)
             {
                 int type = UnityEngine.Random.Range(0, 6);
-                // 30% Chance for a trait to be negative (Malus)
-                bool isMalus = UnityEngine.Random.value < 0.3f; 
+                
+                // Every 3rd trait is negative (Malus)
+                bool isMalus = (i == 2); 
                 float sign = isMalus ? -1f : 1f;
 
                 switch(type)
                 {
-                    case 0: stab += UnityEngine.Random.Range(2f, 6f) * sign; break; 
-                    case 1: pp += UnityEngine.Random.Range(5f, 15f) * sign; break;   
-                    case 2: atk += UnityEngine.Random.Range(5f, 15f) * sign; break; 
-                    case 3: res += UnityEngine.Random.Range(5f, 15f) * sign; break;  
-                    case 4: tax += UnityEngine.Random.Range(5f, 15f) * sign; break;  
+                    case 0: stab += UnityEngine.Random.Range(3f, 8f) * sign; break; 
+                    case 1: pp += UnityEngine.Random.Range(10f, 25f) * sign; break;   
+                    case 2: atk += UnityEngine.Random.Range(10f, 30f) * sign; break; 
+                    case 3: res += UnityEngine.Random.Range(10f, 25f) * sign; break;  
+                    case 4: tax += UnityEngine.Random.Range(10f, 20f) * sign; break;  
                     case 5: 
-                        // Corruption logic is reversed: Negative value = Good (Reduction), Positive = Bad (Increase)
-                        // If 'isMalus' (bad trait), we ADD corruption (+). If good, we SUBTRACT (-).
-                        corr += UnityEngine.Random.Range(0.05f, 0.15f) * (isMalus ? 1f : -1f); 
+                        // Corruption logic: Positive 'corr' value means GOOD reduction.
+                        // So if isMalus (Bad), we make it negative (Increase corruption).
+                        // If Bonus (Good), we make it positive (Reduce corruption).
+                        corr += UnityEngine.Random.Range(0.05f, 0.15f) * (isMalus ? -1f : 1f); 
                         break; 
                 }
             }
@@ -419,23 +436,23 @@ namespace RulerBox
             {
                 Id = System.Guid.NewGuid().ToString(), Name = name, Type = title, Level = 1,
                 UnitLink = unit, StabilityBonus = stab, PPGainBonus = pp/100f, AttackBonus = atk/100f,
-                ResearchBonus = res/100f, TaxBonus = tax/100f, CorruptionReduction = -corr // Store as "Corruption Impact" logic
+                ResearchBonus = res/100f, TaxBonus = tax/100f, CorruptionReduction = corr
             };
         }
 
         private static string FormatSummary(LeaderState l)
         {
             string s = "";
-            // Helper to format green/red
-            string Col(float val, string txt) => val > 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
-            // Reversed logic for corruption
-            string ColRev(float val, string txt) => val < 0 ? $"<color=#7CFC00>{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
+            string Col(float val, string txt) => val >= 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
+            // For corruption: Positive Reduction is Good (Green +), Negative Reduction is Bad (Red -)
+            string ColCorr(float val, string txt) => val >= 0 ? $"<color=#7CFC00>-{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
 
-            if (l.StabilityBonus != 0) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
-            if (l.PPGainBonus != 0) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
-            if (l.AttackBonus != 0) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
+            if (Mathf.Abs(l.StabilityBonus) > 0.1f) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
+            if (Mathf.Abs(l.PPGainBonus) > 0.01f) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
+            if (Mathf.Abs(l.AttackBonus) > 0.01f) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
+            if (Mathf.Abs(l.CorruptionReduction) > 0.01f) s += ColCorr(l.CorruptionReduction, $"Corr {Mathf.Abs(l.CorruptionReduction)*100:0}%") + " ";
             
-            if (s == "") s = "Check bonuses...";
+            if (s == "") s = "Minor Effects";
             return s;
         }
 
@@ -451,29 +468,22 @@ namespace RulerBox
             s += "\n<b>Effects:</b>\n";
 
             string Val(float v, string suffix="") => (v > 0 ? "+" : "") + (v*100).ToString("0") + suffix;
-            string Col(float v) => v > 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
+            string Col(float v) => v >= 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
             
-            // Standard Stats
             if (l.StabilityBonus != 0) s += $"Stability: {Col(l.StabilityBonus)}{l.StabilityBonus:0.#}</color>\n";
-            if (l.PPGainBonus != 0) s += $"Political Power: {Col(l.PPGainBonus)}{Val(l.PPGainBonus, "%")}</color>\n";
+            if (l.PPGainBonus != 0) s += $"Pol. Power: {Col(l.PPGainBonus)}{Val(l.PPGainBonus, "%")}</color>\n";
             if (l.AttackBonus != 0) s += $"Army Attack: {Col(l.AttackBonus)}{Val(l.AttackBonus, "%")}</color>\n";
             if (l.ResearchBonus != 0) s += $"Research: {Col(l.ResearchBonus)}{Val(l.ResearchBonus, "%")}</color>\n";
             if (l.TaxBonus != 0) s += $"Tax Income: {Col(l.TaxBonus)}{Val(l.TaxBonus, "%")}</color>\n";
             
-            // Corruption (Recall: l.CorruptionReduction stored the raw impact in previous methods, 
-            // but in CreateRandomLeader I stored it as inverted. Let's assume stored value: Negative = Reduction (Good), Positive = Increase (Bad))
-            // Actually, KingdomMetrics uses "CorruptionReduction", so Positive Value = Good.
-            // My CreateRandom generates 'corr'. If Malus -> Positive Corr. 
-            // I assigned CorruptionReduction = -corr.
-            // So: If Malus (High Corr), 'corr' is +, so CorruptionReduction is -.
-            // If Bonus (Low Corr), 'corr' is -, so CorruptionReduction is +.
-            
+            // Corruption Display Logic
             if (l.CorruptionReduction != 0) 
             {
-                // Reduction > 0 means Corruption Goes Down (Good)
-                string cColor = l.CorruptionReduction > 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
-                string sign = l.CorruptionReduction > 0 ? "-" : "+"; // Display as "-5% Corruption" (Good)
-                s += $"Corruption: {cColor}{sign}{Mathf.Abs(l.CorruptionReduction)*100:0.##}%</color>\n";
+                // Positive Reduction = Good (Green, -Corruption)
+                // Negative Reduction = Bad (Red, +Corruption)
+                string cCol = l.CorruptionReduction > 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
+                string sign = l.CorruptionReduction > 0 ? "-" : "+";
+                s += $"Corruption: {cCol}{sign}{Mathf.Abs(l.CorruptionReduction)*100:0.##}%</color>\n";
             }
 
             return s;
@@ -485,10 +495,7 @@ namespace RulerBox
             go.transform.SetParent(parent, false);
             var t = go.AddComponent<Text>();
             t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            t.text = txt; 
-            t.fontSize = size; 
-            t.fontStyle = style; 
-            t.color = col;
+            t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
             t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
             var shadow = go.AddComponent<Shadow>();
             shadow.effectColor = new Color(0,0,0,0.5f);
