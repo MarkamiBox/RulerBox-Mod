@@ -23,7 +23,10 @@ namespace RulerBox
         public string Name;
         public string Type; // e.g., "Head of Government"
         public int Level;   // 1, 2, 3...
-        public string IconPath; 
+        
+        // Dynamic Link
+        public Actor UnitLink; 
+        public string IconPath; // Fallback if unit link is missing
         
         // Modifiers
         public float StabilityBonus;
@@ -249,8 +252,21 @@ namespace RulerBox
         {
             if (d.ActiveLeaders == null) return;
             
-            foreach (var leader in d.ActiveLeaders)
+            for (int i = d.ActiveLeaders.Count - 1; i >= 0; i--)
             {
+                var leader = d.ActiveLeaders[i];
+                
+                // Check if unit is dead or null
+                if (leader.UnitLink == null || !leader.UnitLink.isAlive())
+                {
+                    d.ActiveLeaders.RemoveAt(i);
+                    // Optionally: Notify player
+                    string name = leader.Name ?? "Leader";
+                    WorldTip.showNow($"{name} has died/vanished!", true, "top", 3f);
+                    LeadersWindow.Refresh(); // Force refresh UI if open
+                    continue;
+                }
+
                 d.StabilityTargetModifier += leader.StabilityBonus;
                 d.PoliticalPowerGainModifier += leader.PPGainBonus; 
                 d.MilitaryAttackModifier += leader.AttackBonus;
