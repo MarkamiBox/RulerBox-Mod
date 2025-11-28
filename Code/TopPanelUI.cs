@@ -178,6 +178,7 @@ namespace RulerBox
             DiplomacyWindow.SetVisible(false);
             
             LawsWindow.SetVisible(true);
+            LawsWindow.Refresh(Main.selectedKingdom);
             Refresh();
         }
 
