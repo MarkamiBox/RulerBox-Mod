@@ -103,7 +103,7 @@ namespace RulerBox
 
             var cV = content.AddComponent<VerticalLayoutGroup>();
             cV.spacing = 2;
-            cV.childControlWidth = true; // IMPORTANT: Ensures children expand
+            cV.childControlWidth = true; 
             cV.childForceExpandHeight = false;
             
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -195,8 +195,6 @@ namespace RulerBox
             foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
             if (d.ActiveLeaders != null)
             {
-                // Clean up dead leaders logic is handled in KingdomMetricsSystem, 
-                // but this visual refresh ensures they disappear from the list.
                 foreach (var leader in d.ActiveLeaders)
                 {
                     CreateLeaderButton(activeContent, leader, true);
@@ -205,7 +203,7 @@ namespace RulerBox
         }
 
         // ====================================================================================
-        // BUTTON CREATION (FIXED LAYOUT)
+        // BUTTON CREATION
         // ====================================================================================
         private static void CreateLeaderButton(Transform parent, LeaderState leader, bool isActive)
         {
@@ -217,7 +215,6 @@ namespace RulerBox
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
-            // Greenish if active, dark grey if recruit
             img.color = isActive ? new Color(0.2f, 0.45f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -227,12 +224,11 @@ namespace RulerBox
             var le = btnObj.AddComponent<LayoutElement>();
             le.preferredHeight = 44f;
             le.minHeight = 44f;
-            le.flexibleWidth = 1f; // Important: stretch to width
+            le.flexibleWidth = 1f;
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 8;
             h.padding = new RectOffset(6, 6, 4, 4);
-            // FIX: This enables the children (icon + text) to have size
             h.childControlWidth = true; 
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
@@ -260,7 +256,6 @@ namespace RulerBox
             iconObj.transform.SetParent(iconContainer.transform, false);
             var iconImg = iconObj.AddComponent<Image>();
             
-            // Try get unit sprite
             Sprite sprite = null;
             if (leader.UnitLink != null) { try { sprite = leader.UnitLink.getSpriteToRender(); } catch { } }
             if (sprite == null && !string.IsNullOrEmpty(leader.IconPath)) sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
@@ -279,12 +274,12 @@ namespace RulerBox
             var v = infoObj.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.MiddleLeft;
             v.spacing = 0;
-            v.childControlWidth = true; // FIX
+            v.childControlWidth = true;
             v.childControlHeight = true;
             v.childForceExpandHeight = false;
 
             var infoLE = infoObj.AddComponent<LayoutElement>();
-            infoLE.flexibleWidth = 1f; // Fill remaining space
+            infoLE.flexibleWidth = 1f;
 
             CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
             CreateText(infoObj.transform, $"{leader.Type}", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
@@ -323,29 +318,35 @@ namespace RulerBox
         }
 
         // ====================================================================================
-        // RANDOM GENERATION
+        // RANDOM GENERATION [FIXED]
         // ====================================================================================
         private static void GenerateRecruitmentPool(Kingdom k)
         {
             recruitmentPool.Clear();
-            if (k == null || k.units == null) return;
+            if (k == null) return;
 
-            // 1. Pick up to 5 random adult units
-            var candidates = k.units.Where(a => a.isAlive() && a.isAdult() && !a.isKing() && !a.isCityLeader())
-                                    .OrderBy(x => UnityEngine.Random.value)
-                                    .Take(5)
-                                    .ToList();
-            
+            List<Actor> candidates = new List<Actor>();
+
+            // FIX: Safely access units list and filter out nulls to prevent crashes
+            if (k.units != null)
+            {
+                candidates = k.units
+                    .Where(a => a != null && a.isAlive() && a.isAdult() && !a.isKing() && !a.isCityLeader())
+                    .OrderBy(x => UnityEngine.Random.value)
+                    .Take(5)
+                    .ToList();
+            }
+
             int needed = 5;
 
-            // 2. Create leaders from real units
+            // Create leaders from real units found
             foreach(var unit in candidates)
             {
                 recruitmentPool.Add(CreateRandomLeader(unit));
                 needed--;
             }
 
-            // 3. Fill rest with "Abstract" leaders if kingdom has few units
+            // Fill rest with "Abstract" leaders if we didn't find enough real units
             for(int i=0; i<needed; i++)
             {
                 recruitmentPool.Add(CreateRandomLeader(null));
