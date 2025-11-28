@@ -1219,7 +1219,7 @@ namespace RulerBox
             public string Law_WarBonds = "Inactive";
             public string Law_ElitistMilitary = "Default";
             public string Law_PartyLoyalty = "Standard";
-            public string Law_Centralization = "Balanced"; // Renamed from Centralization
+            public string Law_Centralization = "Balanced";
             public string Law_PressRegulation = "Mixed";
             public string Law_FirearmRegulation = "Standard";
             public string Law_Religion = "Secularism";
