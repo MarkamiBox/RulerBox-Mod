@@ -186,8 +186,10 @@ namespace RulerBox
             var avatarBgObj = new GameObject("AvatarBackground");
             avatarBgObj.transform.SetParent(btnObj.transform, false);
             var avatarLE = avatarBgObj.AddComponent<LayoutElement>();
-            avatarLE.minWidth = 44f; avatarLE.preferredWidth = 44f;
-            avatarLE.minHeight = 44f; avatarLE.preferredHeight = 44f;
+            avatarLE.minWidth = 44f; 
+            avatarLE.preferredWidth = 44f;
+            avatarLE.minHeight = 44f; 
+            avatarLE.preferredHeight = 44f;
 
             var avatarBgImg = avatarBgObj.AddComponent<Image>();
             avatarBgImg.sprite = Main.selectedKingdom?.getElementIcon();
@@ -238,12 +240,12 @@ namespace RulerBox
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 10, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 7, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
             
             // Format Summary with Colors for Bonus/Malus
             string summary = FormatSummary(leader);
-            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
+            CreateText(textStack.transform, summary, 6, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
@@ -252,7 +254,7 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "RecruitPanel", 1f);
             
-            var header = CreateText(container.transform, "Recruit Leaders", 13, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 8, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
@@ -265,7 +267,7 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "ActivePanel", 0.8f);
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 13, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 8, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
@@ -483,7 +485,10 @@ namespace RulerBox
             go.transform.SetParent(parent, false);
             var t = go.AddComponent<Text>();
             t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
+            t.text = txt; 
+            t.fontSize = size; 
+            t.fontStyle = style; 
+            t.color = col;
             t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
             var shadow = go.AddComponent<Shadow>();
             shadow.effectColor = new Color(0,0,0,0.5f);
