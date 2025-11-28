@@ -5,6 +5,7 @@ using HarmonyLib;
 
 namespace RulerBox
 {
+    // Represents a timed effect that modifies kingdom stability over a duration
     public class TimedEffect
     {
         public float TimeRemaining;
@@ -17,6 +18,7 @@ namespace RulerBox
         }
     }
 
+    // Main system for calculating and updating kingdom metrics
     public static class KingdomMetricsSystem
     {
         private const float UpdateInterval = 0.25f;
@@ -29,6 +31,7 @@ namespace RulerBox
             "herbs", "CommonMetals", "mithril", "adamantine", "pie", "tea", "cider"
         };
 
+        // Retrieve or create the Data object for a given kingdom
         public static void Tick(float deltaTime)
         {
             if (deltaTime <= 0f) return;
@@ -57,6 +60,7 @@ namespace RulerBox
             RecalculateAllForKingdom(k, d);
         }
 
+        // Get or create Data for a kingdom
         private static void RecalculateAllForKingdom(Kingdom k, Data d)
         {
             if (k == null || d == null) return;
@@ -536,6 +540,7 @@ namespace RulerBox
             d.StabilityChange = change;
         }
 
+        // ==================== LAWS APPLICATION ======================
         private static void UpdateLawsFromKingdom(Kingdom k, Data d)
         {
             ApplyTaxation(d);
@@ -548,6 +553,7 @@ namespace RulerBox
             ApplyAntiCorruption(d);
         }
 
+        // --- LAW EFFECTS ---
         private static void ApplyTaxation(Data d)
         {
             switch (d.TaxationLevel.ToLower())
@@ -578,6 +584,7 @@ namespace RulerBox
             }
         }
 
+        // --- MILITARY SPENDING ---
         private static void ApplyMilitarySpending(Data d)
         {
             switch (d.MilitarySpending.ToLower())
@@ -620,6 +627,7 @@ namespace RulerBox
             }
         }
 
+        // --- SECURITY SPENDING ---
         private static void ApplySecuritySpending(Data d)
         {
             switch (d.SecuritySpending.ToLower())
@@ -657,6 +665,7 @@ namespace RulerBox
             }
         }
 
+        // --- GOVERNMENT SPENDING ---
         private static void ApplyGovernmentSpending(Data d)
         {
             switch (d.GovernmentSpending.ToLower())
@@ -689,6 +698,7 @@ namespace RulerBox
             }
         }
 
+        // --- WELFARE SPENDING ---
         private static void ApplyWelfare(Data d)
         {
             switch (d.WelfareSpending.ToLower())
@@ -721,6 +731,7 @@ namespace RulerBox
             }
         }
 
+        // --- EDUCATION SPENDING ---
         private static void ApplyEducation(Data d)
         {
             switch (d.EducationSpending.ToLower())
@@ -752,6 +763,7 @@ namespace RulerBox
             }
         }
 
+        // --- RESEARCH SPENDING ---
         private static void ApplyResearch(Data d)
         {
             switch (d.ResearchSpending.ToLower())
@@ -784,6 +796,7 @@ namespace RulerBox
             }
         }
 
+        // --- ANTI-CORRUPTION SPENDING ---
         private static void ApplyAntiCorruption(Data d)
         {
             switch (d.AntiCorruption.ToLower())
@@ -814,6 +827,7 @@ namespace RulerBox
             }
         }
 
+        // ==================== UTILITIES ============================
         private static long SafeLong(double v)
         {
             if (v > long.MaxValue) return long.MaxValue;
@@ -821,6 +835,7 @@ namespace RulerBox
             return (long)Math.Round(v);
         }
 
+        // Economy scaling based on population size (logarithmic)
         private static float ComputeEconomyScale(long population)
         {
             if (population <= 0) return 0f;
@@ -828,6 +843,7 @@ namespace RulerBox
             return Mathf.Lerp(0.2f, 1f, t);
         }
 
+        // Get the number of real-world seconds that correspond to one in-game year
         private static float GetSecondsPerYear()
         {
             var ms = World.world?.map_stats;
@@ -836,13 +852,16 @@ namespace RulerBox
             return ms.current_world_ages_duration / ms.world_ages_speed_multiplier;
         }
 
+        // Demographic cost per head by age group
         private static (float, float, float) GetDemographicCostPerHead(Kingdom k)
         {
             return (0.1f, 0.3f, 0.5f);
         }
 
+        // ==================== DATA STORAGE ===========================
         public static readonly Dictionary<Kingdom, Data> db = new();
 
+        // Retrieve or create the metrics data for a kingdom
         public static Data Get(Kingdom k)
         {
             if (k == null) return null;
@@ -854,6 +873,7 @@ namespace RulerBox
             return d;
         }
 
+        // Kingdom Metrics Data Structure
         public class Data
         {
             public Kingdom KRef;
