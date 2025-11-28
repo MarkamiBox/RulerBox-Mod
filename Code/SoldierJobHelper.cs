@@ -12,6 +12,7 @@ namespace RulerBox
             return (actor._profession == UnitProfession.Warrior && actor.kingdom == Main.selectedKingdom);
         }
 
+        // Check if an actor is eligible for recruitment as a soldier
         public static bool IsRecruitable(Actor actor)
         {
             if (actor == null || actor.hasDied()) return false;
@@ -26,9 +27,7 @@ namespace RulerBox
         }
     }
 
-    /// <summary>
-    /// Patch that filters drag-selection based on ArmySystem.CurrentMode.
-    /// </summary>
+    // Patch the selection method to filter only soldiers or recruitable civilians
     [HarmonyPatch(typeof(SelectedUnit), nameof(SelectedUnit.selectMultiple))]
     public static class Patch_SelectOnlySoldiers
     {
