@@ -9,6 +9,7 @@ namespace RulerBox
     {
         public static bool AllowPlayerWar = false;
         public static bool IsPlayerInitiated = false;
+        
         // ruler event data structure       
         private class RulerEvent
         {
@@ -23,6 +24,7 @@ namespace RulerBox
         }
         private static readonly Dictionary<int, RulerEvent> events = new Dictionary<int, RulerEvent>();
         private static int nextId = 1;
+        
         // trigger a trade proposal event
         public static void TriggerTradeProposal(Kingdom other, string resourceId, int amount, bool isSelling, bool isBulk)
         {
@@ -62,6 +64,7 @@ namespace RulerBox
                 refuseLabel: "Cancel"
             );
         }
+        
         // trigger a trade cancelled event
         public static void TriggerTradeCancelled(Kingdom withKingdom, string resource, string reason)
         {
@@ -77,6 +80,7 @@ namespace RulerBox
             events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, title, id);
         }
+        
         // tick method to be called every frame or time step
         public static void Tick(float dt)
         {
@@ -97,6 +101,7 @@ namespace RulerBox
                 TriggerRandomEvent();
             }
         }
+        
         // =====================================================================
         // ========================= PUBLIC API =================================
         // =====================================================================
@@ -126,6 +131,7 @@ namespace RulerBox
             events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.War, title, id);
         }
+        
         // Called when a war involving our focused kingdom ends with peace.
         public static void OnWarEndedWithPeace(War war)
         {
@@ -177,6 +183,7 @@ namespace RulerBox
             events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Peace, title, id);
         }
+        
         // Called when an alliance is formed that includes our focused kingdom.
         public static void OnAllianceFormed(Alliance alliance, Kingdom k1, Kingdom k2)
         {
@@ -204,6 +211,7 @@ namespace RulerBox
             events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Diplomacy, title, id);
         }
+        
         // Open the event popup for the given event ID
         public static void OpenEvent(int id)
         {
@@ -215,11 +223,13 @@ namespace RulerBox
                 evt.ButtonGO = null;
             }
             var fromName = evt.From != null ? evt.From.data.name : "Unknown";
+            
             // Handle Random events with options
             if (evt.Type == EventButtonType.Random && randomEventPerId.TryGetValue(id, out var def))
             {
                 var option1 = def.Options.Count > 0 ? def.Options[0] : null;
                 var option2 = def.Options.Count > 1 ? def.Options[1] : null;
+                
                 // Define callbacks for Accept/Refuse based on the available options
                 Action onAccept = option1 != null ? () => { option1.Action(Main.selectedKingdom); CloseEvent(id); } : null;
                 Action onRefuse = option2 != null ? () => { option2.Action(Main.selectedKingdom); CloseEvent(id); } : null;
@@ -238,6 +248,7 @@ namespace RulerBox
                 );
                 return;
             }
+            
             // Handle other event types
             switch (evt.Type)
             {
@@ -247,7 +258,7 @@ namespace RulerBox
                     EventsUI.ShowPopup(
                         msg,
                         EventButtonType.War,
-                        evt.From,              
+                        evt.From,
                         onOk: () => CloseEvent(id),
                         onAccept: null,
                         onRefuse: null
@@ -273,6 +284,7 @@ namespace RulerBox
                             var me = Main.selectedKingdom;
                             var other = evt.From;
                             var war = evt.War;
+                            
                             // Restart the war
                             if (me != null && other != null && war != null)
                             {
@@ -293,6 +305,7 @@ namespace RulerBox
                 {
                     bool hasAlliance = Main.selectedKingdom != null && Main.selectedKingdom.hasAlliance();
                     string msg;
+                    
                     // Custom message if provided
                     if (evt.Message != null)
                     {
@@ -304,6 +317,7 @@ namespace RulerBox
                             ? $"{fromName} wants to join your alliance"
                             : $"{fromName} wants you to join his alliance";
                     }
+                    
                     // Show popup with Accept/Refuse options
                     EventsUI.ShowPopup(
                         msg,
@@ -319,6 +333,7 @@ namespace RulerBox
                         {
                             var me = Main.selectedKingdom;
                             var alliance = evt.Alliance;
+                            
                             // Leave the alliance
                             if (me != null && alliance != null && alliance.kingdoms_hashset.Contains(me))
                             {
@@ -346,7 +361,7 @@ namespace RulerBox
                     EventsUI.ShowPopup(
                         msg,
                         EventButtonType.Random,
-                        evt.From,            
+                        evt.From, 
                         onOk: () => CloseEvent(id),
                         onAccept: null,
                         onRefuse: null
@@ -361,6 +376,7 @@ namespace RulerBox
         {
             if (me == null || alliance == null)
                 return;
+
             Kingdom other = null;
             foreach (var k in alliance.kingdoms_list)
             {
@@ -370,6 +386,7 @@ namespace RulerBox
                     break;
                 }
             }
+
             string otherName = other != null ? other.data.name : alliance.data.name;
             string title = $"{otherName} removed us from the alliance";
             int id = nextId++;
@@ -400,6 +417,7 @@ namespace RulerBox
                     break;
                 }
             }
+            
             string otherName = other != null ? other.data.name : alliance.data.name;
             string title = $"Our alliance with {otherName} has been dissolved";
             int id = nextId++;
@@ -415,6 +433,7 @@ namespace RulerBox
             events[id] = evt;
             evt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, title, id);
         }
+
         // Close and remove the event with the given ID
         private static void CloseEvent(int id)
         {
@@ -429,6 +448,7 @@ namespace RulerBox
             events.Remove(id);
             EventsUI.HidePopup();
         }
+
         // =====================================================================
         // ============================= RandomEvent ===========================
         // =====================================================================
@@ -438,13 +458,16 @@ namespace RulerBox
         {
             var k = Main.selectedKingdom;
             if (k == null) return;
+            
             // Get kingdom metrics (needed for event triggers)
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
             if (d.Population < 15) return; // Ignore tiny kingdoms
+            
             // Use the existing logic from EventsList to find a valid event based on triggers
             var def = EventsList.GetRandomEvent(k);
             if (def == null) return;
+            
             // spawn the event
             int id = nextId++;
             var rulerEvt = new RulerEvent
@@ -459,19 +482,23 @@ namespace RulerBox
             };
             events[id] = rulerEvt;
             randomEventPerId[id] = def; // Store the EventDef for later use
+            
             // Add button to UI
             rulerEvt.ButtonGO = EventsUI.AddEventButton(EventButtonType.Random, def.Title, id);
         }
+
         // Check if the given kingdom has any active wars
         private static bool HasActiveWar(Kingdom k, out int warCount)
         {
             warCount = 0;
             if (k == null)
                 return false;
+            
             // Check for active wars
             var wars = k.getWars(false);
             if (wars == null)
                 return false;
+            
             // Count active wars involving this kingdom
             foreach (var war in wars)
             {
@@ -483,10 +510,12 @@ namespace RulerBox
             }
             return warCount > 0;
         }
+
         // Store EventDef for random events by their assigned event ID
         private static Dictionary<int, EventsList.EventDef> randomEventPerId 
             = new Dictionary<int, EventsList.EventDef>();
     }
+
     // =====================================================================
     // ============================= PATCHES ===============================
     // =====================================================================
@@ -519,6 +548,7 @@ namespace RulerBox
             }
         }
     }
+    
     // Patch WarManager.endWar to detect wars that end with peace involving our focused kingdom.
     [HarmonyPatch(typeof(WarManager), nameof(WarManager.endWar))]
     public static class Patch_WarManager_EndWar
@@ -527,6 +557,7 @@ namespace RulerBox
         public static void Postfix(War pWar, WarWinner pWinner)
         {
             if (pWar == null) return;
+            
             // Check if our focused kingdom was involved in this war
             if (pWinner == WarWinner.Peace)
             {
@@ -534,6 +565,7 @@ namespace RulerBox
             }
         }
     }
+
     // When an alliance is formed that includes our focused kingdom.
     [HarmonyPatch(typeof(AllianceManager), nameof(AllianceManager.newAlliance))]
     public static class Patch_AllianceManager_NewAlliance
@@ -546,6 +578,7 @@ namespace RulerBox
             EventsSystem.OnAllianceFormed(__result, pKingdom, pKingdom2);
         }
     }
+    
     // When we leave an alliance.
     [HarmonyPatch(typeof(Alliance), nameof(Alliance.leave))]
     public static class Patch_Alliance_Leave
@@ -559,6 +592,7 @@ namespace RulerBox
             EventsSystem.OnAllianceLeft(me, __instance);
         }
     }
+    
     // When an alliance we are in is dissolved.
     [HarmonyPatch(typeof(AllianceManager), nameof(AllianceManager.dissolveAlliance))]
     public static class Patch_AllianceManager_Dissolve
