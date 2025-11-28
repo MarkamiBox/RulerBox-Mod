@@ -108,12 +108,12 @@ namespace RulerBox
 
             // Close ALL windows first
             DiplomacyWindow.SetVisible(false);
-            DiplomacyActionsWindow.Close();
+            DiplomacyActionsWindow.SetVisible(false);
             TechnologyWindow.SetVisible(false);
             EconomyWindow.SetVisible(false);
             EconomicLawsWindow.SetVisible(false);
             InvestmentsWindow.SetVisible(false);
-            ResourcesTradeWindow.SetVisible(false); // Ensure trade closed
+            ResourcesTradeWindow.SetVisible(false); 
             TradeWindow.SetVisible(false);
 
             // Colors update...
