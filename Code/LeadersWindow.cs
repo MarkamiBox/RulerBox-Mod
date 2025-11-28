@@ -198,6 +198,7 @@ namespace RulerBox
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
+            // Highlight if active (greenish) else greyish
             img.color = isActive ? new Color(0.2f, 0.4f, 0.2f, 0.8f) : new Color(0.3f, 0.3f, 0.35f, 0.8f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -207,12 +208,20 @@ namespace RulerBox
             var le = btnObj.AddComponent<LayoutElement>();
             le.preferredHeight = 44f;
             le.minHeight = 44f;
+            le.flexibleWidth = 1f; // Ensure button stretches horizontally
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 8;
             h.padding = new RectOffset(4, 4, 4, 4);
-            h.childControlWidth = false;
-            h.childForceExpandWidth = false;
+            
+            // --- FIX START ---
+            // Change these to TRUE so the layout group actually sizes the icon and text areas
+            h.childControlWidth = true; 
+            h.childControlHeight = true;
+            h.childForceExpandWidth = false; // Keep false so the Icon stays fixed width
+            h.childForceExpandHeight = false; 
+            // --- FIX END ---
+            
             h.childAlignment = TextAnchor.MiddleLeft;
 
             // --- LEFT: Sprite (Unit Icon Style) ---
@@ -231,25 +240,23 @@ namespace RulerBox
             var iconContainerLE = iconContainer.AddComponent<LayoutElement>();
             iconContainerLE.preferredWidth = 32f; 
             iconContainerLE.preferredHeight = 32f;
+            iconContainerLE.minWidth = 32f; // Ensure it doesn't shrink
+            iconContainerLE.minHeight = 32f;
 
             var iconObj = new GameObject("Icon");
             iconObj.transform.SetParent(iconContainer.transform, false);
             var iconImg = iconObj.AddComponent<Image>();
             
-            // 1. Try Unit Actor Sprite
+            // ... (Icon loading logic remains the same) ...
             Sprite sprite = null;
             if (leader.UnitLink != null)
             {
-                // This fetches the sprite rendered for the actor.
-                // NOTE: getSpriteToRender() returns Sprite
                 try { sprite = leader.UnitLink.getSpriteToRender(); } catch { }
             }
-            // 2. Try Generic/Fallback
             if (sprite == null && !string.IsNullOrEmpty(leader.IconPath))
             {
                 sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
             }
-            // 3. Fallback to Kingdom Icon
             if (sprite == null && Main.selectedKingdom != null) 
             {
                 sprite = Main.selectedKingdom.getElementIcon(); 
@@ -258,6 +265,7 @@ namespace RulerBox
             iconImg.sprite = sprite;
             iconImg.preserveAspect = true;
             
+            // Stretch icon inside container
             var iconRT = iconObj.GetComponent<RectTransform>();
             iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
             iconRT.offsetMin = new Vector2(2,2); iconRT.offsetMax = new Vector2(-2,-2);
@@ -268,14 +276,20 @@ namespace RulerBox
             var v = infoObj.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.MiddleLeft;
             v.spacing = 0;
+            // Important: Ensure the vertical group in Info also controls children
+            v.childControlWidth = true; 
+            v.childControlHeight = true; 
+            v.childForceExpandHeight = false;
 
             var infoLE = infoObj.AddComponent<LayoutElement>();
-            infoLE.preferredWidth = 120f;
-            infoLE.flexibleWidth = 1f;
+            // No preferred width fixed, just flexible to fill remaining space
+            infoLE.flexibleWidth = 1f; 
 
+            // Text Creation
             CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
-            CreateText(infoObj.transform, $"<color=#AAAAAA>{leader.Type} (Lvl {leader.Level})</color>", 8, FontStyle.Normal);
-
+            // Updated color to Gold to match screenshot
+            var subTxt = CreateText(infoObj.transform, $"{leader.Type}", 8, FontStyle.Normal, new Color(1f, 0.8f, 0.2f)); 
+            
             // Tooltip
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
