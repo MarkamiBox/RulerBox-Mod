@@ -209,15 +209,15 @@ namespace RulerBox
         {
             if (parent == null || leader == null) return;
 
-            // BUTTON ROOT
+            // ROOT BUTTON
             var btnObj = new GameObject("LeaderBtn");
             btnObj.transform.SetParent(parent, false);
 
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
-            img.color = isActive ? 
-                new Color(0.2f, 0.45f, 0.2f, 0.9f) : 
+            img.color = isActive ?
+                new Color(0.2f, 0.45f, 0.2f, 0.9f) :
                 new Color(0.25f, 0.25f, 0.3f, 0.9f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -238,50 +238,48 @@ namespace RulerBox
             h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // ========================================================================
-            // AVATAR (REAL UNIT SPRITE)
-            // ========================================================================
+            // ======================================================================
+            // AVATAR - REAL ACTOR SPRITE with PrefabUnitElement.show()
+            // ======================================================================
             var avatarGO = new GameObject("Avatar");
             avatarGO.transform.SetParent(btnObj.transform, false);
 
             var avatarRT = avatarGO.AddComponent<RectTransform>();
-            avatarRT.sizeDelta = new Vector2(36, 36);
+            avatarRT.sizeDelta = new Vector2(38, 38);
 
             if (leader.UnitLink != null && leader.UnitLink.isAlive())
             {
-                // Uses in-game PrefabUnitElement → REAL ACTOR GRAPHIC
+                // real unit avatar
                 var avatar = avatarGO.AddComponent<PrefabUnitElement>();
-                avatar.setActor(leader.UnitLink);
+                avatar.show(leader.UnitLink);   // <-- CORRETTO!
                 avatarRT.localScale = new Vector3(0.75f, 0.75f, 1f);
             }
             else
             {
-                // fallback icon if abstract leader (no real unit)
-                var icon = avatarGO.AddComponent<Image>();
-                Sprite fallback = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.ResBread.png");
-                icon.sprite = fallback;
-                icon.color = Color.white;
+                // fallback icon
+                var fallback = avatarGO.AddComponent<Image>();
+                fallback.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.ResBread.png");
+                fallback.color = Color.white;
             }
 
-            // ========================================================================
-            // TEXT COLUMN (NAME + TITLE + STATS)
-            // ========================================================================
+            // ======================================================================
+            // TEXT COLUMN
+            // ======================================================================
             var textCol = new GameObject("TextCol");
             textCol.transform.SetParent(btnObj.transform, false);
 
             var v = textCol.AddComponent<VerticalLayoutGroup>();
             v.spacing = 1;
-            v.childControlWidth = true;
             v.childControlHeight = true;
-            v.childForceExpandWidth = true;
+            v.childControlWidth = true;
             v.childForceExpandHeight = false;
+            v.childForceExpandWidth = true;
 
             // NAME
-            var nameText = CreateText(textCol.transform, leader.Name, 11, FontStyle.Bold);
+            var nameText = CreateText(textCol.transform, leader.Name, 12, FontStyle.Bold);
 
             // TITLE
-            var titleText = CreateText(textCol.transform, leader.Type, 10);
-            titleText.color = new Color(0.95f, 0.95f, 0.4f, 1f);
+            var titleText = CreateText(textCol.transform, leader.Type, 10, FontStyle.Normal, new Color(0.95f, 0.95f, 0.4f));
 
             // STATS
             string statsLine =
@@ -289,11 +287,8 @@ namespace RulerBox
                 $"PP +{leader.PPGainBonus * 100f:0}%   " +
                 $"ATK +{leader.AttackBonus * 100f:0}%";
 
-            var statsText = CreateText(textCol.transform, statsLine, 9);
-            statsText.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+            var statsText = CreateText(textCol.transform, statsLine, 9, FontStyle.Normal, new Color(0.85f, 0.85f, 0.85f));
         }
-
-
 
         private static void OnLeaderClicked(LeaderState leader, bool isActive)
         {
@@ -439,20 +434,20 @@ namespace RulerBox
             return s;
         }
 
-        private static Text CreateText(Transform parent, string content, int size, FontStyle style, Color? col = null)
+        private static Text CreateText(Transform parent, string txt, int size = 11, FontStyle style = FontStyle.Normal, Color? color = null)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
-            var txt = go.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.text = content;
-            txt.fontSize = size;
-            txt.fontStyle = style;
-            txt.color = col ?? Color.white;
-            txt.alignment = TextAnchor.MiddleLeft;
-            txt.resizeTextForBestFit = false;
-            txt.supportRichText = true;
-            return txt;
+
+            var t = go.AddComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.text = txt;
+            t.fontSize = size;
+            t.fontStyle = style;
+            t.color = color ?? Color.white;
+            t.alignment = TextAnchor.MiddleLeft;
+
+            return t;
         }
     }
 }
