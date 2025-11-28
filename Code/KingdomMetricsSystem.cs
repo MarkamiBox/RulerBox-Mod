@@ -308,7 +308,7 @@ namespace RulerBox
 
         private static void ApplyRiseOfNationsLaws(Data d)
         {
-            [cite_start]// 1. Conscription [cite: 109-114]
+            // 1. Conscription [cite: 109-114]
             switch (d.Law_Conscription)
             {
                 case "Disarmed":
@@ -336,7 +336,7 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 2. War Bonds [cite: 114-115]
+            // 2. War Bonds [cite: 114-115]
             switch (d.Law_WarBonds)
             {
                 case "Moderate":
@@ -353,14 +353,14 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 3. Elitist Military Stance [cite: 115-116]
+            // 3. Elitist Military Stance [cite: 115-116]
             if (d.Law_ElitistMilitary == "Expanded")
             {
                 d.CorruptionLevel += 0.1f; // +0.1% is technically 0.001, but text implies significant impact
                 // Military XP gain logic would go here
             }
 
-            [cite_start]// 4. Party Loyalty [cite: 116-117]
+            // 4. Party Loyalty [cite: 116-117]
             switch (d.Law_PartyLoyalty)
             {
                 case "Minimum": d.TaxRateLocal *= 1.1f; break;
@@ -368,14 +368,14 @@ namespace RulerBox
                 // Other effects are political (XP, PP gain)
             }
 
-            [cite_start]// 5. Power Sharing (Iberian) [cite: 118]
+            // 5. Power Sharing (Iberian) [cite: 118]
             switch (d.Law_PowerSharing)
             {
                 case "Decentralized": d.TaxRateLocal *= 1.05f; break; // +5% Tax
                 case "Centralized": d.StabilityTargetModifier += 2.5f; break;
             }
 
-            [cite_start]// 6. Industrial Specialization [cite: 118-119]
+            // 6. Industrial Specialization [cite: 118-119]
             switch (d.Law_IndustrialSpec)
             {
                 case "Extraction": 
@@ -390,7 +390,7 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 7. Resource Subsidization [cite: 119]
+            // 7. Resource Subsidization [cite: 119]
             switch (d.Law_ResourceSubsidy)
             {
                 case "Limited": d.TaxRateLocal *= 0.9f; d.FactoryOutputModifier *= 0.8f; break;
@@ -398,7 +398,7 @@ namespace RulerBox
                 case "Generous": d.TaxRateLocal *= 0.75f; d.FactoryOutputModifier *= 0.6f; break;
             }
 
-            [cite_start]// 8. Working Hours [cite: 120]
+            // 8. Working Hours [cite: 120]
             switch (d.Law_WorkingHours)
             {
                 case "Minimum": 
@@ -423,7 +423,7 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 9. Research Focus [cite: 121]
+            // 9. Research Focus [cite: 121]
             switch (d.Law_ResearchFocus)
             {
                 case "Civilian": 
@@ -432,7 +432,7 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 10. Press Regulation [cite: 122-123]
+            // 10. Press Regulation [cite: 122-123]
             switch (d.Law_PressRegulation)
             {
                 case "Free Press": d.TaxRateLocal *= 1.1f; d.CorruptionLevel -= 0.1f; break;
@@ -442,7 +442,7 @@ namespace RulerBox
                 case "Propaganda": d.TaxRateLocal *= 0.9f; d.StabilityTargetModifier += 10f; d.WarExhaustionGainMultiplier -= 0.03f; break;
             }
 
-            [cite_start]// 11. Firearm Regulation [cite: 123-124]
+            // 11. Firearm Regulation [cite: 123-124]
             switch (d.Law_FirearmRegulation)
             {
                 case "No Restr.": d.TaxRateLocal *= 1.13f; d.StabilityTargetModifier -= 5f; break;
@@ -451,7 +451,7 @@ namespace RulerBox
                 case "Illegal": d.StabilityTargetModifier += 15f; break;
             }
 
-            [cite_start]// 12. Religious Emphasis [cite: 124-125]
+            // 12. Religious Emphasis [cite: 124-125]
             switch (d.Law_Religion)
             {
                 case "Atheism": 
@@ -467,14 +467,14 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 13. Population Growth [cite: 125-126]
+            // 13. Population Growth [cite: 125-126]
             switch (d.Law_PopulationGrowth)
             {
                 case "Encouraged": d.PopulationGrowthBonus += 0.025f; d.TaxRateLocal *= 0.85f; break;
                 case "Mandatory": d.PopulationGrowthBonus += 0.05f; d.TaxRateLocal *= 0.7f; break;
             }
 
-            [cite_start]// 14. Monarch [cite: 126-127]
+            // 14. Monarch [cite: 126-127]
             switch (d.Law_Monarch)
             {
                 case "Constitutional":
@@ -490,7 +490,7 @@ namespace RulerBox
                     break;
             }
 
-            [cite_start]// 15. Collective Theory [cite: 128]
+            // 15. Collective Theory [cite: 128]
             switch (d.Law_CollectiveTheory)
             {
                 case "Maoism": d.ResourceOutputModifier *= 1.25f; break;
@@ -499,20 +499,20 @@ namespace RulerBox
                 case "Trotskyism": d.TaxRateLocal *= 0.925f; d.WarExhaustionGainMultiplier -= 0.02f; break;
             }
             
-            [cite_start]// 16. Elective Assembly [cite: 129]
+            // 16. Elective Assembly [cite: 129]
             switch(d.Law_ElectiveAssembly)
             {
                 case "Direct": d.TaxRateLocal *= 1.35f; break;
                 case "Technocratic": d.ResearchOutputModifier *= 1.2f; break;
             }
             
-            [cite_start]// 17. Democracy Style [cite: 130]
+            // 17. Democracy Style [cite: 130]
             switch(d.Law_DemocracyStyle)
             {
                 case "Presidential": d.StabilityTargetModifier += 5f; break;
             }
             
-            [cite_start]// 18. State Doctrine [cite: 131]
+            // 18. State Doctrine [cite: 131]
             switch(d.Law_StateDoctrine)
             {
                 case "Corporatism": d.FactoryOutputModifier *= 1.25f; break;
