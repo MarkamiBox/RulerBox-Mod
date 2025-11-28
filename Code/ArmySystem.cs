@@ -35,6 +35,7 @@ namespace RulerBox
             HandleHotkeys();
             UpdateGuardOrders();
         }
+
         // Handle hotkey inputs
         private static void HandleHotkeys()
         {
@@ -55,6 +56,7 @@ namespace RulerBox
                 }
                 ShowModeTip();
             }
+
             // Guard Commands (Only in Normal Mode)
             if (CurrentMode == ArmySelectionMode.Normal)
             {
@@ -62,6 +64,7 @@ namespace RulerBox
                 if (Input.GetKeyDown(KeyCode.M)) ClearGuardPointForSelection();
             }
         }
+
         // Display current mode tip
         private static void ShowModeTip()
         {
@@ -75,13 +78,16 @@ namespace RulerBox
             }
             WorldTip.showNow(msg, false, "top", 2f, color);
         }
+        
         // Handle new selection of actors
         public static void OnNewSelection(IEnumerable<Actor> actors)
         {
             lastSelection.Clear();
             if (actors == null) return;
+
             var k = Main.selectedKingdom;
             if (k == null) return;
+
             List<Actor> processed = new List<Actor>(); // Filter list based on current mode
             foreach (Actor a in actors)
             {
@@ -100,6 +106,7 @@ namespace RulerBox
                 }
             }
         }
+
         // Attempt to recruit an actor as a soldier
         private static void TryRecruit(Actor a)
         {
@@ -108,6 +115,7 @@ namespace RulerBox
             if (a.isKing() || a.isCityLeader()) return;
             if (SoldierJobHelper.IsSoldier(a)) return;
             if (a.city == null) return;
+
             // Check Manpower (Currency)
             var d = KingdomMetricsSystem.Get(a.kingdom);
             if (d.ManpowerCurrent < 1) 
@@ -115,16 +123,19 @@ namespace RulerBox
                 // Optional: Fail feedback
                 return;
             }
+            
             // Execute Recruit -> Force job to warrior
             a.setProfession(UnitProfession.Warrior);
             d.ManpowerCurrent--;             
             a.startColorEffect();
         }
+        
         // Attempt to dismiss an actor from soldier role
         private static void TryDismiss(Actor a)
         {
             if (!SoldierJobHelper.IsSoldier(a)) return;
             a.setProfession(UnitProfession.Unit); // Revert to citizen
+            
             var d = KingdomMetricsSystem.Get(a.kingdom); // Refund Manpower
             if (UnityEngine.Random.value < 0.33f)
             {
@@ -132,10 +143,12 @@ namespace RulerBox
             }
             a.startColorEffect();
         }
+
         // Update guard orders for soldiers
         private static void UpdateGuardOrders()
         {
             if (guardOrders.Count == 0) return;
+            
             List<Actor> toRemove = new List<Actor>();
             // Iterate through guard orders
             foreach (var kvp in guardOrders)
@@ -162,14 +175,18 @@ namespace RulerBox
                     }
                 }
             }
+            
             foreach(var a in toRemove) guardOrders.Remove(a);
         }
+        
         // Set guard point for currently selected soldiers
         private static void SetGuardPointForSelection()
         {
             if (lastSelection.Count == 0) return;
+            
             WorldTile tile = World.world?.getMouseTilePos();
             if (tile == null) return;
+            
             // Assign guard orders
             int count = 0;
             foreach(var a in lastSelection)
@@ -181,19 +198,24 @@ namespace RulerBox
                 IssueMoveOrder(a, tile);
                 count++;
             }
+            
             WorldTip.showNow($"Guard point set for {count} soldiers", false, "top", 2f, "#9EE07A");
         }
+
         // Clear guard points for currently selected soldiers
         private static void ClearGuardPointForSelection()
         {
             if (lastSelection.Count == 0) return;
+            
             int count = 0;
             foreach(var a in lastSelection)
             {
                 if(guardOrders.Remove(a)) count++;
             }
+            
             WorldTip.showNow($"Guard cleared for {count} soldiers", false, "top", 2f, "#9EE07A");
         }
+        
         // Issue move order to an actor
         private static void IssueMoveOrder(Actor actor, WorldTile tile)
         {
