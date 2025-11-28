@@ -32,11 +32,13 @@ namespace RulerBox
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
+
         // Manpower tooltip text
         public static string ManpowerTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
+            
             string modeStr = "Normal";
             if (ArmySystem.CurrentMode == ArmySelectionMode.Recruit) 
                 modeStr = "<color=#7CFC00>RECRUIT (Drag civilians)</color>";
@@ -54,6 +56,7 @@ namespace RulerBox
                 $"<color=#999999>Drafting costs 1 Manpower Point per soldier.\n" +
                 $"Dismissing refunds Manpower Point.</color>";
         }
+
         // ==============================================================================================
         // ECONOMY TOOLTIP
         // ==============================================================================================
@@ -75,16 +78,19 @@ namespace RulerBox
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
+
         // Economy tooltip text
         public static string EconomyTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
+            
             bool extended = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             var treasury = Money(d.Treasury, whenPositive: "gold", zeroGold: true);
             var income   = Money(d.Income);
             var expenses = Money(-Math.Abs(d.Expenses));
             var balance  = Money(d.Balance, whenPositive: "gold", zeroGold: true);
+            
             if (!extended)
             {
                 // Compact view
@@ -101,6 +107,7 @@ namespace RulerBox
                     $"Balance:  {balance}\n\n" +
                     $"<color=#999999>Hold <b>Shift</b> for detailed breakdown</color>";
             }
+            
             // ---- Extended breakdown ----
             string taxRateStr   = ColorGold($"{d.TaxRateLocal * 100f:0.##}%");
             string warPenStr    = d.TaxPenaltyFromWar != 0 ? ColorRed($"-{d.TaxPenaltyFromWar:0.##}%") : ColorGold("0%");
@@ -140,6 +147,7 @@ namespace RulerBox
                 $"- Corruption Drain ({d.CorruptionLevel*100:0}%):    {corruptCost}\n" +
                 $"- Total expenses:     {expenses}";
         }
+
         // ==============================================================================================
         // POPULATION TOOLTIP
         // ==============================================================================================
@@ -149,7 +157,6 @@ namespace RulerBox
         {
             EnsureTooltip();
             var et = AddOrGetEventTrigger(chip);
-
             var enter = new EventTrigger.Entry { eventID = EventTriggerType.PointerEnter };
             enter.callback.AddListener((_) =>
             {
@@ -163,16 +170,19 @@ namespace RulerBox
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
+        
         // Population tooltip text
         public static string PopulationTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
+            
             long delta = d.Population - d.PrevPopulation;
             string deltaStr = delta >= 0
                 ? ColorGreen("+" + FormatBig(delta))
                 : ColorRed(FormatBig(delta));
             string growthStr = ColorGold($"{d.AvgGrowthRate:0.##}%");
+            
             bool extended = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             if (!extended)
             {
@@ -215,6 +225,7 @@ namespace RulerBox
                 $"-Sick: {sick}\n" +
                 $"-Happy Units: {ColorGold(FormatBig(d.HappyUnits))} ({happyRatio})";
         }
+
         // ==============================================================================================
         // WAR TOOLTIP
         // ==============================================================================================
@@ -236,11 +247,13 @@ namespace RulerBox
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
+        
         // War tooltip text
         public static string WarTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
+            
             var cur = ColorGold($"{d.WarExhaustion:0.#}");
             var chg = d.WEChange >= 0
                 ? ColorGreen($"+{d.WEChange:0.#}")
@@ -262,6 +275,7 @@ namespace RulerBox
                 $"-Manpower Capacity: {manpowerEffect}\n" +
                 $"-Stability Drift: {stabEffect}\n";
         }
+
         // ==============================================================================================
         // STABILITY TOOLTIP
         // ==============================================================================================
@@ -283,11 +297,13 @@ namespace RulerBox
             exit.callback.AddListener((_) => Hide());
             et.triggers.Add(exit);
         }
+        
         // Stability tooltip text
         public static string StabilityTooltip(Kingdom k)
         {
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return "No data";
+            
             var change60 = d.StabilityChange >= 0
                 ? ColorGreen($"+{d.StabilityChange:0.#} pp")
                 : ColorRed($"{d.StabilityChange:0.#} pp");
@@ -302,6 +318,7 @@ namespace RulerBox
                 $"-Tax Income: {taxEffect}\n" +
                 $"-Corruption Impact: {corr}\n";
         }
+
         // ==============================================================================================
         // HELPERS
         // ==============================================================================================
@@ -332,24 +349,29 @@ namespace RulerBox
             et.triggers.Add(enter);
             et.triggers.Add(exit);
         }
+
         // Ensure the tooltip GameObject is created
         private static void EnsureTooltip()
         {
             if (tooltip != null) return;
+            
             tooltip = new GameObject("RulerBox_Tooltip");
             tooltip.transform.SetParent(DebugConfig.instance?.transform, false);
             tooltip.transform.SetAsLastSibling();
+            
             // Background image
             var img = tooltip.AddComponent<Image>();
             img.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.ToolTip.png");
             img.type = Image.Type.Sliced;
             img.raycastTarget = false;
+            
             // Layout
             var rt = tooltip.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(0, 1);
             rt.anchorMax = new Vector2(0, 1);
             rt.pivot     = new Vector2(0f, 1f);               
             rt.sizeDelta = Vector2.zero;                         
+            
             // Padding and layout group
             var vlg = tooltip.AddComponent<VerticalLayoutGroup>();
             vlg.padding = new RectOffset(12, 12, 8, 8);         
@@ -358,10 +380,12 @@ namespace RulerBox
             vlg.childControlHeight = true;
             vlg.childForceExpandWidth = false;
             vlg.childForceExpandHeight = false;
+            
             // Content size fitter
             var fit = tooltip.AddComponent<ContentSizeFitter>();
             fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             fit.verticalFit   = ContentSizeFitter.FitMode.PreferredSize;
+            
             // Text
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(tooltip.transform, false);
@@ -376,20 +400,24 @@ namespace RulerBox
             tooltipText.verticalOverflow   = VerticalWrapMode.Overflow; 
             tooltipText.lineSpacing = 1.0f;
             tooltipText.raycastTarget = false;
+            
             // Text RectTransform
             var textRT = tooltipText.GetComponent<RectTransform>();
             textRT.anchorMin = Vector2.zero;
             textRT.anchorMax = Vector2.one;
             textRT.offsetMin = Vector2.zero;
             textRT.offsetMax = Vector2.zero;
+            
             // Layout Element for width control
             var textLE = textGO.AddComponent<LayoutElement>();
             textLE.minWidth = 100f;
             textLE.preferredWidth = 110f; 
+            
             // Tooltip follower
             tooltip.AddComponent<TooltipFollower>();
             tooltip.SetActive(false);
         }
+
         // Add or get EventTrigger component
         private static EventTrigger AddOrGetEventTrigger(GameObject go)
         {
@@ -397,31 +425,37 @@ namespace RulerBox
             if (et == null) et = go.AddComponent<EventTrigger>();
             return et;
         }
+
         // Force hide the tooltip
         public static void ForceHideTooltip()
         {
             if (tooltip != null) tooltip.SetActive(false);
             currentProvider = null;
         }
+
         // Show the tooltip
         private static void Show()
         {
             if (tooltip == null) return;
+            
             if (currentProvider != null) tooltipText.text = currentProvider();
             LayoutRebuilder.ForceRebuildLayoutImmediate(tooltip.GetComponent<RectTransform>());
             tooltip.SetActive(true);
             tooltip.transform.SetAsLastSibling();
         }
+
         // Hide the tooltip
         private static void Hide()
         {
             if (tooltip != null) tooltip.SetActive(false);
         }
+
         // Tooltip follower component
         private class TooltipFollower : MonoBehaviour
         {
             private RectTransform rt;
             private void Start() { rt = GetComponent<RectTransform>(); }
+            
             // Update is called once per frame
             void Update()
             {
@@ -444,12 +478,15 @@ namespace RulerBox
                 }
             }
         }
+
         // Clear simple tooltip from a GameObject
         public static void ClearSimpleTooltip(GameObject go)
         {
             if (go == null) return;
+            
             var et = go.GetComponent<EventTrigger>();
             if (et == null || et.triggers == null) return;
+            
             for (int i = et.triggers.Count - 1; i >= 0; i--)
             {
                 var ev = et.triggers[i].eventID;
@@ -459,17 +496,20 @@ namespace RulerBox
                 }
             }
         }
+
         // Hide tooltip immediately
         public static void HideTooltipNow()
         {
             if (tooltip != null) tooltip.SetActive(false);
             currentProvider = null;
         }
+
         // Utility formatting
         public static string ColorGold(string txt)  => $"<color=#FFD700>{txt}</color>";
         public static string ColorGreen(string txt) => $"<color=#7CFC00>{txt}</color>";
         public static string ColorRed(string txt) => $"<color=#FF5A5A>{txt}</color>";
         public static string FormatBig(long v) => v.ToString("#,0").Replace(',', ' ');
+        
         // Format big numbers with suffixes
         private static long SafeLong(double v)
         {
@@ -477,6 +517,7 @@ namespace RulerBox
             if (v < long.MinValue) return long.MinValue;
             return (long)Math.Round(v);
         }
+        
         // Format money with color coding
         public static string Money(long v, string whenPositive = "green", bool zeroGold = false)
         {
