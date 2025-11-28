@@ -100,13 +100,13 @@ namespace RulerBox
             contentRT.pivot     = new Vector2(0.5f, 1f);
 
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            // Center le card dentro lo scroll
+            
+            // Layout del contenuto
             contentVL.childAlignment        = TextAnchor.UpperCenter;
             contentVL.spacing               = 4;
             contentVL.padding               = new RectOffset(4, 4, 2, 2);
             contentVL.childControlWidth     = true;
             contentVL.childControlHeight    = true;
-            // NON forziamo full width → card più strette
             contentVL.childForceExpandWidth = false;
             contentVL.childForceExpandHeight= false;
 
@@ -162,7 +162,7 @@ namespace RulerBox
             var rowGO = new GameObject(def.Id + "_Row");
             rowGO.transform.SetParent(parent, false);
 
-            // Card di sfondo
+            // Background
             var rowImg = rowGO.AddComponent<Image>();
             rowImg.sprite = bgSprite != null ? bgSprite : windowInnerSprite;
             rowImg.type   = Image.Type.Sliced;
@@ -175,14 +175,12 @@ namespace RulerBox
             rowHL.childControlHeight    = true;
             rowHL.childForceExpandWidth = false;
             rowHL.childForceExpandHeight= false;
-
-            // CARD PIÙ STRETTA → bottone più “a destra”
             var rowLE = rowGO.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 32f;
-            rowLE.preferredWidth  = 155f;   // aumenta/diminuisci se vuoi più largo/stretto
+            rowLE.preferredWidth  = 155f;   
             rowLE.flexibleWidth   = 0f;
 
-            // 1) Icona a sinistra
+            // Icon
             var iconGO = new GameObject("Icon");
             iconGO.transform.SetParent(rowGO.transform, false);
             var iconImg = iconGO.AddComponent<Image>();
@@ -203,7 +201,7 @@ namespace RulerBox
             iconLE.preferredHeight = 24f;
             iconLE.minWidth        = 14f;
 
-            // 2) Nome (al centro)
+            // Name
             var nameGO = new GameObject("Name");
             nameGO.transform.SetParent(rowGO.transform, false);
             var nameText = nameGO.AddComponent<Text>();
@@ -211,7 +209,6 @@ namespace RulerBox
             nameText.text = def.Name;
             nameText.alignment = TextAnchor.MiddleLeft;
             nameText.color = Color.white;
-            // TESTO PIÙ PICCOLO
             nameText.resizeTextForBestFit = false;
             nameText.fontSize = 9;
 
@@ -222,10 +219,10 @@ namespace RulerBox
             nameRT.offsetMax = Vector2.zero;
 
             var nameLE = nameGO.AddComponent<LayoutElement>();
-            nameLE.flexibleWidth   = 1f;   // riempie lo spazio tra icona e bottone
+            nameLE.flexibleWidth   = 1f;  
             nameLE.preferredHeight = 24f;
 
-            // 3) Bottone + a destra
+            // Place Button
             var btnGO = new GameObject("PlaceBtn");
             btnGO.transform.SetParent(rowGO.transform, false);
             var btnImg = btnGO.AddComponent<Image>();
@@ -241,7 +238,7 @@ namespace RulerBox
             btnLE.preferredHeight = 24f;
             btnLE.minWidth        = 24f;
 
-            // Tooltip su tutta la row
+            // Tooltip
             ChipTooltips.AttachSimpleTooltip(rowGO, () => GetInvestmentTooltip(def));
         }
 
