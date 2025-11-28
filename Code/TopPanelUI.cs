@@ -13,7 +13,7 @@ namespace RulerBox
         private static Button economyTabBtn;
         private static Button technologyTabBtn;
 
-        private enum HubTab { Diplomacy, Economy, Technology }
+        public enum HubTab { Diplomacy, Economy, Technology }
         private static HubTab currentTab = HubTab.Economy;
 
         private static bool showEconomicLaws = false;
@@ -98,7 +98,7 @@ namespace RulerBox
         }
 
         // Tab Click Handler
-        private static void OnTabClicked(HubTab tab)
+        public static void OnTabClicked(HubTab tab)
         {
             // If clicking Economy again while already open, do nothing or reset view
             if (tab == HubTab.Economy && currentTab == HubTab.Economy)

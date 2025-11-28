@@ -147,7 +147,7 @@ namespace RulerBox
             BuildBackButton(bottomRow.transform, "Back", () => 
             {
                 SetVisible(false);
-                TopPanelUI.ReturnToEconomyMain();
+                TopPanelUI.OnTabClicked(TopPanelUI.HubTab.Diplomacy);
             });
 
             root.SetActive(false);

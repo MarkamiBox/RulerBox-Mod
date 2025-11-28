@@ -80,7 +80,10 @@ namespace RulerBox
             float yearsPassed = secondsPerYear > 0f ? deltaWorldSeconds / secondsPerYear : 0f;
             if (yearsPassed <= 0f) yearsPassed = 0.0001f;
 
-            // 0. Base Tax & Reset Modifiers
+            // 0. Update Counts First (Crucial for Expenses)
+            UpdateCounts(k, d);
+
+            // 1. Base Tax & Reset Modifiers
             d.TaxRateLocal = Mathf.Clamp01(k.getTaxRateLocal());
             
             // Reset Modifiers
@@ -109,11 +112,11 @@ namespace RulerBox
             d.GeniusChanceModifier = 0f;
             d.PlagueResistanceModifier = 0f;
 
-            // 1. Apply Laws Modifiers
+            // 2. Apply Laws Modifiers
             ApplyRiseOfNationsLaws(d);
             ApplyEconomicLaws_Modifiers(d);
 
-            // 2. Economy Calc (Income)
+            // 3. Economy Calc (Income)
             double totalWealth = 0;
             var units = k.getUnits();
             if (units != null) {
@@ -154,7 +157,7 @@ namespace RulerBox
             
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
-            // 3. Expenses Calc
+            // 4. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
             long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
             long demo = 0; 
@@ -189,13 +192,43 @@ namespace RulerBox
                 d.TreasuryTimer = 0f;
             }
             
-            // --- Resources, Population, Manpower, War Exhaustion, Stability ---
+            // --- Updates ---
             UpdateResources(k, d);
-            UpdatePopulation(k, d, k.getPopulationPeople(), deltaWorldSeconds);
             UpdateManpower(k, d, deltaWorldSeconds);
             UpdateWarExhaustion(k, d, yearsPassed);
             if (!d.HasInitializedStability) { d.Stability = 50f; d.HasInitializedStability = true; }
             UpdateStability(k, d, yearsPassed);
+        }
+
+        private static void UpdateCounts(Kingdom k, Data d)
+        {
+            if (k.cities != null)
+            {
+                d.Cities = k.cities.Count;
+                int bCount = 0;
+                foreach(var c in k.cities)
+                {
+                    if (c.buildings != null) bCount += c.buildings.Count;
+                }
+                d.Buildings = bCount;
+            }
+            else
+            {
+                d.Cities = 0;
+                d.Buildings = 0;
+            }
+            
+            d.Adults = k.countAdults();
+            d.Soldiers = k.countTotalWarriors();
+            d.Population = k.getPopulationPeople();
+            
+            // Population Growth Calc
+            d.AvgGrowthRate = (d.PopulationGrowthBonus * 100f); 
+            
+            // Basic Demographic place holders if needed for tooltips
+            // d.Children = ...
+            // d.Unemployed = ... 
+            // These would be calculated here if we had detailed actor iteration
         }
         
         // --- Economic Laws (New System) ---
@@ -854,10 +887,14 @@ namespace RulerBox
         private static void UpdateWarExhaustion(Kingdom k, Data d, float years)
         {
              // Basic simulation of War Exhaustion logic
+             // Applying modifier: d.WarExhaustionGainMultiplier
+             float gain = (d.WEChange * d.WarExhaustionGainMultiplier);
+             d.WarExhaustion = Mathf.Clamp(d.WarExhaustion + gain, 0f, 100f);
         }
 
         private static void UpdateStability(Kingdom k, Data d, float years)
         {
+            // Apply StabilityTargetModifier to base 50
              float target = 50f + d.StabilityTargetModifier;
              d.Stability = Mathf.MoveTowards(d.Stability, target, 5f * years);
         }
@@ -884,7 +921,7 @@ namespace RulerBox
             public long ExpensesCorruption;
             public long Balance => Income - Expenses;
             
-            // Economic Laws
+            // Law States
             public string TaxationLevel = "Normal";
             public string MilitarySpending = "None";
             public string SecuritySpending = "None";
@@ -893,8 +930,7 @@ namespace RulerBox
             public string EducationSpending = "None";
             public string ResearchSpending = "None";
             public string AntiCorruption = "None";
-
-            // Rise of Nations Laws
+            
             public string Law_Conscription = "Volunteer";
             public string Law_WarBonds = "Inactive";
             public string Law_ElitistMilitary = "Default";
@@ -1011,5 +1047,6 @@ namespace RulerBox
     public static class Patch_Building_Construction
     {
         // Note: Ideally this would patch updateBuild, but for visualization we might adjust progress speed logic elsewhere. 
+        // This is a placeholder to indicate where building speed logic connects.
     }
 }
