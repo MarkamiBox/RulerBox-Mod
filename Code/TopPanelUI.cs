@@ -162,6 +162,20 @@ namespace RulerBox
             // Hide others
             EconomyWindow.SetVisible(false);
             InvestmentsWindow.SetVisible(false);
+            DiplomacyWindow.SetVisible(false);
+            
+            EconomicLawsWindow.SetVisible(true);
+            showEconomicLaws = true;
+            showInvestments = false;
+            Refresh();
+        }
+
+        public static void OpenLaws()
+        {
+            // Hide others
+            EconomyWindow.SetVisible(false);
+            InvestmentsWindow.SetVisible(false);
+            DiplomacyWindow.SetVisible(false);
             
             EconomicLawsWindow.SetVisible(true);
             showEconomicLaws = true;
