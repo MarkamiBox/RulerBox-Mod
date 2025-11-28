@@ -232,7 +232,7 @@ namespace RulerBox
             label.text = displayName;
             label.alignment = TextAnchor.MiddleLeft;
             label.color = Color.white;
-            label.fontSize = 9;
+            label.fontSize = 7;
             labelGO.AddComponent<LayoutElement>().preferredHeight = 12f;
             
             // Buttons Row
