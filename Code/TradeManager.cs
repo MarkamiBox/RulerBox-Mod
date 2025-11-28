@@ -23,6 +23,7 @@ namespace RulerBox
         private static int nextId = 1;
         private const float TRADE_INTERVAL = 120f; // 2 minutes
 
+        // Called every game tick
         public static void Tick(float dt)
         {
             if (World.world.isPaused()) return;
@@ -72,6 +73,7 @@ namespace RulerBox
             return total;
         }
 
+        // get total expenses from active trade contracts
         public static long GetTradeExpenses(Kingdom k)
         {
             long total = 0;
@@ -84,8 +86,8 @@ namespace RulerBox
             }
             return total;
         }
-        // ----------------------------------
-
+        
+        // --- TRADE CONTRACT MANAGEMENT ---
         public static void AddContract(Kingdom source, Kingdom target, string resource, int amount, int cost, bool isSelling)
         {
             activeContracts.Add(new TradeContract
@@ -103,6 +105,7 @@ namespace RulerBox
             WorldTip.showNow($"Trade contract established: {amount} {resource} every 2m.", false, "top", 2f, "#9EE07A");
         }
 
+        // Cancel all trades between two kingdoms for a specific resource
         public static void CancelAllTrades(Kingdom player, Kingdom other, string resourceId)
         {
             int removed = activeContracts.RemoveAll(c => 
@@ -116,6 +119,7 @@ namespace RulerBox
             }
         }
 
+        // --- TRADE EXECUTION ---
         public static void ExecuteContract(TradeContract c)
         {
             var buyer = c.Target;
@@ -152,6 +156,7 @@ namespace RulerBox
                 WorldTip.showNow($"Trade: Bought {c.AmountPerTick} {c.ResourceId} (-{c.CostPerTick}g)", false, "top", 2f, "#9EE07A");
         }
 
+        // One-time trade execution
         public static bool ExecuteOneTimeTrade(Kingdom source, Kingdom target, string resource, int amount, int cost)
         {
             var buyerData = KingdomMetricsSystem.Get(target);
@@ -177,6 +182,7 @@ namespace RulerBox
             return true;
         }
 
+        // Cancel a contract and alert player if involved
         private static void CancelContract(TradeContract c, string reason)
         {
             activeContracts.Remove(c);
@@ -190,7 +196,6 @@ namespace RulerBox
         }
 
         // --- Helpers ---
-
         public static int CalculatePrice(string resourceId, int amount)
         {
             int totalWorld = 0;
@@ -220,6 +225,7 @@ namespace RulerBox
             return Mathf.CeilToInt(finalPricePerUnit * amount);
         }
 
+        // Get total amount of a resource in a kingdom's cities
         private static int GetKingdomResourceCount(Kingdom k, string id)
         {
             int total = 0;
@@ -233,6 +239,7 @@ namespace RulerBox
             return total;
         }
 
+        // Check if two kingdoms can trade
         public static bool CanTrade(Kingdom k1, Kingdom k2, out string reason)
         {
             reason = "";
@@ -256,6 +263,7 @@ namespace RulerBox
             return true;
         }
 
+        // Transfer resources from one kingdom to another
         private static void TransferResource(Kingdom from, Kingdom to, string id, int amount)
         {
             // Take from 'from' cities iteratively
