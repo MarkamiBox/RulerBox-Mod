@@ -210,7 +210,6 @@ namespace RulerBox
                 manpowerText.text =
                     $"{ChipTooltips.FormatBig(d.ManpowerCurrent)}/" +
                     $"{ChipTooltips.FormatBig(d.ManpowerMax)}";
-
                 warExhaustionText.text = ChipTooltips.ColorGold($"{d.WarExhaustion:0.#}");
                 stabilityText.text = ChipTooltips.ColorGold($"{d.Stability:0.#}%");
             }
