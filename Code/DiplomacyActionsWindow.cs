@@ -81,6 +81,18 @@ namespace RulerBox
             Refresh();
         }
 
+        public static void SetVisible(bool visible)
+        {
+            if (root != null) 
+            {
+                if (visible)
+                {
+                    DiplomacyActionsWindow.SetVisible(false);
+                }
+                root.SetActive(visible);
+            }
+        }
+
         public static void Close()
         {
             if (root != null) root.SetActive(false);
