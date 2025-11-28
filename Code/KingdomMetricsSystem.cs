@@ -17,6 +17,23 @@ namespace RulerBox
         }
     }
 
+    public class LeaderState
+    {
+        public string Id;
+        public string Name;
+        public string Type; // e.g., "Head of Government"
+        public int Level;   // 1, 2, 3...
+        public string IconPath; 
+        
+        // Modifiers
+        public float StabilityBonus;
+        public float PPGainBonus;
+        public float AttackBonus;
+        public float ResearchBonus;
+        public float TaxBonus;
+        public float CorruptionReduction;
+    }
+
     public static class KingdomMetricsSystem
     {
         private const float UpdateInterval = 0.25f;
@@ -1025,6 +1042,7 @@ namespace RulerBox
             public float JustificationTimeModifier = 1.0f;
             public float GeniusChanceModifier = 0f;
             public float PlagueResistanceModifier = 0f;
+            public float MilitaryAttackModifier = 0f; 
 
             // Misc
             public Dictionary<string, int> ResourceStockpiles = new Dictionary<string, int>();
