@@ -53,7 +53,7 @@ namespace RulerBox
                 contentRT.offsetMin = new Vector2(25f, 23f);
                 contentRT.offsetMax = new Vector2(-25f, -45f);
 
-                // Initialize Sub-Windows with Error Handling
+                // Initialize Sub-Windows
                 InitSubWindow("EconomyWindow", () => EconomyWindow.Initialize(contentContainer.transform));
                 InitSubWindow("EconomicLaws", () => EconomicLawsWindow.Initialize(contentContainer.transform));
                 InitSubWindow("LawsWindow", () => LawsWindow.Initialize(contentContainer.transform));
@@ -61,6 +61,9 @@ namespace RulerBox
                 InitSubWindow("Diplomacy", () => DiplomacyWindow.Initialize(contentContainer.transform));
                 InitSubWindow("DiplomacyActions", () => DiplomacyActionsWindow.Initialize(contentContainer.transform));
                 InitSubWindow("Technology", () => TechnologyWindow.Initialize(contentContainer.transform));
+                
+                // --- FIX: Explicitly Initialize LeadersWindow ---
+                InitSubWindow("LeadersWindow", () => LeadersWindow.Initialize(contentContainer.transform));
 
                 SetTab(HubTab.Economy);
                 root.SetActive(false);
@@ -82,6 +85,7 @@ namespace RulerBox
             }
         }
 
+        // ... [Rest of the file remains unchanged] ...
         // Create Tab Buttons
         private static void CreateTabs(Transform parent)
         {
@@ -132,6 +136,9 @@ namespace RulerBox
             InvestmentsWindow.SetVisible(false);
             ResourcesTradeWindow.SetVisible(false); 
             TradeWindow.SetVisible(false);
+            
+            // Fix: Also hide LeadersWindow when switching tabs
+            LeadersWindow.SetVisible(false);
 
             var selectedColor   = new Color(0.25f, 0.25f, 0.3f, 0.01f);
             var unselectedColor = new Color(0.15f, 0.15f, 0.2f, 0.01f);
@@ -209,6 +216,7 @@ namespace RulerBox
             DiplomacyWindow.SetVisible(false);
             DiplomacyActionsWindow.SetVisible(false);
             LawsWindow.SetVisible(false);
+            LeadersWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {
