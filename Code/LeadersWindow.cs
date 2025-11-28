@@ -160,40 +160,75 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.minHeight = 50f;
-            le.preferredHeight = 50f;
+            le.minHeight = 52f; // Slightly taller for better spacing
+            le.preferredHeight = 52f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            bg.color = isActive ? new Color(0.2f, 0.4f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
+            // Greenish for active, Blue-grey for recruit
+            bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = bg;
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 8;
-            h.padding = new RectOffset(6, 6, 4, 4);
+            h.spacing = 10; // Increased spacing
+            h.padding = new RectOffset(8, 8, 6, 6); // Adjust padding
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // Avatar
-            var avatarObj = new GameObject("Avatar");
-            avatarObj.transform.SetParent(btnObj.transform, false);
-            var avatarLE = avatarObj.AddComponent<LayoutElement>();
-            avatarLE.minWidth = 40f; avatarLE.preferredWidth = 40f;
-            avatarLE.minHeight = 40f; avatarLE.preferredHeight = 40f;
+            // --- UPDATED AVATAR RENDERING ---
 
-            var avatarImg = avatarObj.AddComponent<Image>();
-            avatarImg.preserveAspect = true;
-            Sprite s = null;
-            try { if (leader.UnitLink != null) s = leader.UnitLink.getSpriteToRender(); } catch { }
-            if (s == null) s = Main.selectedKingdom?.getElementIcon();
-            avatarImg.sprite = s;
+            // 1. Avatar Background (The circular container)
+            var avatarBgObj = new GameObject("AvatarBackground");
+            avatarBgObj.transform.SetParent(btnObj.transform, false);
+            var avatarLE = avatarBgObj.AddComponent<LayoutElement>();
+            avatarLE.minWidth = 44f; avatarLE.preferredWidth = 44f;
+            avatarLE.minHeight = 44f; avatarLE.preferredHeight = 44f;
+
+            var avatarBgImg = avatarBgObj.AddComponent<Image>();
+            // Use kingdom icon for the round shape
+            avatarBgImg.sprite = Main.selectedKingdom?.getElementIcon();
+            // Darken the background so the unit pops out
+            avatarBgImg.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+
+            // 2. The Unit Sprite (Overlay)
+            if (leader.UnitLink != null)
+            {
+                var unitImgObj = new GameObject("UnitSprite");
+                unitImgObj.transform.SetParent(avatarBgObj.transform, false);
+                
+                // Stretch to fill the background container
+                var unitRT = unitImgObj.AddComponent<RectTransform>();
+                unitRT.anchorMin = Vector2.zero; unitRT.anchorMax = Vector2.one;
+                unitRT.sizeDelta = Vector2.zero;
+
+                var unitImg = unitImgObj.AddComponent<Image>();
+                unitImg.preserveAspect = true;
+
+                try
+                {
+                    // Get the base sprite
+                    unitImg.sprite = leader.UnitLink.getSpriteToRender();
+                    // Tint it with the kingdom color if available
+                    if (leader.UnitLink.kingdom != null)
+                    {
+                        unitImg.color = leader.UnitLink.kingdom.getColor().getColor();
+                    }
+                }
+                catch 
+                {
+                   // Fallback if data is missing
+                   unitImg.color = Color.clear; 
+                }
+            }
+
+            // --- END UPDATED AVATAR ---
 
             // Text Stack
             var textStack = new GameObject("InfoStack");
@@ -201,21 +236,24 @@ namespace RulerBox
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 0;
+            textVL.spacing = 2; // Added spacing between text lines
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.9f, 0.5f));
+            // Name (Larger)
+            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
+            // Title (Gold color)
+            CreateText(textStack.transform, leader.Type, 10, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
             
             string summary = "";
             if (leader.StabilityBonus > 0) summary += $"Stab +{leader.StabilityBonus:0.#} ";
             if (leader.PPGainBonus > 0) summary += $"PP +{leader.PPGainBonus*100:0}% ";
             if (summary == "") summary = "View bonuses...";
-            CreateText(textStack.transform, summary, 8, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+            // Summary (Lighter grey)
+            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
@@ -224,13 +262,11 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "RecruitPanel", 1f);
             
-            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 13, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
-            // FIX: Add LayoutElement explicitly before accessing it
             var le = header.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f;
-            le.minHeight = 30f;
+            le.preferredHeight = 34f; le.minHeight = 34f;
 
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
@@ -239,13 +275,11 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "ActivePanel", 0.8f);
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, Color.yellow);
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 13, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); // Gold header
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
-            // FIX: Add LayoutElement explicitly before accessing it
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f;
-            le.minHeight = 30f;
+            le.preferredHeight = 34f; le.minHeight = 34f;
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
@@ -259,10 +293,10 @@ namespace RulerBox
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.3f);
+            bg.color = new Color(0, 0, 0, 0.4f); // Slightly darker panel background
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.padding = new RectOffset(4, 4, 4, 4);
+            v.spacing = 6; v.padding = new RectOffset(6, 6, 6, 6);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
@@ -275,11 +309,12 @@ namespace RulerBox
             le.flexibleHeight = 1f;
             
             var bg = scrollObj.AddComponent<Image>();
-            bg.color = new Color(0, 0, 0, 0.2f);
+            bg.color = new Color(0, 0, 0, 0.25f); // Darker scroll background
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 20f;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
@@ -295,7 +330,7 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
+            v.spacing = 5; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             
             scroll.viewport = vpRT; scroll.content = cRT;
@@ -385,7 +420,7 @@ namespace RulerBox
 
         private static string GetLeaderTooltip(LeaderState l)
         {
-            string s = $"<b>{l.Type}</b>\n";
+            string s = $"<b><color=#FFD700>{l.Type}</color></b>\n";
             if (l.UnitLink != null)
             {
                 string status = l.UnitLink.isAlive() ? "<color=#7CFC00>Alive</color>" : "<color=#FF5A5A>Deceased</color>";
@@ -410,6 +445,10 @@ namespace RulerBox
             t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
             t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            // Add a slight shadow for better readability against colored backgrounds
+            var shadow = go.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0,0,0,0.5f);
+            shadow.effectDistance = new Vector2(1, -1);
             return t;
         }
     }
