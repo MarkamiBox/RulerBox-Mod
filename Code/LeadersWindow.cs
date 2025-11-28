@@ -20,7 +20,8 @@ namespace RulerBox
         private static readonly string[] RandomTitles = { 
             "High Marshall", "Royal Advisor", "Grand Treasurer", "Spymaster", 
             "Chief Justice", "Head of Research", "Fleet Admiral", "High Priest", 
-            "Minister of Defense", "Governor", "Diplomat", "Reformer" 
+            "Minister of Defense", "Governor", "Diplomat", "Reformer",
+            "Corrupt Official", "Tyrant", "Usurper", "Fanatic" // Added some "flavor" titles
         };
 
         public static void Initialize(Transform parent)
@@ -160,14 +161,13 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.minHeight = 52f; // Slightly taller for better spacing
+            le.minHeight = 52f;
             le.preferredHeight = 52f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            // Greenish for active, Blue-grey for recruit
             bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -175,16 +175,14 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 10; // Increased spacing
-            h.padding = new RectOffset(8, 8, 6, 6); // Adjust padding
+            h.spacing = 10;
+            h.padding = new RectOffset(8, 8, 6, 6);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- UPDATED AVATAR RENDERING ---
-
-            // 1. Avatar Background (The circular container)
+            // --- AVATAR RENDERING ---
             var avatarBgObj = new GameObject("AvatarBackground");
             avatarBgObj.transform.SetParent(btnObj.transform, false);
             var avatarLE = avatarBgObj.AddComponent<LayoutElement>();
@@ -192,18 +190,14 @@ namespace RulerBox
             avatarLE.minHeight = 44f; avatarLE.preferredHeight = 44f;
 
             var avatarBgImg = avatarBgObj.AddComponent<Image>();
-            // Use kingdom icon for the round shape
             avatarBgImg.sprite = Main.selectedKingdom?.getElementIcon();
-            // Darken the background so the unit pops out
-            avatarBgImg.color = new Color(0.4f, 0.4f, 0.4f, 1f);
+            avatarBgImg.color = new Color(0.3f, 0.3f, 0.3f, 1f); // Dark background
 
-            // 2. The Unit Sprite (Overlay)
             if (leader.UnitLink != null)
             {
                 var unitImgObj = new GameObject("UnitSprite");
                 unitImgObj.transform.SetParent(avatarBgObj.transform, false);
                 
-                // Stretch to fill the background container
                 var unitRT = unitImgObj.AddComponent<RectTransform>();
                 unitRT.anchorMin = Vector2.zero; unitRT.anchorMax = Vector2.one;
                 unitRT.sizeDelta = Vector2.zero;
@@ -213,46 +207,42 @@ namespace RulerBox
 
                 try
                 {
-                    // Get the base sprite
                     unitImg.sprite = leader.UnitLink.getSpriteToRender();
-                    // Tint it with the kingdom color if available
-                    if (leader.UnitLink.kingdom != null)
+                    
+                    // --- FIX: Use kingdomColor object instead of incorrect ColorAsset method ---
+                    if (leader.UnitLink.kingdom != null && leader.UnitLink.kingdom.kingdomColor != null)
                     {
-                        unitImg.color = leader.UnitLink.kingdom.getColor().getColor();
+                        unitImg.color = leader.UnitLink.kingdom.kingdomColor.getColorMain(); 
+                    }
+                    else
+                    {
+                        unitImg.color = Color.white;
                     }
                 }
                 catch 
                 {
-                   // Fallback if data is missing
                    unitImg.color = Color.clear; 
                 }
             }
 
-            // --- END UPDATED AVATAR ---
-
-            // Text Stack
+            // --- TEXT INFO ---
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 2; // Added spacing between text lines
+            textVL.spacing = 2;
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            // Name (Larger)
             CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
-            // Title (Gold color)
             CreateText(textStack.transform, leader.Type, 10, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
             
-            string summary = "";
-            if (leader.StabilityBonus > 0) summary += $"Stab +{leader.StabilityBonus:0.#} ";
-            if (leader.PPGainBonus > 0) summary += $"PP +{leader.PPGainBonus*100:0}% ";
-            if (summary == "") summary = "View bonuses...";
-            // Summary (Lighter grey)
+            // Format Summary with Colors for Bonus/Malus
+            string summary = FormatSummary(leader);
             CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
@@ -275,7 +265,7 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "ActivePanel", 0.8f);
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 13, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); // Gold header
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 13, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
@@ -293,7 +283,7 @@ namespace RulerBox
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.4f); // Slightly darker panel background
+            bg.color = new Color(0, 0, 0, 0.4f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
             v.spacing = 6; v.padding = new RectOffset(6, 6, 6, 6);
@@ -309,7 +299,7 @@ namespace RulerBox
             le.flexibleHeight = 1f;
             
             var bg = scrollObj.AddComponent<Image>();
-            bg.color = new Color(0, 0, 0, 0.25f); // Darker scroll background
+            bg.color = new Color(0, 0, 0, 0.25f); 
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
@@ -391,31 +381,60 @@ namespace RulerBox
             }
         }
 
+        // --- NEW: GENERATE MIXED STATS (BONUS + MALUS) ---
         private static LeaderState CreateRandomLeader(Actor unit)
         {
             string title = RandomTitles[UnityEngine.Random.Range(0, RandomTitles.Length)];
+            
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
-            int perks = UnityEngine.Random.Range(1, 3);
+            int perks = UnityEngine.Random.Range(1, 3); // 1 to 2 stats
+
             for(int i=0; i<perks; i++)
             {
                 int type = UnityEngine.Random.Range(0, 6);
+                // 30% Chance for a trait to be negative (Malus)
+                bool isMalus = UnityEngine.Random.value < 0.3f; 
+                float sign = isMalus ? -1f : 1f;
+
                 switch(type)
                 {
-                    case 0: stab += UnityEngine.Random.Range(2f, 6f); break; 
-                    case 1: pp += UnityEngine.Random.Range(5f, 15f); break;   
-                    case 2: atk += UnityEngine.Random.Range(5f, 15f); break; 
-                    case 3: res += UnityEngine.Random.Range(5f, 15f); break;  
-                    case 4: tax += UnityEngine.Random.Range(5f, 15f); break;  
-                    case 5: corr += UnityEngine.Random.Range(0.05f, 0.15f); break; 
+                    case 0: stab += UnityEngine.Random.Range(2f, 6f) * sign; break; 
+                    case 1: pp += UnityEngine.Random.Range(5f, 15f) * sign; break;   
+                    case 2: atk += UnityEngine.Random.Range(5f, 15f) * sign; break; 
+                    case 3: res += UnityEngine.Random.Range(5f, 15f) * sign; break;  
+                    case 4: tax += UnityEngine.Random.Range(5f, 15f) * sign; break;  
+                    case 5: 
+                        // Corruption logic is reversed: Negative value = Good (Reduction), Positive = Bad (Increase)
+                        // If 'isMalus' (bad trait), we ADD corruption (+). If good, we SUBTRACT (-).
+                        corr += UnityEngine.Random.Range(0.05f, 0.15f) * (isMalus ? 1f : -1f); 
+                        break; 
                 }
             }
+
             string name = (unit != null) ? unit.getName() : "Generated Leader";
+            
             return new LeaderState
             {
                 Id = System.Guid.NewGuid().ToString(), Name = name, Type = title, Level = 1,
                 UnitLink = unit, StabilityBonus = stab, PPGainBonus = pp/100f, AttackBonus = atk/100f,
-                ResearchBonus = res/100f, TaxBonus = tax/100f, CorruptionReduction = corr
+                ResearchBonus = res/100f, TaxBonus = tax/100f, CorruptionReduction = -corr // Store as "Corruption Impact" logic
             };
+        }
+
+        private static string FormatSummary(LeaderState l)
+        {
+            string s = "";
+            // Helper to format green/red
+            string Col(float val, string txt) => val > 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
+            // Reversed logic for corruption
+            string ColRev(float val, string txt) => val < 0 ? $"<color=#7CFC00>{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
+
+            if (l.StabilityBonus != 0) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
+            if (l.PPGainBonus != 0) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
+            if (l.AttackBonus != 0) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
+            
+            if (s == "") s = "Check bonuses...";
+            return s;
         }
 
         private static string GetLeaderTooltip(LeaderState l)
@@ -427,13 +446,34 @@ namespace RulerBox
                 s += $"Unit: {l.UnitLink.getName()} ({status})\n";
             }
             else s += "(Abstract Leader)\n";
-            s += "\n<b>Bonuses:</b>\n";
-            if (l.StabilityBonus > 0) s += $"Stability: +{l.StabilityBonus:0.#}\n";
-            if (l.PPGainBonus > 0) s += $"Political Power: +{l.PPGainBonus*100:0}%\n";
-            if (l.AttackBonus > 0) s += $"Army Attack: +{l.AttackBonus*100:0}%\n";
-            if (l.ResearchBonus > 0) s += $"Research: +{l.ResearchBonus*100:0}%\n";
-            if (l.TaxBonus > 0) s += $"Tax Income: +{l.TaxBonus*100:0}%\n";
-            if (l.CorruptionReduction > 0) s += $"Corruption: -{l.CorruptionReduction*100:0.##}\n";
+            s += "\n<b>Effects:</b>\n";
+
+            string Val(float v, string suffix="") => (v > 0 ? "+" : "") + (v*100).ToString("0") + suffix;
+            string Col(float v) => v > 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
+            
+            // Standard Stats
+            if (l.StabilityBonus != 0) s += $"Stability: {Col(l.StabilityBonus)}{l.StabilityBonus:0.#}</color>\n";
+            if (l.PPGainBonus != 0) s += $"Political Power: {Col(l.PPGainBonus)}{Val(l.PPGainBonus, "%")}</color>\n";
+            if (l.AttackBonus != 0) s += $"Army Attack: {Col(l.AttackBonus)}{Val(l.AttackBonus, "%")}</color>\n";
+            if (l.ResearchBonus != 0) s += $"Research: {Col(l.ResearchBonus)}{Val(l.ResearchBonus, "%")}</color>\n";
+            if (l.TaxBonus != 0) s += $"Tax Income: {Col(l.TaxBonus)}{Val(l.TaxBonus, "%")}</color>\n";
+            
+            // Corruption (Recall: l.CorruptionReduction stored the raw impact in previous methods, 
+            // but in CreateRandomLeader I stored it as inverted. Let's assume stored value: Negative = Reduction (Good), Positive = Increase (Bad))
+            // Actually, KingdomMetrics uses "CorruptionReduction", so Positive Value = Good.
+            // My CreateRandom generates 'corr'. If Malus -> Positive Corr. 
+            // I assigned CorruptionReduction = -corr.
+            // So: If Malus (High Corr), 'corr' is +, so CorruptionReduction is -.
+            // If Bonus (Low Corr), 'corr' is -, so CorruptionReduction is +.
+            
+            if (l.CorruptionReduction != 0) 
+            {
+                // Reduction > 0 means Corruption Goes Down (Good)
+                string cColor = l.CorruptionReduction > 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
+                string sign = l.CorruptionReduction > 0 ? "-" : "+"; // Display as "-5% Corruption" (Good)
+                s += $"Corruption: {cColor}{sign}{Mathf.Abs(l.CorruptionReduction)*100:0.##}%</color>\n";
+            }
+
             return s;
         }
 
@@ -445,7 +485,6 @@ namespace RulerBox
             t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
             t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
-            // Add a slight shadow for better readability against colored backgrounds
             var shadow = go.AddComponent<Shadow>();
             shadow.effectColor = new Color(0,0,0,0.5f);
             shadow.effectDistance = new Vector2(1, -1);
