@@ -100,7 +100,7 @@ namespace RulerBox
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVL.childAlignment = TextAnchor.UpperLeft;
             contentVL.spacing = 4;
-            contentVL.padding = new RectOffset(4, 4, 4, 4); // Padding inside the scroll area
+            contentVL.padding = new RectOffset(20, 20, 4, 4); // Padding inside the scroll area
             contentVL.childControlWidth = true;
             contentVL.childControlHeight = true;
             contentVL.childForceExpandWidth = true;
