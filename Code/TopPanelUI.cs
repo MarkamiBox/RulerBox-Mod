@@ -18,7 +18,8 @@ namespace RulerBox
 
         private static bool showEconomicLaws = false;
         private static bool showInvestments = false; 
-
+        
+        // Initialization
         public static void Initialize()
         {
             if (root != null) return;
@@ -26,11 +27,13 @@ namespace RulerBox
             root = new GameObject("RulerBox_MainHub");
             root.transform.SetParent(DebugConfig.instance?.transform, false);
 
+            // Background
             var img = root.AddComponent<Image>();
             img.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.MainHub.png");
             img.type = Image.Type.Sliced;
             img.color = Color.white;
 
+            // RectTransform setup
             var rt = root.GetComponent<RectTransform>();
             rt.anchorMin = new Vector2(1.05f, 0.7f);
             rt.anchorMax = new Vector2(1.05f, 0.7f);
@@ -40,10 +43,12 @@ namespace RulerBox
 
             CreateTabs(root.transform);
 
+            // Content Container
             var containerGO = new GameObject("ContentContainer");
             containerGO.transform.SetParent(root.transform, false);
             contentContainer = containerGO;
 
+            // Content Container RectTransform
             var contentRT = containerGO.AddComponent<RectTransform>();
             contentRT.anchorMin = new Vector2(0f, 0f);
             contentRT.anchorMax = new Vector2(1f, 1f);
@@ -58,12 +63,15 @@ namespace RulerBox
             DiplomacyActionsWindow.Initialize(contentContainer.transform);
             TechnologyWindow.Initialize(contentContainer.transform);
 
+            // Default tab
             SetTab(HubTab.Economy);
             root.SetActive(false);
         }
 
+        // Create Tab Buttons
         private static void CreateTabs(Transform parent)
         {
+            // Tabs Row
             var tabsRow = new GameObject("TabsRow");
             tabsRow.transform.SetParent(parent, false);
             var tabsRT = tabsRow.AddComponent<RectTransform>();
@@ -73,6 +81,7 @@ namespace RulerBox
             tabsRT.offsetMin = new Vector2(9f, -34f);
             tabsRT.offsetMax = new Vector2(-9f, -24f);
 
+            // Horizontal Layout
             var hTabs = tabsRow.AddComponent<HorizontalLayoutGroup>();
             hTabs.childAlignment = TextAnchor.MiddleCenter;
             hTabs.spacing = 3f;
@@ -81,11 +90,13 @@ namespace RulerBox
             hTabs.childControlHeight = true;
             hTabs.childForceExpandWidth = true;
 
+            // Build Buttons
             diplomacyTabBtn = BuildTabButton(tabsRow.transform, "Diplomacy", () => OnTabClicked(HubTab.Diplomacy));
             economyTabBtn   = BuildTabButton(tabsRow.transform, "Economy",   () => OnTabClicked(HubTab.Economy));
             technologyTabBtn= BuildTabButton(tabsRow.transform, "Technology",() => OnTabClicked(HubTab.Technology));
         }
 
+        // Tab Click Handler
         private static void OnTabClicked(HubTab tab)
         {
             // If clicking Economy again while already open, do nothing or reset view
@@ -98,6 +109,7 @@ namespace RulerBox
             Refresh();
         }
 
+        // Set Active Tab
         private static void SetTab(HubTab tab)
         {
             currentTab = tab;
@@ -116,10 +128,11 @@ namespace RulerBox
             ResourcesTradeWindow.SetVisible(false); 
             TradeWindow.SetVisible(false);
 
-            // Colors update...
+            // Colors update
             var selectedColor   = new Color(0.25f, 0.25f, 0.3f, 0.01f);
             var unselectedColor = new Color(0.15f, 0.15f, 0.2f, 0.01f);
 
+            // Deselect all
             if (diplomacyTabBtn) diplomacyTabBtn.GetComponent<Image>().color = unselectedColor;
             if (economyTabBtn)   economyTabBtn.GetComponent<Image>().color   = unselectedColor;
             if (technologyTabBtn)technologyTabBtn.GetComponent<Image>().color= unselectedColor;
@@ -142,6 +155,7 @@ namespace RulerBox
             }
         }
 
+        // Economy Sub-Window Navigation
         public static void OpenEconomicLaws()
         {
             // Hide others
@@ -154,6 +168,7 @@ namespace RulerBox
             Refresh();
         }
 
+        // Economy Sub-Window Navigation
         public static void OpenInvestments()
         {
             EconomyWindow.SetVisible(false);
@@ -165,11 +180,13 @@ namespace RulerBox
             Refresh();
         }
 
+        // Return to main Economy window
         public static void ReturnToEconomyMain()
         {
             CloseAllWindows(); // Go back to main economy
         }
 
+        // Close all sub-windows, reset to main Economy if in Economy tab
         public static void CloseAllWindows()
         {
             // Reset to default Economy state
@@ -192,6 +209,7 @@ namespace RulerBox
             Refresh();
         }
 
+        // Refresh Content
         public static void Refresh()
         {
             if (root == null || !root.activeSelf) return;
@@ -209,10 +227,12 @@ namespace RulerBox
             if (TechnologyWindow.IsVisible()) TechnologyWindow.Refresh(k);
         }
 
+        // Show / Hide / Toggle
         public static void Show() { if (root == null) Initialize(); root.SetActive(true); Refresh(); }
         public static void Hide() { if (root != null) root.SetActive(false); }
         public static void Toggle() { if (root == null) Initialize(); root.SetActive(!root.activeSelf); if (root.activeSelf) Refresh(); }
 
+        // Build Tab Button
         private static Button BuildTabButton(Transform parent, string label, Action onClick)
         {
             var go = new GameObject(label + "Tab");
