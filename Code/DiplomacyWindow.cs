@@ -45,6 +45,8 @@ namespace RulerBox
         // ================================================================================================
         public static void Initialize(Transform parent)
         {
+            LeadersWindow.Initialize(parent);
+
             if (root != null) return;
             
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
@@ -105,6 +107,8 @@ namespace RulerBox
         {
             if (!IsVisible() || k == null) return;
             
+            if (LeadersWindow.IsVisible()) LeadersWindow.Refresh();
+
             // --- 1. Header Updates (Safe to update every frame for smooth visuals) ---
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
@@ -488,7 +492,11 @@ namespace RulerBox
             scroll.viewport = viewport.GetComponent<RectTransform>(); 
             scroll.content = cRT;
             CreateActionBtn("Laws", () => TopPanelUI.OpenLaws());
-            CreateActionBtn("Leaders", null);
+            CreateActionBtn("Leaders", () => {
+                SetVisible(false); // Hide main diplomacy
+                LeadersWindow.SetVisible(true); // Open Leaders
+                LeadersWindow.Refresh();
+            });
             CreateActionBtn("Policies", null);
             CreateActionBtn("Ideologies", null);
             CreateActionBtn("National Flags", null);
