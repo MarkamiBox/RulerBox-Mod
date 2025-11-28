@@ -250,9 +250,9 @@ namespace RulerBox
 
         private static void ApplyLeaderModifiers(Data d)
         {
-            if (d.ActiveLeaders == null) return;
-            
             LeadersWindow.Refresh();
+            if (d.ActiveLeaders == null) return;
+
             for (int i = d.ActiveLeaders.Count - 1; i >= 0; i--)
             {
                 var leader = d.ActiveLeaders[i];
