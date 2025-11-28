@@ -302,11 +302,12 @@ namespace RulerBox
             });
 
             var btnLE = btnGO.AddComponent<LayoutElement>();
-            btnLE.preferredWidth = 24f; // Smaller button to fit nicely
+            btnLE.preferredWidth = 24f; 
             btnLE.preferredHeight = 24f;
             btnLE.minWidth = 24f;
         }
 
+        // Creates a Text UI element
         private static Text CreateText(GameObject parent, string content, int fontSize, FontStyle style)
         {
             var go = new GameObject("Text");
@@ -324,6 +325,7 @@ namespace RulerBox
             return txt;
         }
 
+        // Builds a button with given label and click action
         private static void BuildButton(Transform parent, string label, Action onClick)
         {
             var go = new GameObject("Button_" + label);
