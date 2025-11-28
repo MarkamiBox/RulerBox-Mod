@@ -44,6 +44,9 @@ namespace RulerBox
                 modeStr = "<color=#7CFC00>RECRUIT (Drag civilians)</color>";
             else if (ArmySystem.CurrentMode == ArmySelectionMode.Dismiss) 
                 modeStr = "<color=#FF5A5A>DISMISS (Drag soldiers)</color>";
+            
+            string regenStr = ColorGold($"{d.ManpowerRegenRate * 100f:0.##}% / min");
+
             return
                 $"<b>Manpower Command</b>\n" +
                 $"Current Mode: {modeStr}\n" +
@@ -52,7 +55,8 @@ namespace RulerBox
                 $"Eligible Civilians: {ColorGold(FormatBig(d.Adults - d.Soldiers))}\n\n" +
                 $"<b>Manpower Points (Draft Currency)</b>\n" +
                 $"Available: {ColorGold(FormatBig(d.ManpowerCurrent))}\n" +
-                $"Capacity:  {FormatBig(d.ManpowerMax)}\n\n" +
+                $"Capacity:  {FormatBig(d.ManpowerMax)}\n" +
+                $"Regeneration: {regenStr}\n\n" +
                 $"<color=#999999>Drafting costs 1 Manpower Point per soldier.\n" +
                 $"Dismissing refunds Manpower Point.</color>";
         }
@@ -129,7 +133,7 @@ namespace RulerBox
             return
                 $"Treasury: {treasury}\n" +
                 $"Balance:  {balance}\n\n" +
-                $"<b>INCOME</b>\n" +
+                $"<b>INCOME</b> (Level: {d.TaxationLevel})\n" +
                 $"- Base taxable wealth: {baseWealth}\n" +
                 $"- Raw tax {taxRateStr}:             {incomeBase}\n" +
                 $"- After war penalty ({warPenStr}):    {incomeWar}\n" +
@@ -205,6 +209,11 @@ namespace RulerBox
             string elders     = ColorGold(FormatBig(d.Elders));
             string veterans   = ColorGold(FormatBig(d.Veterans));
             string genius     = ColorGold(FormatBig(d.Genius));
+            
+            string researchEff = ColorGold($"{d.ResearchOutputModifier * 100f:0.##}%");
+            string plagueRes = ColorGold($"{d.PlagueResistanceModifier * 100f:0.##}%");
+            string geniusChance = ColorGold($"+{d.GeniusChanceModifier * 100f:0.##}%");
+
             return
                 $"Population: {ColorGold(FormatBig(d.Population))}\n" +
                 $"Change: {deltaStr}\n" +
@@ -223,7 +232,10 @@ namespace RulerBox
                 $"-Hungry: {hungry}\n" +
                 $"-Starving: {starving}\n" +
                 $"-Sick: {sick}\n" +
-                $"-Happy Units: {ColorGold(FormatBig(d.HappyUnits))} ({happyRatio})";
+                $"-Happy Units: {ColorGold(FormatBig(d.HappyUnits))} ({happyRatio})\n" +
+                $"-Research Eff: {researchEff}\n" +
+                $"-Plague Res: {plagueRes}\n" +
+                $"-Genius Chance: {geniusChance}";
         }
 
         // ==============================================================================================
@@ -267,9 +279,15 @@ namespace RulerBox
             string stabEffect = d.WarEffectOnStabilityPerYear != 0
                 ? ColorRed($"{d.WarEffectOnStabilityPerYear:0.##} pp / year")
                 : ColorGold("0 pp / year");
+                
+            string gainMult = d.WarExhaustionGainMultiplier != 1f 
+                ? (d.WarExhaustionGainMultiplier > 1f ? ColorRed($"{d.WarExhaustionGainMultiplier:0.##}x") : ColorGreen($"{d.WarExhaustionGainMultiplier:0.##}x"))
+                : ColorGold("1x");
+
             return
                 $"{cur}% War Exhaustion\n\n" +
-                $"Change: {chg} / update\n\n" +
+                $"Change: {chg} / update\n" +
+                $"Gain Multiplier: {gainMult}\n\n" +
                 $"Effects:\n" +
                 $"-Tax Income: {taxEffect}\n" +
                 $"-Manpower Capacity: {manpowerEffect}\n" +
@@ -310,10 +328,19 @@ namespace RulerBox
             string taxEffect = d.TaxModifierFromStability != 0
                 ? (d.TaxModifierFromStability > 0 ? ColorGreen($"+{d.TaxModifierFromStability:0.##}%") : ColorRed($"{d.TaxModifierFromStability:0.##}%"))
                 : ColorGold("0%");
-            string corr = ColorRed($"-{d.CorruptionLevel * 40f:0.#} pp/yr");
+            string corr = d.CorruptionLevel > 0 
+                ? ColorRed($"-{d.CorruptionLevel * 40f:0.#} pp/yr")
+                : ColorGold("0");
+            
+            float targetStab = 50f + d.StabilityTargetModifier;
+            string targetStr = ColorGold($"{targetStab:0.#}%");
+            string corruptionStr = ColorRed($"{d.CorruptionLevel*100f:0.#}%");
+
             return
-                $"{ColorGold($"{d.Stability:0.#}%")} Stability (Base 50%)\n\n" +
+                $"{ColorGold($"{d.Stability:0.#}%")} Stability (Base 50%)\n" +
+                $"Target Equilibrium: {targetStr}\n\n" +
                 $"Change: {change60}\n\n" +
+                $"Corruption: {corruptionStr}\n\n" +
                 $"Effects:\n" +
                 $"-Tax Income: {taxEffect}\n" +
                 $"-Corruption Impact: {corr}\n";
