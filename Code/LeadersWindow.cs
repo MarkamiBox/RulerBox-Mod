@@ -209,84 +209,88 @@ namespace RulerBox
         {
             if (parent == null || leader == null) return;
 
+            // BUTTON ROOT
             var btnObj = new GameObject("LeaderBtn");
             btnObj.transform.SetParent(parent, false);
 
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
-            img.color = isActive ? new Color(0.2f, 0.45f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
+            img.color = isActive ? 
+                new Color(0.2f, 0.45f, 0.2f, 0.9f) : 
+                new Color(0.25f, 0.25f, 0.3f, 0.9f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 44f;
-            le.minHeight = 44f;
+            le.preferredHeight = 54f;
+            le.minHeight = 54f;
             le.flexibleWidth = 1f;
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 8;
+            h.spacing = 6;
             h.padding = new RectOffset(6, 6, 4, 4);
-            h.childControlWidth = true; 
-            h.childControlHeight = true;
-            h.childForceExpandWidth = false; 
-            h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleLeft;
+            h.childControlWidth = true;
+            h.childControlHeight = true;
 
-            // --- LEFT: Icon ---
-            var iconContainer = new GameObject("IconContainer");
-            iconContainer.transform.SetParent(btnObj.transform, false);
-            var iconBg = iconContainer.AddComponent<Image>();
-            
-            if (Main.selectedKingdom != null)
-            {
-                iconBg.sprite = Main.selectedKingdom.getElementBackground();
-                if(Main.selectedKingdom.kingdomColor != null) 
-                    iconBg.color = Main.selectedKingdom.kingdomColor.getColorMain32();
-            }
-            
-            var iconContainerLE = iconContainer.AddComponent<LayoutElement>();
-            iconContainerLE.preferredWidth = 32f; 
-            iconContainerLE.preferredHeight = 32f;
-            iconContainerLE.minWidth = 32f;
+            // === ICON ===
+            var iconGO = new GameObject("Icon");
+            iconGO.transform.SetParent(btnObj.transform, false);
+            var iconImg = iconGO.AddComponent<Image>();
+            iconImg.sprite = AssetManager.sprites.get(leader.IconPath);
+            iconImg.color = Color.white;
 
-            var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(iconContainer.transform, false);
-            var iconImg = iconObj.AddComponent<Image>();
-            
-            Sprite sprite = null;
-            if (leader.UnitLink != null) { try { sprite = leader.UnitLink.getSpriteToRender(); } catch { } }
-            if (sprite == null && !string.IsNullOrEmpty(leader.IconPath)) sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
-            if (sprite == null && Main.selectedKingdom != null) sprite = Main.selectedKingdom.getElementIcon(); 
-            
-            iconImg.sprite = sprite;
-            iconImg.preserveAspect = true;
-            
-            var iconRT = iconObj.GetComponent<RectTransform>();
-            iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
-            iconRT.offsetMin = new Vector2(2,2); iconRT.offsetMax = new Vector2(-2,-2);
+            var iconRT = iconGO.GetComponent<RectTransform>();
+            iconRT.sizeDelta = new Vector2(32, 32);
 
-            // --- RIGHT: Info Text ---
-            var infoObj = new GameObject("Info");
-            infoObj.transform.SetParent(btnObj.transform, false);
-            var v = infoObj.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.MiddleLeft;
-            v.spacing = 0;
+            // === TEXT COLUMN ===
+            var textCol = new GameObject("TextCol");
+            textCol.transform.SetParent(btnObj.transform, false);
+            var v = textCol.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 1;
             v.childControlWidth = true;
             v.childControlHeight = true;
+            v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
 
-            var infoLE = infoObj.AddComponent<LayoutElement>();
-            infoLE.flexibleWidth = 1f;
+            // NAME
+            var nameGO = new GameObject("Name");
+            nameGO.transform.SetParent(textCol.transform, false);
+            var nameText = nameGO.AddComponent<Text>();
+            nameText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            nameText.text = leader.Name;
+            nameText.fontSize = 11;
+            nameText.color = Color.white;
+            nameText.alignment = TextAnchor.MiddleLeft;
 
-            CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
-            CreateText(infoObj.transform, $"{leader.Type}", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
+            // TITLE
+            var titleGO = new GameObject("Title");
+            titleGO.transform.SetParent(textCol.transform, false);
+            var titleText = titleGO.AddComponent<Text>();
+            titleText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            titleText.text = leader.Type;
+            titleText.fontSize = 10;
+            titleText.color = new Color(0.9f, 0.9f, 0.4f, 1f);
+            titleText.alignment = TextAnchor.MiddleLeft;
 
-            // Tooltip
-            ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
+            // STATS SUMMARY
+            var statsGO = new GameObject("Stats");
+            statsGO.transform.SetParent(textCol.transform, false);
+            var statsText = statsGO.AddComponent<Text>();
+            statsText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            statsText.fontSize = 9;
+            statsText.color = new Color(0.85f, 0.85f, 0.85f, 1f);
+            statsText.alignment = TextAnchor.MiddleLeft;
+
+            statsText.text =
+                $"Stab +{leader.StabilityBonus:0}  " +
+                $"PP +{(leader.PPGainBonus * 100f):0}%  " +
+                $"ATK +{(leader.AttackBonus * 100f):0}%";
         }
+
 
         private static void OnLeaderClicked(LeaderState leader, bool isActive)
         {
