@@ -111,6 +111,11 @@ namespace RulerBox
             d.CityWealthBonusCapPct = 30f; // Reset to base
             d.CorruptionLevel = 0f; // Reset base corruption
             d.ManpowerRegenRate = 0.015f; // Reset to new base (1.5% per min)
+            d.MilitaryUpkeepModifier = 1.0f; // New
+            d.BuildingSpeedModifier = 1.0f; // New
+            d.ResearchOutputModifier = 1.0f; // New
+            d.FactoryOutputModifier = 1.0f; // New (Economy)
+            d.ResourceOutputModifier = 1.0f; // New (Economy)
 
             UpdateLawsFromKingdom(k, d);
 
@@ -184,7 +189,8 @@ namespace RulerBox
             taxableBase *= (1.0 + cityBonus / 100.0);
             d.IncomeAfterCityBonus = SafeLong(taxableBase);
 
-            float econScale = ComputeEconomyScale(currentPop);
+            float industryMod = (d.FactoryOutputModifier + d.ResourceOutputModifier) / 2f;
+            float econScale = ComputeEconomyScale(currentPop) * industryMod;
             
             // Add Trade Income
             long tradeIn = TradeManager.GetTradeIncome(k);
@@ -193,7 +199,7 @@ namespace RulerBox
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
             // B) Expenses
-            long military = d.Soldiers * d.MilitaryCostPerSoldier;
+            long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
             long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
 
             var (childCost, elderCost, veteranCost) = GetDemographicCostPerHead(k);
@@ -298,6 +304,221 @@ namespace RulerBox
 
             float order = (d.Stability / 100f) * (1f - tension01);
             d.PublicOrderIndex = Mathf.Clamp01(order) * 100f;
+        }
+
+        private static void ApplyRiseOfNationsLaws(Data d)
+        {
+            [cite_start]// 1. Conscription [cite: 109-114]
+            switch (d.Law_Conscription)
+            {
+                case "Disarmed":
+                    d.ManpowerMaxMultiplier = 0.5f; // -50% (approx)
+                    d.ManpowerRegenRate *= 0.5f;
+                    d.TaxRateLocal *= 1.05f;
+                    break;
+                case "Limited":
+                    d.ManpowerMaxMultiplier = 1.5f; // +50%
+                    d.ManpowerRegenRate *= 1.5f;
+                    d.TaxRateLocal *= 0.90f; // -10%
+                    d.BuildingSpeedModifier *= 0.90f; // -10%
+                    break;
+                case "Extensive":
+                    d.ManpowerMaxMultiplier = 2.0f; // +100%
+                    d.ManpowerRegenRate *= 2.0f;
+                    d.TaxRateLocal *= 0.75f; // -25%
+                    d.BuildingSpeedModifier *= 0.75f; // -25%
+                    break;
+                case "Required":
+                    d.ManpowerMaxMultiplier = 2.5f; // +150%
+                    d.ManpowerRegenRate *= 2.5f;
+                    d.TaxRateLocal *= 0.35f; // -65%
+                    d.BuildingSpeedModifier *= 0.50f; // -50%
+                    break;
+            }
+
+            [cite_start]// 2. War Bonds [cite: 114-115]
+            switch (d.Law_WarBonds)
+            {
+                case "Moderate":
+                    d.TaxRateLocal *= 1.5f;
+                    d.MilitaryUpkeepModifier *= 0.75f;
+                    d.StabilityTargetModifier -= 8f;
+                    d.WarExhaustionGainMultiplier += 0.05f;
+                    break;
+                case "Maximum":
+                    d.TaxRateLocal *= 2.25f;
+                    d.MilitaryUpkeepModifier *= 0.5f;
+                    d.StabilityTargetModifier -= 15f;
+                    d.WarExhaustionGainMultiplier += 0.15f;
+                    break;
+            }
+
+            [cite_start]// 3. Elitist Military Stance [cite: 115-116]
+            if (d.Law_ElitistMilitary == "Expanded")
+            {
+                d.CorruptionLevel += 0.1f; // +0.1% is technically 0.001, but text implies significant impact
+                // Military XP gain logic would go here
+            }
+
+            [cite_start]// 4. Party Loyalty [cite: 116-117]
+            switch (d.Law_PartyLoyalty)
+            {
+                case "Minimum": d.TaxRateLocal *= 1.1f; break;
+                case "Maximum": d.TaxRateLocal *= 0.9f; break;
+                // Other effects are political (XP, PP gain)
+            }
+
+            [cite_start]// 5. Power Sharing (Iberian) [cite: 118]
+            switch (d.Law_PowerSharing)
+            {
+                case "Decentralized": d.TaxRateLocal *= 1.05f; break; // +5% Tax
+                case "Centralized": d.StabilityTargetModifier += 2.5f; break;
+            }
+
+            [cite_start]// 6. Industrial Specialization [cite: 118-119]
+            switch (d.Law_IndustrialSpec)
+            {
+                case "Extraction": 
+                    d.ResourceOutputModifier *= 1.25f; 
+                    d.FactoryOutputModifier *= 0.75f; 
+                    d.TaxRateLocal *= 0.8f; 
+                    break;
+                case "Manufacturing": 
+                    d.ResourceOutputModifier *= 0.75f; 
+                    d.FactoryOutputModifier *= 1.25f; 
+                    d.TaxRateLocal *= 0.8f; 
+                    break;
+            }
+
+            [cite_start]// 7. Resource Subsidization [cite: 119]
+            switch (d.Law_ResourceSubsidy)
+            {
+                case "Limited": d.TaxRateLocal *= 0.9f; d.FactoryOutputModifier *= 0.8f; break;
+                case "Moderate": d.TaxRateLocal *= 0.85f; d.FactoryOutputModifier *= 0.7f; break;
+                case "Generous": d.TaxRateLocal *= 0.75f; d.FactoryOutputModifier *= 0.6f; break;
+            }
+
+            [cite_start]// 8. Working Hours [cite: 120]
+            switch (d.Law_WorkingHours)
+            {
+                case "Minimum": 
+                    d.PopulationGrowthBonus += 0.01f; 
+                    d.StabilityTargetModifier += 10f; 
+                    d.TaxRateLocal *= 0.75f; 
+                    break;
+                case "Reduced": 
+                    d.StabilityTargetModifier += 5f; 
+                    d.TaxRateLocal *= 0.85f; 
+                    break;
+                case "Extended": 
+                    d.StabilityTargetModifier -= 5f; 
+                    d.TaxRateLocal *= 1.25f; 
+                    d.BuildingSpeedModifier *= 1.25f;
+                    break;
+                case "Unlimited": 
+                    d.PopulationGrowthBonus -= 0.015f; 
+                    d.StabilityTargetModifier -= 15f; 
+                    d.TaxRateLocal *= 1.5f; 
+                    d.BuildingSpeedModifier *= 1.5f;
+                    break;
+            }
+
+            [cite_start]// 9. Research Focus [cite: 121]
+            switch (d.Law_ResearchFocus)
+            {
+                case "Civilian": 
+                case "Military": 
+                    d.ResearchOutputModifier *= 0.85f; 
+                    break;
+            }
+
+            [cite_start]// 10. Press Regulation [cite: 122-123]
+            switch (d.Law_PressRegulation)
+            {
+                case "Free Press": d.TaxRateLocal *= 1.1f; d.CorruptionLevel -= 0.1f; break;
+                case "Laxed": d.TaxRateLocal *= 1.05f; d.CorruptionLevel -= 0.05f; break;
+                case "Mixed": d.TaxRateLocal *= 0.95f; d.StabilityTargetModifier += 5f; break;
+                case "State Focus": d.TaxRateLocal *= 0.9f; d.StabilityTargetModifier += 10f; break;
+                case "Propaganda": d.TaxRateLocal *= 0.9f; d.StabilityTargetModifier += 10f; d.WarExhaustionGainMultiplier -= 0.03f; break;
+            }
+
+            [cite_start]// 11. Firearm Regulation [cite: 123-124]
+            switch (d.Law_FirearmRegulation)
+            {
+                case "No Restr.": d.TaxRateLocal *= 1.13f; d.StabilityTargetModifier -= 5f; break;
+                case "Reduced": d.TaxRateLocal *= 1.05f; d.StabilityTargetModifier -= 2.5f; break;
+                case "Expanded": d.StabilityTargetModifier += 5f; break;
+                case "Illegal": d.StabilityTargetModifier += 15f; break;
+            }
+
+            [cite_start]// 12. Religious Emphasis [cite: 124-125]
+            switch (d.Law_Religion)
+            {
+                case "Atheism": 
+                    d.TaxRateLocal *= 1.05f; 
+                    d.ResearchOutputModifier *= 1.1f; 
+                    break;
+                case "State Rel.": 
+                    d.TaxRateLocal *= 0.95f; 
+                    d.ResearchOutputModifier *= 0.9f; 
+                    d.StabilityTargetModifier += 5f; 
+                    d.PopulationGrowthBonus += 0.0125f;
+                    d.WarExhaustionGainMultiplier -= 0.05f; // -0.005 in text, boosted for effect
+                    break;
+            }
+
+            [cite_start]// 13. Population Growth [cite: 125-126]
+            switch (d.Law_PopulationGrowth)
+            {
+                case "Encouraged": d.PopulationGrowthBonus += 0.025f; d.TaxRateLocal *= 0.85f; break;
+                case "Mandatory": d.PopulationGrowthBonus += 0.05f; d.TaxRateLocal *= 0.7f; break;
+            }
+
+            [cite_start]// 14. Monarch [cite: 126-127]
+            switch (d.Law_Monarch)
+            {
+                case "Constitutional":
+                    d.StabilityTargetModifier += 5f;
+                    d.ManpowerMaxMultiplier *= 1.1f;
+                    d.TaxRateLocal *= 1.15f;
+                    break;
+                case "Absolute":
+                    d.StabilityTargetModifier += 10f;
+                    d.ManpowerMaxMultiplier *= 1.2f;
+                    d.TaxRateLocal *= 1.15f;
+                    d.MilitaryUpkeepModifier *= 0.9f;
+                    break;
+            }
+
+            [cite_start]// 15. Collective Theory [cite: 128]
+            switch (d.Law_CollectiveTheory)
+            {
+                case "Maoism": d.ResourceOutputModifier *= 1.25f; break;
+                case "Marxism": d.FactoryOutputModifier *= 1.15f; break;
+                case "Stalinism": d.StabilityTargetModifier += 5f; d.CorruptionLevel += 0.02f; break;
+                case "Trotskyism": d.TaxRateLocal *= 0.925f; d.WarExhaustionGainMultiplier -= 0.02f; break;
+            }
+            
+            [cite_start]// 16. Elective Assembly [cite: 129]
+            switch(d.Law_ElectiveAssembly)
+            {
+                case "Direct": d.TaxRateLocal *= 1.35f; break;
+                case "Technocratic": d.ResearchOutputModifier *= 1.2f; break;
+            }
+            
+            [cite_start]// 17. Democracy Style [cite: 130]
+            switch(d.Law_DemocracyStyle)
+            {
+                case "Presidential": d.StabilityTargetModifier += 5f; break;
+            }
+            
+            [cite_start]// 18. State Doctrine [cite: 131]
+            switch(d.Law_StateDoctrine)
+            {
+                case "Corporatism": d.FactoryOutputModifier *= 1.25f; break;
+                case "Stratocracy": d.ManpowerMaxMultiplier *= 1.2f; break;
+                case "Clerical": d.PopulationGrowthBonus += 0.005f; d.WarExhaustionGainMultiplier -= 0.025f; break;
+            }
         }
 
         private static void UpdateResources(Kingdom k, Data d)
