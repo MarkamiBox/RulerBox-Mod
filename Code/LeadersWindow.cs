@@ -9,6 +9,8 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
+        private static Sprite buttonSprite; // Background for items
+        
         private static Transform recruitmentContent;
         private static Transform activeContent;
         private static Text activeHeader;
@@ -25,203 +27,84 @@ namespace RulerBox
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
-            Debug.Log("[RulerBox] LeadersWindow: Initializing...");
+            Debug.Log("[RulerBox] LeadersWindow: Initializing UI...");
 
-            try 
-            {
-                // Safe Sprite Loading
-                windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-                if (windowInnerSprite == null) 
-                    Debug.LogWarning("[RulerBox] Warning: windowInnerSliced.png not found. UI might look plain.");
+            windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+            // Use a darker sprite for buttons if available, or fallback
+            buttonSprite = windowInnerSprite; 
 
-                root = new GameObject("LeadersWindow");
-                root.transform.SetParent(parent, false);
-                var rt = root.AddComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-                rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            // --- ROOT WINDOW ---
+            root = new GameObject("LeadersWindow");
+            root.transform.SetParent(parent, false);
+            var rt = root.AddComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
-                var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 6;
-                h.padding = new RectOffset(6, 6, 6, 6);
-                h.childControlWidth = true;
-                h.childControlHeight = true;
-                h.childForceExpandWidth = true;
+            // --- MAIN SPLIT (LEFT / RIGHT) ---
+            var h = root.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 10;
+            h.padding = new RectOffset(8, 8, 8, 8);
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = true;
+            h.childForceExpandHeight = true;
 
-                CreateRecruitmentPanel(root.transform);
-                CreateActivePanel(root.transform);
+            // --- CREATE PANELS ---
+            CreateRecruitPanel(root.transform);
+            CreateActivePanel(root.transform);
 
-                root.SetActive(false);
-                Debug.Log("[RulerBox] LeadersWindow: Initialization Complete.");
-            }
-            catch (System.Exception e)
-            {
-                Debug.LogError("[RulerBox] LeadersWindow Init Failed: " + e.ToString());
-            }
+            root.SetActive(false);
         }
 
-        // --- SELF REPAIR FUNCTION ---
-        private static void TrySelfInitialize()
+        // ---------------------------------------------------------
+        // LEFT PANEL: RECRUITMENT
+        // ---------------------------------------------------------
+        private static void CreateRecruitPanel(Transform parent)
         {
-            try
-            {
-                // Try to find the Main Hub content container created by TopPanelUI
-                GameObject hub = GameObject.Find("RulerBox_MainHub");
-                if (hub != null)
-                {
-                    Transform container = hub.transform.Find("ContentContainer");
-                    if (container != null)
-                    {
-                        Debug.Log("[RulerBox] Found ContentContainer. Self-Initializing LeadersWindow...");
-                        Initialize(container);
-                    }
-                    else Debug.LogError("[RulerBox] ContentContainer not found inside RulerBox_MainHub.");
-                }
-                else Debug.LogError("[RulerBox] RulerBox_MainHub not found in scene.");
-            }
-            catch(System.Exception e)
-            {
-                Debug.LogError("[RulerBox] Self-Repair Failed: " + e.Message);
-            }
-        }
+            var container = CreatePanelBase(parent, "RecruitPanel", 1f); // Weight 1 (50% or more)
 
-        public static void SetVisible(bool visible)
-        {
-            // Fix: If root is missing, try to repair it immediately
-            if (root == null)
-            {
-                Debug.LogWarning("[RulerBox] LeadersWindow root is null! Attempting self-repair...");
-                TrySelfInitialize();
-            }
-
-            if (root != null)
-            {
-                root.SetActive(visible);
-                if (visible) 
-                {
-                    Debug.Log("[RulerBox] LeadersWindow shown.");
-                    Refresh();
-                }
-            }
-            else
-            {
-                Debug.LogError("[RulerBox] LeadersWindow could not be opened. Root is NULL.");
-            }
-        }
-
-        public static bool IsVisible() => root != null && root.activeSelf;
-
-        public static void Refresh()
-        {
-            if (root == null) TrySelfInitialize();
-            if (root == null || !root.activeSelf) return;
-
-            var k = Main.selectedKingdom;
-            if (k == null) return;
-
-            var d = KingdomMetricsSystem.Get(k);
-            if (d == null) return;
-
-            // Regenerate pool logic
-            if (lastKingdom != k || recruitmentPool.Count == 0)
-            {
-                Debug.Log($"[RulerBox] Regenerating pool for {k.data.name}");
-                GenerateRecruitmentPool(k);
-                lastKingdom = k;
-            }
-
-            if (recruitmentContent == null || activeContent == null) return;
-
-            // Update Header
-            int count = d.ActiveLeaders != null ? d.ActiveLeaders.Count : 0;
-            if (activeHeader != null) activeHeader.text = $"{count}/3 Leaders";
-
-            // 1. RECRUITMENT LIST
-            foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
-            
-            foreach (var leader in recruitmentPool)
-            {
-                if (leader == null) continue;
-                // Skip if already active
-                if (d.ActiveLeaders != null && d.ActiveLeaders.Any(l => l.Id == leader.Id)) continue;
-                
-                CreateLeaderButton(recruitmentContent, leader, false);
-            }
-
-            // 2. ACTIVE LIST
-            foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
-            if (d.ActiveLeaders != null)
-            {
-                foreach (var leader in d.ActiveLeaders)
-                {
-                    CreateLeaderButton(activeContent, leader, true);
-                }
-            }
-        }
-
-        // --- UI CREATION HELPERS ---
-        private static void CreateRecruitmentPanel(Transform parent)
-        {
-            var panel = new GameObject("RecruitmentPanel");
-            panel.transform.SetParent(parent, false);
-            panel.AddComponent<LayoutElement>().flexibleWidth = 1f;
-
-            var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4;
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandHeight = false;
-
-            var header = CreateText(panel.transform, "Recruit Leaders", 10, FontStyle.Bold);
+            // Header
+            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
+            header.GetComponent<LayoutElement>().preferredHeight = 30f;
 
-            var scrollObj = new GameObject("Scroll");
-            scrollObj.transform.SetParent(panel.transform, false);
-            scrollObj.AddComponent<LayoutElement>().flexibleHeight = 1f;
-            
-            var bg = scrollObj.AddComponent<Image>();
-            bg.sprite = windowInnerSprite;
-            bg.type = Image.Type.Sliced;
-            bg.color = new Color(0, 0, 0, 0.3f);
-
-            var scroll = scrollObj.AddComponent<ScrollRect>();
-            scroll.vertical = true;
-            scroll.horizontal = false;
-            
-            var viewport = new GameObject("Viewport");
-            viewport.transform.SetParent(scrollObj.transform, false);
-            var vpRT = viewport.AddComponent<RectTransform>();
-            vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
-            vpRT.offsetMin = new Vector2(2, 2); vpRT.offsetMax = new Vector2(-2, -2);
-            viewport.AddComponent<RectMask2D>();
-
-            var content = new GameObject("Content");
-            content.transform.SetParent(viewport.transform, false);
-            recruitmentContent = content.transform;
-            
-            var cRT = content.AddComponent<RectTransform>();
-            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
-            cRT.pivot = new Vector2(0.5f, 1);
-
-            var cV = content.AddComponent<VerticalLayoutGroup>();
-            cV.spacing = 2;
-            cV.childControlWidth = true;
-            cV.childForceExpandHeight = false;
-            
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            scroll.viewport = vpRT;
-            scroll.content = cRT;
+            // Scroll Area
+            recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
 
+        // ---------------------------------------------------------
+        // RIGHT PANEL: ACTIVE LEADERS
+        // ---------------------------------------------------------
         private static void CreateActivePanel(Transform parent)
         {
-            var panel = new GameObject("ActivePanel");
-            panel.transform.SetParent(parent, false);
-            panel.AddComponent<LayoutElement>().flexibleWidth = 0.8f; 
+            var container = CreatePanelBase(parent, "ActivePanel", 0.8f); // Weight 0.8
 
+            // Header
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, Color.yellow);
+            activeHeader.alignment = TextAnchor.MiddleCenter;
+            activeHeader.GetComponent<LayoutElement>().preferredHeight = 30f;
+
+            // Scroll Area
+            activeContent = CreateScrollList(container.transform, "ActiveScroll");
+        }
+
+        // ---------------------------------------------------------
+        // HELPER: PANEL BASE
+        // ---------------------------------------------------------
+        private static GameObject CreatePanelBase(Transform parent, string name, float flexibleWidth)
+        {
+            var panel = new GameObject(name);
+            panel.transform.SetParent(parent, false);
+            
+            var le = panel.AddComponent<LayoutElement>();
+            le.flexibleWidth = flexibleWidth;
+            le.flexibleHeight = 1f;
+
+            // Background
             var bg = panel.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            bg.color = new Color(0.2f, 0.2f, 0.25f, 0.8f);
+            bg.color = new Color(0, 0, 0, 0.3f);
 
             var v = panel.AddComponent<VerticalLayoutGroup>();
             v.spacing = 4;
@@ -230,109 +113,211 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandHeight = false;
 
-            activeHeader = CreateText(panel.transform, "0/3 Leaders", 10, FontStyle.Bold);
-            activeHeader.alignment = TextAnchor.MiddleCenter;
-            activeHeader.color = Color.yellow;
-
-            var listObj = new GameObject("ActiveList");
-            listObj.transform.SetParent(panel.transform, false);
-            activeContent = listObj.transform;
-            
-            var listV = listObj.AddComponent<VerticalLayoutGroup>();
-            listV.spacing = 2;
-            listV.childControlWidth = true;
-            listV.childForceExpandHeight = false;
-            
-            listObj.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            return panel;
         }
 
-        private static void CreateLeaderButton(Transform parent, LeaderState leader, bool isActive)
+        // ---------------------------------------------------------
+        // HELPER: SCROLL LIST
+        // ---------------------------------------------------------
+        private static Transform CreateScrollList(Transform parent, string name)
         {
-            if (parent == null || leader == null) return;
+            var scrollObj = new GameObject(name);
+            scrollObj.transform.SetParent(parent, false);
+            
+            var le = scrollObj.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f; // Fill remaining vertical space
 
-            try {
-                var btnObj = new GameObject("LeaderBtn");
-                btnObj.transform.SetParent(parent, false);
+            var bg = scrollObj.AddComponent<Image>();
+            bg.color = new Color(0, 0, 0, 0.2f); // Darker background for list
 
-                var img = btnObj.AddComponent<Image>();
-                img.sprite = windowInnerSprite;
-                img.type = Image.Type.Sliced;
-                img.color = isActive ? new Color(0.2f, 0.45f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.vertical = true;
+            scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 25f;
 
-                var btn = btnObj.AddComponent<Button>();
-                btn.targetGraphic = img;
-                btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
+            var viewport = new GameObject("Viewport");
+            viewport.transform.SetParent(scrollObj.transform, false);
+            var vpRT = viewport.AddComponent<RectTransform>();
+            vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
+            vpRT.offsetMin = new Vector2(4, 4); vpRT.offsetMax = new Vector2(-4, -4);
+            viewport.AddComponent<RectMask2D>();
 
-                var le = btnObj.AddComponent<LayoutElement>();
-                le.preferredHeight = 44f;
-                le.minHeight = 44f;
-                le.flexibleWidth = 1f;
+            var content = new GameObject("Content");
+            content.transform.SetParent(viewport.transform, false);
+            
+            var cRT = content.AddComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
+            cRT.pivot = new Vector2(0.5f, 1);
 
-                var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 8;
-                h.padding = new RectOffset(6, 6, 4, 4);
-                h.childControlWidth = true; 
-                h.childControlHeight = true;
-                h.childForceExpandWidth = false; 
-                h.childForceExpandHeight = false;
-                h.childAlignment = TextAnchor.MiddleLeft;
+            var v = content.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 4;
+            v.childControlWidth = true;
+            v.childControlHeight = true;
+            v.childForceExpandHeight = false; // Important: Allow content to grow
 
-                // --- LEFT: Icon ---
-                var iconContainer = new GameObject("IconContainer");
-                iconContainer.transform.SetParent(btnObj.transform, false);
-                var iconBg = iconContainer.AddComponent<Image>();
-                
-                if (Main.selectedKingdom != null)
-                {
-                    iconBg.sprite = Main.selectedKingdom.getElementBackground();
-                    if(Main.selectedKingdom.kingdomColor != null) 
-                        iconBg.color = Main.selectedKingdom.kingdomColor.getColorMain32();
-                }
-                
-                var iconContainerLE = iconContainer.AddComponent<LayoutElement>();
-                iconContainerLE.preferredWidth = 32f; 
-                iconContainerLE.preferredHeight = 32f;
-                iconContainerLE.minWidth = 32f;
+            var fitter = content.AddComponent<ContentSizeFitter>();
+            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize; // Auto-height
 
-                var iconObj = new GameObject("Icon");
-                iconObj.transform.SetParent(iconContainer.transform, false);
-                var iconImg = iconObj.AddComponent<Image>();
-                
-                Sprite sprite = null;
-                try { if (leader.UnitLink != null) sprite = leader.UnitLink.getSpriteToRender(); } catch { }
-                if (sprite == null && !string.IsNullOrEmpty(leader.IconPath)) sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
-                if (sprite == null && Main.selectedKingdom != null) sprite = Main.selectedKingdom.getElementIcon(); 
-                
-                iconImg.sprite = sprite;
-                iconImg.preserveAspect = true;
-                
-                var iconRT = iconObj.GetComponent<RectTransform>();
-                iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
-                iconRT.offsetMin = new Vector2(2,2); iconRT.offsetMax = new Vector2(-2,-2);
+            scroll.viewport = vpRT;
+            scroll.content = cRT;
 
-                // --- RIGHT: Info Text ---
-                var infoObj = new GameObject("Info");
-                infoObj.transform.SetParent(btnObj.transform, false);
-                var v = infoObj.AddComponent<VerticalLayoutGroup>();
-                v.childAlignment = TextAnchor.MiddleLeft;
-                v.spacing = 0;
-                v.childControlWidth = true;
-                v.childControlHeight = true;
-                v.childForceExpandHeight = false;
+            return content.transform;
+        }
 
-                var infoLE = infoObj.AddComponent<LayoutElement>();
-                infoLE.flexibleWidth = 1f;
-
-                CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
-                CreateText(infoObj.transform, $"{leader.Type}", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
-
-                ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
-            }
-            catch(System.Exception e) {
-                Debug.LogError($"[RulerBox] Error creating leader button: {e.Message}");
+        // ---------------------------------------------------------
+        // LOGIC: VISIBILITY & REFRESH
+        // ---------------------------------------------------------
+        public static void SetVisible(bool visible)
+        {
+            if (root == null) TrySelfInitialize(); // Safety check
+            if (root != null)
+            {
+                root.SetActive(visible);
+                if (visible) Refresh();
             }
         }
 
+        public static bool IsVisible() => root != null && root.activeSelf;
+
+        public static void Refresh()
+        {
+            if (!IsVisible()) return;
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+
+            var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            // Generate Pool Logic
+            if (lastKingdom != k || recruitmentPool.Count == 0)
+            {
+                GenerateRecruitmentPool(k);
+                lastKingdom = k;
+            }
+
+            // Update Header
+            int activeCount = d.ActiveLeaders != null ? d.ActiveLeaders.Count : 0;
+            if(activeHeader) activeHeader.text = $"{activeCount}/3 Leaders";
+
+            // --- POPULATE LISTS ---
+            // Clear old items
+            foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
+            foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
+
+            // Populate Recruitment (Left)
+            foreach (var leader in recruitmentPool)
+            {
+                if (leader == null) continue;
+                // Skip if already hired
+                if (d.ActiveLeaders != null && d.ActiveLeaders.Any(l => l.Id == leader.Id)) continue;
+                
+                CreateLeaderItem(recruitmentContent, leader, false);
+            }
+
+            // Populate Active (Right)
+            if (d.ActiveLeaders != null)
+            {
+                foreach (var leader in d.ActiveLeaders)
+                {
+                    CreateLeaderItem(activeContent, leader, true);
+                }
+            }
+            
+            // Force layout update just in case
+            LayoutRebuilder.ForceRebuildLayoutImmediate(recruitmentContent.GetComponent<RectTransform>());
+            LayoutRebuilder.ForceRebuildLayoutImmediate(activeContent.GetComponent<RectTransform>());
+        }
+
+        // ---------------------------------------------------------
+        // ITEM CREATION (THE IMPORTANT PART)
+        // ---------------------------------------------------------
+        private static void CreateLeaderItem(Transform parent, LeaderState leader, bool isActive)
+        {
+            // 1. Button Root
+            var btnObj = new GameObject("LeaderItem");
+            btnObj.transform.SetParent(parent, false);
+
+            var le = btnObj.AddComponent<LayoutElement>();
+            le.minHeight = 50f;
+            le.preferredHeight = 50f;
+            le.flexibleWidth = 1f;
+
+            var bg = btnObj.AddComponent<Image>();
+            bg.sprite = windowInnerSprite;
+            bg.type = Image.Type.Sliced;
+            // Greenish if active, Greyish if recruit
+            bg.color = isActive ? new Color(0.2f, 0.4f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
+
+            var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
+
+            // 2. Horizontal Layout
+            var h = btnObj.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 8;
+            h.padding = new RectOffset(6, 6, 4, 4);
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = false; // Don't force expand everything
+            h.childAlignment = TextAnchor.MiddleLeft;
+
+            // 3. Avatar Image
+            var avatarObj = new GameObject("Avatar");
+            avatarObj.transform.SetParent(btnObj.transform, false);
+            
+            var avatarLE = avatarObj.AddComponent<LayoutElement>();
+            avatarLE.minWidth = 40f;
+            avatarLE.minHeight = 40f;
+            avatarLE.preferredWidth = 40f;
+            avatarLE.preferredHeight = 40f;
+
+            var avatarImg = avatarObj.AddComponent<Image>();
+            avatarImg.preserveAspect = true;
+            
+            // Logic to get sprite
+            Sprite s = null;
+            try { 
+                if (leader.UnitLink != null) s = leader.UnitLink.getSpriteToRender(); 
+            } catch { }
+            if (s == null) s = Main.selectedKingdom?.getElementIcon(); // Fallback to Kingdom Icon
+            
+            avatarImg.sprite = s;
+
+            // 4. Text Info
+            var textStack = new GameObject("InfoStack");
+            textStack.transform.SetParent(btnObj.transform, false);
+            
+            var textVL = textStack.AddComponent<VerticalLayoutGroup>();
+            textVL.childAlignment = TextAnchor.MiddleLeft;
+            textVL.spacing = 0;
+            textVL.childControlHeight = true;
+            textVL.childControlWidth = true;
+            textVL.childForceExpandHeight = false;
+            textVL.childForceExpandWidth = true;
+
+            var textStackLE = textStack.AddComponent<LayoutElement>();
+            textStackLE.flexibleWidth = 1f; // Fill remaining width
+
+            // Name
+            CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
+            // Title
+            CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.9f, 0.5f));
+            
+            // Stats Summary
+            string summary = "";
+            if (leader.StabilityBonus > 0) summary += $"Stab +{leader.StabilityBonus} ";
+            if (leader.PPGainBonus > 0) summary += $"PP +{leader.PPGainBonus*100:0}% ";
+            if (summary == "") summary = "Effects: Various";
+            CreateText(textStack.transform, summary, 8, FontStyle.Normal, new Color(0.8f, 0.8f, 0.8f));
+
+            // Tooltip
+            ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
+        }
+
+        // ---------------------------------------------------------
+        // DATA & LOGIC
+        // ---------------------------------------------------------
         private static void OnLeaderClicked(LeaderState leader, bool isActive)
         {
             var k = Main.selectedKingdom;
@@ -365,33 +350,33 @@ namespace RulerBox
             recruitmentPool.Clear();
             if (k == null) return;
 
+            // Safely get candidates
             List<Actor> candidates = new List<Actor>();
             if (k.units != null)
             {
-                // Safe check for nulls
-                foreach (var a in k.units)
+                foreach(var u in k.units)
                 {
-                    if (a != null && a.isAlive() && a.isAdult() && !a.isKing() && !a.isCityLeader())
+                    if (u != null && u.isAlive() && u.isAdult() && !u.isKing())
                     {
-                        candidates.Add(a);
+                        candidates.Add(u);
                     }
                 }
-                candidates.Shuffle(); 
+                candidates.Shuffle();
             }
 
-            int needed = 5;
-            int taken = 0;
-
-            foreach(var unit in candidates)
+            int count = 0;
+            // Up to 5 real units
+            foreach (var unit in candidates)
             {
-                if (taken >= needed) break;
+                if (count >= 5) break;
                 recruitmentPool.Add(CreateRandomLeader(unit));
-                taken++;
+                count++;
             }
-
-            for(int i=taken; i<needed; i++)
+            // Fill rest with abstract
+            while (count < 5)
             {
                 recruitmentPool.Add(CreateRandomLeader(null));
+                count++;
             }
         }
 
@@ -414,37 +399,21 @@ namespace RulerBox
                     case 5: corr += UnityEngine.Random.Range(0.05f, 0.15f); break; 
                 }
             }
-            return CreateLeader(unit, title, stab, pp, atk, res, tax, corr);
-        }
 
-        private static LeaderState CreateLeader(Actor unit, string type, float stab, float pp, float atk, float res, float tax, float corr)
-        {
-            string name = "Unknown";
-            string icon = "icon_citizen";
-
-            if (unit != null)
-            {
-                name = unit.getName();
-            }
-            else
-            {
-                string[] names = { "Cyrus", "Darius", "Alexander", "Sargon", "Hammurabi", "Leonidas", "Pericles", "Solon" };
-                name = names[UnityEngine.Random.Range(0, names.Length)];
-            }
-
+            string name = (unit != null) ? unit.getName() : "Generated Leader";
+            
             return new LeaderState
             {
                 Id = System.Guid.NewGuid().ToString(),
                 Name = name,
-                Type = type,
+                Type = title,
                 Level = 1,
                 UnitLink = unit,
-                IconPath = icon,
                 StabilityBonus = stab,
-                PPGainBonus = pp / 100f,
-                AttackBonus = atk / 100f,
-                ResearchBonus = res / 100f,
-                TaxBonus = tax / 100f,
+                PPGainBonus = pp/100f,
+                AttackBonus = atk/100f,
+                ResearchBonus = res/100f,
+                TaxBonus = tax/100f,
                 CorruptionReduction = corr
             };
         }
@@ -457,32 +426,46 @@ namespace RulerBox
                 string status = l.UnitLink.isAlive() ? "<color=#7CFC00>Alive</color>" : "<color=#FF5A5A>Deceased</color>";
                 s += $"Unit: {l.UnitLink.getName()} ({status})\n";
             }
-            s += "\n<b>Effects:</b>\n";
-            if (l.StabilityBonus > 0) s += $"Stability: <color=#7CFC00>+{l.StabilityBonus:0.#}</color>\n";
-            if (l.PPGainBonus > 0) s += $"Pol. Power: <color=#7CFC00>+{l.PPGainBonus*100:0}%</color>\n";
-            if (l.AttackBonus > 0) s += $"Army Attack: <color=#7CFC00>+{l.AttackBonus*100:0}%</color>\n";
-            if (l.ResearchBonus > 0) s += $"Research Eff: <color=#7CFC00>+{l.ResearchBonus*100:0}%</color>\n";
-            if (l.TaxBonus > 0) s += $"Tax Income: <color=#7CFC00>+{l.TaxBonus*100:0}%</color>\n";
-            if (l.CorruptionReduction > 0) s += $"Corruption: <color=#7CFC00>-{l.CorruptionReduction*100:0}%</color>\n";
+            else
+            {
+                s += "(Abstract Leader)\n";
+            }
             
-            s += "\n<size=9><i>Click to " + (Main.selectedKingdom != null && KingdomMetricsSystem.Get(Main.selectedKingdom).ActiveLeaders.Contains(l) ? "Dismiss" : "Recruit") + "</i></size>";
+            s += "\n<b>Bonuses:</b>\n";
+            if (l.StabilityBonus > 0) s += $"Stability: +{l.StabilityBonus:0.#}\n";
+            if (l.PPGainBonus > 0) s += $"Political Power: +{l.PPGainBonus*100:0}%\n";
+            if (l.AttackBonus > 0) s += $"Army Attack: +{l.AttackBonus*100:0}%\n";
+            if (l.ResearchBonus > 0) s += $"Research: +{l.ResearchBonus*100:0}%\n";
+            if (l.TaxBonus > 0) s += $"Tax Income: +{l.TaxBonus*100:0}%\n";
+            if (l.CorruptionReduction > 0) s += $"Corruption: -{l.CorruptionReduction*100:0.##}\n";
+
             return s;
         }
 
-        private static Text CreateText(Transform parent, string content, int size, FontStyle style, Color? col = null)
+        private static Text CreateText(Transform parent, string txt, int size, FontStyle style, Color col)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
-            var txt = go.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.text = content;
-            txt.fontSize = size;
-            txt.fontStyle = style;
-            txt.color = col ?? Color.white;
-            txt.alignment = TextAnchor.MiddleLeft;
-            txt.resizeTextForBestFit = false;
-            txt.supportRichText = true;
-            return txt;
+            var t = go.AddComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.text = txt;
+            t.fontSize = size;
+            t.fontStyle = style;
+            t.color = col;
+            t.alignment = TextAnchor.MiddleLeft;
+            t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            t.verticalOverflow = VerticalWrapMode.Truncate;
+            return t;
+        }
+
+        private static void TrySelfInitialize()
+        {
+            GameObject hub = GameObject.Find("RulerBox_MainHub");
+            if (hub != null)
+            {
+                Transform container = hub.transform.Find("ContentContainer");
+                if (container != null) Initialize(container);
+            }
         }
     }
 }
