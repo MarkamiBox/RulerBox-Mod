@@ -252,6 +252,7 @@ namespace RulerBox
         {
             if (d.ActiveLeaders == null) return;
             
+            LeadersWindow.Refresh();
             for (int i = d.ActiveLeaders.Count - 1; i >= 0; i--)
             {
                 var leader = d.ActiveLeaders[i];
