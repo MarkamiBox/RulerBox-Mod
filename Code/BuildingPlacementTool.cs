@@ -10,25 +10,31 @@ namespace RulerBox
         private string pendingBuildingId;
         private Kingdom targetKingdom;
         private InvestmentsList.InvestmentDefinition pendingInvestment;
+        
         void Awake()
         {
             Instance = this;
         }
+        
         // Start placing a building for the given kingdom and investment
         public void StartPlacement(Kingdom k, InvestmentsList.InvestmentDefinition investment)
         {
             if (k == null || investment == null) return;
+            
             targetKingdom = k;
             pendingInvestment = investment;
             pendingBuildingId = investment.GetBuildingAssetId(k);
+            
             if (string.IsNullOrEmpty(pendingBuildingId))
             {
                 WorldTip.showNow("Cannot determine building type for this race!", true, "top", 2f);
                 CancelPlacement();
                 return;
             }
+            
             WorldTip.showNow($"Click territory to place: {investment.Name}", false, "top", 3f);
         }
+        
         // Cancel the current building placement
         public void CancelPlacement()
         {
@@ -36,28 +42,34 @@ namespace RulerBox
             targetKingdom = null;
             pendingInvestment = null;
         }
+        
         public bool IsPlacing => !string.IsNullOrEmpty(pendingBuildingId);
+        
         // Update is called once per frame
         void Update()
         {
             if (!IsPlacing) return;
+            
             if (Input.GetMouseButtonDown(1))
             {
                 CancelPlacement();
                 WorldTip.showNow("Placement Cancelled", false, "top", 1f);
                 return;
             }
+            
             if (Input.GetMouseButtonDown(0))
             {
                 if (EventSystem.current.IsPointerOverGameObject()) return;
                 TryPlaceBuilding();
             }
         }
+        
         // Attempt to place the building at the mouse position
         private void TryPlaceBuilding()
         {
             WorldTile tile = World.world.getMouseTilePos();
             if (tile == null) return;
+            
             if (tile.Type.ocean || tile.Type.liquid)
             {
                 WorldTip.showNow("Must place on land", true, "top", 1f);
@@ -68,6 +80,7 @@ namespace RulerBox
                 WorldTip.showNow("Must place within kingdom territory", true, "top", 1f);
                 return;
             }
+            
             City city = tile.zone.city;
             if (!CheckAffordability(city, pendingInvestment))
             {
@@ -88,15 +101,18 @@ namespace RulerBox
             InvestmentsWindow.Refresh(targetKingdom);
             TopPanelUI.Refresh();
         }
+
         // Check if the city can afford the investment
         public static bool CheckAffordability(City city, InvestmentsList.InvestmentDefinition def)
         {
             if (city == null || def == null || def.Costs == null) return false;
+            
             // 1. Check Material Resources
             foreach (var cost in def.Costs)
             {
                 if (city.getResourcesAmount(cost.ResourceId) < cost.Amount) return false;
             }
+            
             // 2. Check Hidden Treasury Cost (RulerBox Economy)
             if (def.TreasuryPctCost > 0f && city.kingdom != null)
             {
@@ -109,6 +125,7 @@ namespace RulerBox
             }
             return true;
         }
+
         // Deduct the costs of the investment from the city
         private void DeductCosts(City city, InvestmentsList.InvestmentDefinition def)
         {
@@ -133,6 +150,7 @@ namespace RulerBox
                     }
                 }
             }
+            
             // Deduct Hidden Treasury Cost (RulerBox Economy)
             if (def.TreasuryPctCost > 0f && city.kingdom != null)
             {
