@@ -176,12 +176,13 @@ namespace RulerBox
             showEconomicLaws = false;
             showInvestments = false;
             
+            EconomyWindow.SetVisible(false);
             EconomicLawsWindow.SetVisible(false);
             InvestmentsWindow.SetVisible(false);
             ResourcesTradeWindow.SetVisible(false);
             TradeWindow.SetVisible(false);
             DiplomacyWindow.SetVisible(false);
-            DiplomacyActionsWindow.Close();
+            DiplomacyActionsWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {
