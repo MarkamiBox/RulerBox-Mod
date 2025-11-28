@@ -61,7 +61,7 @@ namespace RulerBox
         }
 
         // Get or create Data for a kingdom
-        private static void RecalculateAllForKingdom(Kingdom k, Data d)
+        public static void RecalculateAllForKingdom(Kingdom k, Data d)
         {
             if (k == null || d == null) return;
 
