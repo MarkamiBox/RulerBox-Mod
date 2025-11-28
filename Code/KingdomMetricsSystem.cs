@@ -1200,6 +1200,35 @@ namespace RulerBox
             
             public float ManpowerRegenRate = 0.015f; // Default base (fraction of max per minute)
             public float ManpowerAccumulator = 0f;    // Accumulates fractional updates
+
+            // --- NEW/UPDATED LAW FIELDS ---
+            public string Law_Conscription = "Volunteer";
+            public string Law_WarBonds = "Inactive";
+            public string Law_ElitistMilitary = "Default";
+            public string Law_PartyLoyalty = "Standard";
+            public string Law_PowerSharing = "Balanced"; // Renamed from Centralization
+            public string Law_PressRegulation = "Mixed";
+            public string Law_FirearmRegulation = "Standard";
+            public string Law_Religion = "Secularism";
+            public string Law_PopulationGrowth = "Balanced";
+            public string Law_IndustrialSpec = "Balanced";
+            public string Law_ResourceSubsidy = "None";
+            public string Law_WorkingHours = "Standard";
+            public string Law_ResearchFocus = "Balanced";
+            
+            // Ideology Laws
+            public string Law_Monarch = "None";
+            public string Law_CollectiveTheory = "Marxism";
+            public string Law_ElectiveAssembly = "Indirect";
+            public string Law_DemocracyStyle = "Semi-Presidential";
+            public string Law_StateDoctrine = "Classical";
+
+            // --- NEW METRIC MODIFIERS ---
+            public float MilitaryUpkeepModifier = 1.0f;
+            public float BuildingSpeedModifier = 1.0f;
+            public float FactoryOutputModifier = 1.0f;
+            public float ResourceOutputModifier = 1.0f;
+            public float ResearchOutputModifier = 1.0f;
         }
     }
 

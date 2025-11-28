@@ -177,9 +177,7 @@ namespace RulerBox
             InvestmentsWindow.SetVisible(false);
             DiplomacyWindow.SetVisible(false);
             
-            EconomicLawsWindow.SetVisible(true);
-            showEconomicLaws = true;
-            showInvestments = false;
+            LawsWindow.SetVisible(true);
             Refresh();
         }
 
