@@ -80,17 +80,17 @@ namespace RulerBox
             float yearsPassed = secondsPerYear > 0f ? deltaWorldSeconds / secondsPerYear : 0f;
             if (yearsPassed <= 0f) yearsPassed = 0.0001f;
 
-            // 0. Update Counts First (Crucial for Expenses)
+            // 0. Update Counts
             UpdateCounts(k, d);
 
             // 1. Base Tax & Reset Modifiers
             d.TaxRateLocal = Mathf.Clamp01(k.getTaxRateLocal());
             
-            // Reset Modifiers
+            // Reset all modifiers to default before applying laws/leaders
             d.StabilityTargetModifier = 0f;
             d.WarExhaustionGainMultiplier = 1.0f;
             d.ManpowerMaxMultiplier = 1.0f;
-            d.ManpowerRegenRate = 0.015f; // Base 1.5%
+            d.ManpowerRegenRate = 0.015f; 
             d.PopulationGrowthBonus = 0f;
             d.CorruptionLevel = 0f;
             d.MilitaryUpkeepModifier = 1.0f;
@@ -111,10 +111,12 @@ namespace RulerBox
             d.JustificationTimeModifier = 1.0f;
             d.GeniusChanceModifier = 0f;
             d.PlagueResistanceModifier = 0f;
+            d.MilitaryAttackModifier = 0f; 
 
-            // 2. Apply Laws Modifiers
+            // 2. Apply Laws & Leaders
             ApplyRiseOfNationsLaws(d);
             ApplyEconomicLaws_Modifiers(d);
+            ApplyLeaderModifiers(d); 
 
             // 3. Economy Calc (Income)
             double totalWealth = 0;
@@ -133,7 +135,6 @@ namespace RulerBox
             double taxableBase = baseTaxable * d.TaxRateLocal;
             d.IncomeBeforeModifiers = SafeLong(taxableBase);
 
-            // Apply modifiers to Income
             float we01 = Mathf.Clamp01(d.WarExhaustion / 100f);
             d.TaxPenaltyFromWar = we01 * d.MaxWeTaxPenaltyPct;
             taxableBase *= (1.0 - d.TaxPenaltyFromWar / 100.0);
@@ -148,7 +149,6 @@ namespace RulerBox
             taxableBase *= (1.0 + cityBonus / 100.0);
             d.IncomeAfterCityBonus = SafeLong(taxableBase);
             
-            // Apply Factory/Resource Output to Income (Simplified Economy Scale)
             float industryMod = (d.FactoryOutputModifier + d.ResourceOutputModifier) / 2f;
             float econScale = ComputeEconomyScale(k.getPopulationPeople()) * industryMod;
             
@@ -170,7 +170,6 @@ namespace RulerBox
             long warOverhead = SafeLong(baseExpenses * (warOverheadPct / 100.0));
             d.ExpensesWarOverhead = warOverhead;
 
-            // Calculate Economic Laws Spending
             long econSpending = CalculateEconomicSpending(d);
             d.ExpensesLawUpkeep = econSpending;
             
@@ -183,7 +182,6 @@ namespace RulerBox
 
             d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost + econSpending);
 
-            // Treasury Update
             d.TreasuryTimer += deltaWorldSeconds;
             if (d.TreasuryTimer >= 5f)
             {
@@ -192,7 +190,6 @@ namespace RulerBox
                 d.TreasuryTimer = 0f;
             }
             
-            // --- Updates ---
             UpdateResources(k, d);
             UpdateManpower(k, d, deltaWorldSeconds);
             UpdateWarExhaustion(k, d, yearsPassed);
@@ -229,6 +226,21 @@ namespace RulerBox
             // d.Children = ...
             // d.Unemployed = ... 
             // These would be calculated here if we had detailed actor iteration
+        }
+
+        private static void ApplyLeaderModifiers(Data d)
+        {
+            if (d.ActiveLeaders == null) return;
+            
+            foreach (var leader in d.ActiveLeaders)
+            {
+                d.StabilityTargetModifier += leader.StabilityBonus;
+                d.PoliticalPowerGainModifier += leader.PPGainBonus; 
+                d.MilitaryAttackModifier += leader.AttackBonus;
+                d.ResearchOutputModifier += leader.ResearchBonus;
+                d.TaxRateLocal += leader.TaxBonus; 
+                d.CorruptionLevel -= leader.CorruptionReduction;
+            }
         }
         
         // --- Economic Laws (New System) ---
@@ -912,6 +924,8 @@ namespace RulerBox
             public float LastUpdateWorldTime;
             public float TreasuryTimer;
             public List<TimedEffect> ActiveEffects = new List<TimedEffect>();
+
+            public List<LeaderState> ActiveLeaders = new List<LeaderState>();
             
             public long Treasury;
             public long Income;

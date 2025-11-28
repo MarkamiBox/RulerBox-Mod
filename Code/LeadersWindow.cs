@@ -14,7 +14,12 @@ namespace RulerBox
         private static Text activeHeader;
         
         // Random names pool
-        private static readonly string[] Names = { "Alexander", "Cyrus", "Augustus", "Bismarck", "Churchill", "Caesar", "Napoleon", "Victoria", "Lincoln", "Gandhi" };
+        private static readonly string[] Names = { 
+            "Alexander", "Cyrus", "Augustus", "Bismarck", "Churchill", 
+            "Caesar", "Napoleon", "Victoria", "Lincoln", "Gandhi",
+            "Charlemagne", "Saladin", "Genghis", "Oda", "Peter" 
+        };
+        
         private static List<LeaderState> recruitmentPool = new List<LeaderState>();
         private static bool initializedPool = false;
 
@@ -110,7 +115,7 @@ namespace RulerBox
             panel.transform.SetParent(parent, false);
             
             var le = panel.AddComponent<LayoutElement>();
-            le.flexibleWidth = 0.8f; // Slightly smaller
+            le.flexibleWidth = 0.8f; 
 
             var bg = panel.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
@@ -150,6 +155,8 @@ namespace RulerBox
                 if (visible) Refresh();
             }
         }
+        
+        public static bool IsVisible() => root != null && root.activeSelf;
 
         public static void Refresh()
         {
@@ -192,6 +199,7 @@ namespace RulerBox
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
+            // Green tint if active, dark if recruit
             img.color = isActive ? new Color(0.2f, 0.4f, 0.2f, 0.8f) : new Color(0.3f, 0.3f, 0.35f, 0.8f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -199,37 +207,53 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 40f;
-            le.minHeight = 40f;
+            le.preferredHeight = 44f;
+            le.minHeight = 44f;
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 8;
             h.padding = new RectOffset(4, 4, 4, 4);
             h.childControlWidth = false;
             h.childForceExpandWidth = false;
+            h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- LEFT: Sprite ---
+            // --- LEFT: Sprite (Unit Icon Style) ---
+            var iconContainer = new GameObject("IconContainer");
+            iconContainer.transform.SetParent(btnObj.transform, false);
+            var iconBg = iconContainer.AddComponent<Image>();
+            // Use race background for style
+            if (Main.selectedKingdom != null)
+            {
+                iconBg.sprite = Main.selectedKingdom.getElementBackground();
+                if(Main.selectedKingdom.kingdomColor != null) 
+                    iconBg.color = Main.selectedKingdom.kingdomColor.getColorMain32();
+            }
+            
+            var iconContainerLE = iconContainer.AddComponent<LayoutElement>();
+            iconContainerLE.preferredWidth = 32f; 
+            iconContainerLE.preferredHeight = 32f;
+
             var iconObj = new GameObject("Icon");
-            iconObj.transform.SetParent(btnObj.transform, false);
+            iconObj.transform.SetParent(iconContainer.transform, false);
             var iconImg = iconObj.AddComponent<Image>();
             
-            // Try to load race icon or generic
+            // Try to use unit sprite based on leader type or fallback
             Sprite sprite = null;
             if (!string.IsNullOrEmpty(leader.IconPath))
             {
-                sprite = Resources.Load<Sprite>(leader.IconPath); // Try direct path
-                if (sprite == null) sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
+                sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
             }
-            // Fallback to current kingdom race icon if specific icon missing
-            if (sprite == null && Main.selectedKingdom != null) 
+            if (sprite == null && Main.selectedKingdom != null)
             {
-                sprite = Main.selectedKingdom.getElementIcon(); // Using banner icon as fallback proxy for "actor" style
+                // Fallback to kingdom icon if specific leader icon missing
+                sprite = Main.selectedKingdom.getElementIcon(); 
             }
             iconImg.sprite = sprite;
             iconImg.preserveAspect = true;
-
-            var iconLE = iconObj.AddComponent<LayoutElement>();
-            iconLE.preferredWidth = 32f; iconLE.preferredHeight = 32f;
+            
+            var iconRT = iconObj.GetComponent<RectTransform>();
+            iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
+            iconRT.offsetMin = new Vector2(2,2); iconRT.offsetMax = new Vector2(-2,-2);
 
             // --- RIGHT: Info ---
             var infoObj = new GameObject("Info");
@@ -239,11 +263,11 @@ namespace RulerBox
             v.spacing = 0;
 
             var infoLE = infoObj.AddComponent<LayoutElement>();
-            infoLE.preferredWidth = 100f; // Ensure text has space
+            infoLE.preferredWidth = 120f;
             infoLE.flexibleWidth = 1f;
 
-            CreateText(infoObj.transform, $"Lvl {leader.Level} {leader.Name}", 8, FontStyle.Bold);
-            CreateText(infoObj.transform, leader.Type, 7, FontStyle.Italic, Color.gray);
+            CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
+            CreateText(infoObj.transform, $"<color=#AAAAAA>{leader.Type} (Lvl {leader.Level})</color>", 8, FontStyle.Normal);
 
             // Tooltip
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
@@ -268,30 +292,30 @@ namespace RulerBox
                 // Recruit
                 if (d.ActiveLeaders.Count >= 3)
                 {
-                    WorldTip.showNow("Leader slots full (0/3)", false, "top", 1.5f, "#FF5A5A");
+                    WorldTip.showNow("Cabinet is full (3/3)", false, "top", 1.5f, "#FF5A5A");
                     return;
                 }
                 d.ActiveLeaders.Add(leader);
                 KingdomMetricsSystem.RecalculateForKingdom(k, d);
                 Refresh();
-                WorldTip.showNow($"Recruited {leader.Name}", false, "top", 1.5f, "#9EE07A");
+                WorldTip.showNow($"Recruited {leader.Name}!", false, "top", 1.5f, "#9EE07A");
             }
         }
 
         private static void GenerateRecruitmentPool(Kingdom k)
         {
             recruitmentPool.Clear();
-            // Generate 5 random leaders
-            recruitmentPool.Add(CreateLeader("Head of Government", 5f, 15f, 0f, 0f, 0f));
-            recruitmentPool.Add(CreateLeader("Chief of Staff", 0f, 0f, 10f, 0f, 0f));
-            recruitmentPool.Add(CreateLeader("Interior Minister", 4f, 0f, 0f, 0f, 0f)); // +Unrest not impl yet
-            recruitmentPool.Add(CreateLeader("Head of Research", 0f, 0f, 0f, 5f, 0f));
-            recruitmentPool.Add(CreateLeader("Chief Judge", 3f, -3f, 0f, 0f, 0.0025f)); // -0.25% corruption
+            // 5 Random Leaders based on wiki types
+            recruitmentPool.Add(CreateLeader("Head of Government", 5f, 15f, 0f, 0f, 0f, 0f, "icon_crown"));
+            recruitmentPool.Add(CreateLeader("Chief of Staff", 0f, 0f, 10f, 0f, 0f, 0f, "icon_sword"));
+            recruitmentPool.Add(CreateLeader("Head of Research", 0f, 0f, 0f, 5f, 0f, 0f, "icon_scroll"));
+            recruitmentPool.Add(CreateLeader("Finance Minister", 0f, 0f, 0f, 0f, 15f, 0f, "icon_gold"));
+            recruitmentPool.Add(CreateLeader("Chief Judge", 3f, -3f, 0f, 0f, 0f, 0.0025f, "icon_hammer"));
             
             initializedPool = true;
         }
 
-        private static LeaderState CreateLeader(string type, float stab, float pp, float atk, float res, float corr)
+        private static LeaderState CreateLeader(string type, float stab, float pp, float atk, float res, float tax, float corr, string icon)
         {
             return new LeaderState
             {
@@ -299,11 +323,12 @@ namespace RulerBox
                 Name = Names[Random.Range(0, Names.Length)],
                 Type = type,
                 Level = 1,
-                IconPath = "icon_citizen", // Placeholder asset name
+                IconPath = icon,
                 StabilityBonus = stab,
                 PPGainBonus = pp / 100f,
                 AttackBonus = atk / 100f,
                 ResearchBonus = res / 100f,
+                TaxBonus = tax / 100f,
                 CorruptionReduction = corr
             };
         }
@@ -311,11 +336,14 @@ namespace RulerBox
         private static string GetLeaderTooltip(LeaderState l)
         {
             string s = $"<b>{l.Type}</b> (Lvl {l.Level})\n";
-            if (l.StabilityBonus != 0) s += $"Stability: +{l.StabilityBonus}%\n";
-            if (l.PPGainBonus != 0) s += $"Pol. Power: +{l.PPGainBonus*100:0}%\n";
-            if (l.AttackBonus != 0) s += $"Attack: +{l.AttackBonus*100:0}%\n";
-            if (l.ResearchBonus != 0) s += $"Research: +{l.ResearchBonus*100:0}%\n";
-            if (l.CorruptionReduction != 0) s += $"Corruption: -{l.CorruptionReduction*100:0.##}%\n";
+            if (l.StabilityBonus != 0) s += $"Stability: <color=#7CFC00>+{l.StabilityBonus}%</color>\n";
+            if (l.PPGainBonus != 0) s += $"Pol. Power: {(l.PPGainBonus>0?"<color=#7CFC00>+":"<color=#FF5A5A>")}{l.PPGainBonus*100:0}%</color>\n";
+            if (l.AttackBonus != 0) s += $"Army Attack: <color=#7CFC00>+{l.AttackBonus*100:0}%</color>\n";
+            if (l.ResearchBonus != 0) s += $"Research Eff: <color=#7CFC00>+{l.ResearchBonus*100:0}%</color>\n";
+            if (l.TaxBonus != 0) s += $"Tax Income: <color=#7CFC00>+{l.TaxBonus*100:0}%</color>\n";
+            if (l.CorruptionReduction != 0) s += $"Corruption: <color=#7CFC00>-{l.CorruptionReduction*100:0.25}%</color>\n";
+            
+            s += "\n<size=9><i>Click to " + (Main.selectedKingdom != null && KingdomMetricsSystem.Get(Main.selectedKingdom).ActiveLeaders.Contains(l) ? "Dismiss" : "Recruit") + "</i></size>";
             return s;
         }
 
@@ -331,6 +359,7 @@ namespace RulerBox
             txt.color = col ?? Color.white;
             txt.alignment = TextAnchor.MiddleLeft;
             txt.resizeTextForBestFit = false;
+            txt.supportRichText = true;
             return txt;
         }
     }
