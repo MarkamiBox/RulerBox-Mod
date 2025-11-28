@@ -84,6 +84,19 @@ namespace RulerBox
             ResourcesTradeWindow.Update();
         }
 
+        public static void RecalculateForKingdom(Kingdom k, Data d)
+        {
+            if (d == null) return;
+            d.KRef = k;
+            
+            // Calculate time delta (prevent zero/negative issues)
+            float now = Time.unscaledTime;
+            float delta = (d.LastUpdateWorldTime <= 0f) ? UpdateInterval : Mathf.Max(0.01f, now - d.LastUpdateWorldTime);
+            d.LastUpdateWorldTime = now;
+
+            Recalculate(k, d, delta);
+        }
+
         // ==================== CORE RECALCULATE ======================
         private static void Recalculate(Kingdom k, Data d, float deltaWorldSeconds)
         {
@@ -369,9 +382,9 @@ namespace RulerBox
             }
 
             // 5. Power Sharing (Iberian) [cite: 118]
-            switch (d.Law_PowerSharing)
+            switch (d.Law_Centralization) 
             {
-                case "Decentralized": d.TaxRateLocal *= 1.05f; break; // +5% Tax
+                case "Decentralized": d.TaxRateLocal *= 1.05f; break;
                 case "Centralized": d.StabilityTargetModifier += 2.5f; break;
             }
 
@@ -1206,7 +1219,7 @@ namespace RulerBox
             public string Law_WarBonds = "Inactive";
             public string Law_ElitistMilitary = "Default";
             public string Law_PartyLoyalty = "Standard";
-            public string Law_PowerSharing = "Balanced"; // Renamed from Centralization
+            public string Law_Centralization = "Balanced"; // Renamed from Centralization
             public string Law_PressRegulation = "Mixed";
             public string Law_FirearmRegulation = "Standard";
             public string Law_Religion = "Secularism";
