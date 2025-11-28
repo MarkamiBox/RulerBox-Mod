@@ -382,56 +382,56 @@ namespace RulerBox
             switch(lawId)
             {
                 case "conscription":
-                    if(level=="Disarmed") desc = "Manpower Cap -50%, Gain -50%\nTax +5%";
+                    if(level=="Disarmed") desc = "Manpower Cap -50%\nGain -50%\nTax +5%";
                     else if(level=="Volunteer") desc = "Default";
-                    else if(level=="Limited") desc = "Manpower Cap +50%, Gain +48%\nTax -10%, Build Speed -10%\nRecruit Time +25%";
-                    else if(level=="Extensive") desc = "Manpower Cap +100%, Gain +99%\nTax -25%, Build Speed -25%\nRecruit Time +50%";
-                    else if(level=="Required") desc = "Manpower Cap +150%, Gain +150%\nTax -65%, Build Speed -50%\nRecruit Time +75%";
+                    else if(level=="Limited") desc = "Manpower Cap +50%\n Gain +48%\nTax -10%\nBuild Speed -10%\nRecruit Time +25%";
+                    else if(level=="Extensive") desc = "Manpower Cap +100%\nGain +99%\nTax -25%\nBuild Speed -25%\nRecruit Time +50%";
+                    else if(level=="Required") desc = "Manpower Cap +150%\nGain +150%\nTax -65%\nBuild Speed -50%\nRecruit Time +75%";
                     break;
                 case "war_bonds":
                     if(level=="Inactive") desc = "Default";
-                    else if(level=="Moderate") desc = "Tax x1.5\nStability -8%, War Exhaustion +0.05\nMil. Upkeep x0.75";
-                    else if(level=="Maximum") desc = "Tax x2.25\nStability -15%, War Exhaustion +0.15\nMil. Upkeep x0.5";
+                    else if(level=="Moderate") desc = "Tax x1.5\nStability -8%\nWar Exhaustion +0.05\nMil. Upkeep x0.75";
+                    else if(level=="Maximum") desc = "Tax x2.25\nStability -15%\nWar Exhaustion +0.15\nMil. Upkeep x0.5";
                     break;
                 case "elitist_military":
                     if(level=="Default") desc = "No effect";
                     else if(level=="Expanded") desc = "Military Power Gain +25%\nCorruption +0.1";
                     break;
                 case "party_loyalty":
-                    if(level=="Minimum") desc = "Tax x1.1, PP Gain +25%\nIdeology Power -15%";
+                    if(level=="Minimum") desc = "Tax x1.1\nPP Gain +25%\nIdeology Power -15%";
                     else if(level=="Low") desc = "PP Gain +15%\nIdeology Power -5%";
                     else if(level=="Standard") desc = "Default";
                     else if(level=="High") desc = "Ideology Power +10%\nPP Gain -10%";
-                    else if(level=="Maximum") desc = "Tax x0.9, PP Gain -20%\nIdeology Power +25%";
+                    else if(level=="Maximum") desc = "Tax x0.9\nPP Gain -20%\nIdeology Power +25%";
                     break;
                 case "power_sharing":
-                    if(level=="Decentralized") desc = "Tax +5%, Unrest Reduction +5%";
+                    if(level=="Decentralized") desc = "Tax +5%\nUnrest Reduction +5%";
                     else if(level=="Balanced") desc = "Default";
                     else if(level=="Centralized") desc = "Stability +2.5%";
                     break;
                 case "press_regulation":
-                    if(level=="Free Press") desc = "Tax x1.1, Corruption -0.1\nIntegration x1.25\nUnrest Reduction -25%";
-                    else if(level=="Laxed") desc = "Tax x1.05, Corruption -0.05\nIntegration x1.1\nUnrest Reduction -10%";
-                    else if(level=="Mixed") desc = "Tax x0.95, Stability +5\nIntegration x0.9\nUnrest Reduction +15%";
-                    else if(level=="State Focus") desc = "Tax x0.9, Stability +10\nIntegration x0.85\nUnrest Reduction +25%";
-                    else if(level=="Propaganda") desc = "Tax x0.9, Stability +10\nWE Gain -0.03\nUnrest Reduction +25%";
+                    if(level=="Free Press") desc = "Tax x1.1\nCorruption -0.1\nIntegration x1.25\nUnrest Reduction -25%";
+                    else if(level=="Laxed") desc = "Tax x1.05\nCorruption -0.05\nIntegration x1.1\nUnrest Reduction -10%";
+                    else if(level=="Mixed") desc = "Tax x0.95\nStability +5\nIntegration x0.9\nUnrest Reduction +15%";
+                    else if(level=="State Focus") desc = "Tax x0.9\nStability +10\nIntegration x0.85\nUnrest Reduction +25%";
+                    else if(level=="Propaganda") desc = "Tax x0.9\nStability +10\nWE Gain -0.03\nUnrest Reduction +25%";
                     break;
                 case "firearm_regulation":
-                    if(level=="No Restr.") desc = "Tax x1.13, City Resistance +50%\nStability -5, Unrest Red. -40%";
-                    else if(level=="Reduced") desc = "Tax x1.05, City Resistance +25%\nStability -2.5, Unrest Red. -20%";
+                    if(level=="No Restr.") desc = "Tax x1.13\nCity Resistance +50%\nStability -5\nUnrest Red. -40%";
+                    else if(level=="Reduced") desc = "Tax x1.05\nCity Resistance +25%\nStability -2.5\nUnrest Red. -20%";
                     else if(level=="Standard") desc = "Default";
-                    else if(level=="Expanded") desc = "Stability +5, Unrest Red. +15%\nCity Resistance -33%";
-                    else if(level=="Illegal") desc = "Stability +15, Unrest Red. +40%\nCity Resistance -60%";
+                    else if(level=="Expanded") desc = "Stability +5\nUnrest Red. +15%\nCity Resistance -33%";
+                    else if(level=="Illegal") desc = "Stability +15\nUnrest Red. +40%\nCity Resistance -60%";
                     break;
                 case "religious_emphasis":
-                    if(level=="Atheism") desc = "Tax +5%, Ideology +5%\nResearch Output +10%\nUnrest Reduction -10%";
+                    if(level=="Atheism") desc = "Tax +5%\nIdeology +5%\nResearch Output +10%\nUnrest Reduction -10%";
                     else if(level=="Secularism") desc = "Default";
-                    else if(level=="State Rel.") desc = "Stability +5%, Manpower +10%\nUnrest Red. +10%, WE Gain -0.005\nIdeology -5%, Research -10%";
+                    else if(level=="State Rel.") desc = "Stability +5%\nManpower +10%\nUnrest Red. +10%\nWE Gain -0.005\nIdeology -5%\nResearch -10%";
                     break;
                 case "population_growth":
                     if(level=="Balanced") desc = "Default";
-                    else if(level=="Encouraged") desc = "Pop Growth +2.5%\nTax -15%, Factory/Res Output -15%";
-                    else if(level=="Mandatory") desc = "Pop Growth +5%\nTax -30%, Factory/Res Output -30%";
+                    else if(level=="Encouraged") desc = "Pop Growth +2.5%\nTax -15%\nFactory/Res Output -15%";
+                    else if(level=="Mandatory") desc = "Pop Growth +5%\nTax -30%\nFactory/Res Output -30%";
                     break;
                 case "industrial_spec":
                     if(level=="Extraction") desc = "Resource Output +25%\nFactory Output -25%\nTax -20%";
@@ -440,16 +440,16 @@ namespace RulerBox
                     break;
                 case "resource_subsidy":
                     if(level=="None") desc = "Default";
-                    else if(level=="Limited") desc = "Trade Income x2\nTax -10%, Output -15%";
-                    else if(level=="Moderate") desc = "Trade Income x3.5\nTax -15%, Output -25%";
-                    else if(level=="Generous") desc = "Trade Income x5\nTax -25%, Output -30%";
+                    else if(level=="Limited") desc = "Trade Income x2\nTax -10%\nOutput -15%";
+                    else if(level=="Moderate") desc = "Trade Income x3.5\nTax -15%\nOutput -25%";
+                    else if(level=="Generous") desc = "Trade Income x5\nTax -25%\nOutput -30%";
                     break;
                 case "working_hours":
-                    if(level=="Minimum") desc = "Stability +10, Unrest Red. +50%\nTax -25%, Output -25%";
-                    else if(level=="Reduced") desc = "Stability +5, Unrest Red. +30%\nTax -15%, Output -10%";
+                    if(level=="Minimum") desc = "Stability +10\nUnrest Red. +50%\nTax -25%\nOutput -25%";
+                    else if(level=="Reduced") desc = "Stability +5\nUnrest Red. +30%\nTax -15%\nOutput -10%";
                     else if(level=="Standard") desc = "Default";
-                    else if(level=="Extended") desc = "Tax +25%, Output +10%\nStability -5, Unrest Red. -25%";
-                    else if(level=="Unlimited") desc = "Tax +50%, Output +30%\nStability -15, Unrest Red. -60%";
+                    else if(level=="Extended") desc = "Tax +25%\nOutput +10%\nStability -5\nUnrest Red. -25%";
+                    else if(level=="Unlimited") desc = "Tax +50%\nOutput +30%\nStability -15\nUnrest Red. -60%";
                     break;
                 case "research_focus":
                     if(level=="Civilian") desc = "Econ/Pol Research +30%\nRaw Research -15%\nResearch Cost +25%";
@@ -458,15 +458,15 @@ namespace RulerBox
                     break;
                 case "monarch":
                     if(level=="Ceremonial") desc = "Default";
-                    else if(level=="Constitutional") desc = "Stability +5, Manpower +10%\nPP Gain +20%, Tax +15%\nIdeology -25%, Unrest Red. -20%";
-                    else if(level=="Absolute") desc = "Stability +10, Manpower +20%\nPP Gain +20%, Tax +15%\nIdeology -50%, Unrest Red. -30%";
+                    else if(level=="Constitutional") desc = "Stability +5\nManpower +10%\nPP Gain +20%\nTax +15%\nIdeology -25%\nUnrest Red. -20%";
+                    else if(level=="Absolute") desc = "Stability +10\nManpower +20%\nPP Gain +20%\nTax +15%\nIdeology -50%\nUnrest Red. -30%";
                     break;
                 case "collective_theory":
                     if(level=="Maoist") desc = "Resource Output +25%\nTax -7.5%";
                     else if(level=="Marxism") desc = "Factory Output +15%\nTax -7.5%";
                     else if(level=="Leninist") desc = "PP Gain +15%\nTax -7.5%";
-                    else if(level=="Stalinist") desc = "Stability +5, Unrest Red. +10%\nCorruption +0.02\nTax -7.5%";
-                    else if(level=="Trotskyism") desc = "WE Gain -0.02, Justification -15%\nTax -7.5%";
+                    else if(level=="Stalinist") desc = "Stability +5\nUnrest Red. +10%\nCorruption +0.02\nTax -7.5%";
+                    else if(level=="Trotskyism") desc = "WE Gain -0.02\nJustification -15%\nTax -7.5%";
                     break;
                 case "elective_assembly":
                     if(level=="Direct") desc = "Tax +35%\nPP Gain -5%";
@@ -483,7 +483,7 @@ namespace RulerBox
                     else if(level=="Classical") desc = "Aligned Leaders +50%\nBase XP -5";
                     else if(level=="Stratocracy") desc = "Manpower +20%";
                     else if(level=="Clerical") desc = "Pop Growth +0.5%\nWE Gain -0.0025";
-                    else if(level=="Falangism") desc = "Build Speed +10%, Unrest Red. +15%\nJustification +10%";
+                    else if(level=="Falangism") desc = "Build Speed +10%\nUnrest Red. +15%\nJustification +10%";
                     break;
             }
             return $"<b>{level}</b>\n{desc}";
