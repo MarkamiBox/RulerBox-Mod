@@ -19,14 +19,14 @@ namespace RulerBox
             root = new GameObject("LawsWindowRoot");
             root.transform.SetParent(parent, false);
             
-            // Full stretch relative to parent container
+            // Full stretch
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             
-            // Vertical layout for the whole window structure
+            // Vertical layout
             var v = root.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 6;
@@ -36,7 +36,7 @@ namespace RulerBox
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
             
-            // --- 1. TITLE ---
+            // Title
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(root.transform, false);
             var title = titleGO.AddComponent<Text>();
@@ -49,15 +49,14 @@ namespace RulerBox
             title.resizeTextMaxSize = 14;
             titleGO.AddComponent<LayoutElement>().preferredHeight = 24f;
             
-            // --- 2. SCROLL VIEW ---
+            // Scroll container
             var scrollGO = new GameObject("LawsScroll");
             scrollGO.transform.SetParent(root.transform, false);
-            
-            // Layout Element for Scroll View (flexible height to fill space)
             var scrollLE = scrollGO.AddComponent<LayoutElement>();
+            scrollLE.preferredHeight = 140f;
             scrollLE.flexibleHeight = 1f;
             
-            // Background for Scroll View
+            // Background
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
             {
@@ -65,17 +64,12 @@ namespace RulerBox
                 bgImg.type = Image.Type.Sliced;
                 bgImg.color = Color.white;
             }
-            else
-            {
-                bgImg.color = new Color(0f, 0f, 0f, 0.35f);
-            }
             
-            // ScrollRect Component
+            // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.scrollSensitivity = 15f;
             
             // Viewport
             var viewportGO = new GameObject("Viewport");
@@ -83,9 +77,9 @@ namespace RulerBox
             var viewportRT = viewportGO.AddComponent<RectTransform>();
             viewportRT.anchorMin = Vector2.zero;
             viewportRT.anchorMax = Vector2.one;
-            viewportRT.offsetMin = new Vector2(2f, 2f);
-            viewportRT.offsetMax = new Vector2(-2f, -2f);
-            viewportGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f); // Invisible raycast target
+            viewportRT.offsetMin = new Vector2(2f, 4.5f);
+            viewportRT.offsetMax = new Vector2(-2f, -4f);
+            viewportGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
             viewportGO.AddComponent<Mask>().showMaskGraphic = false;
             
             // Content
@@ -96,69 +90,58 @@ namespace RulerBox
             contentRT.anchorMax = new Vector2(1f, 1f);
             contentRT.pivot = new Vector2(0.5f, 1f);
             
-            // Content Layout
+            // Vertical Layout for content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentVL.childAlignment = TextAnchor.UpperCenter;
+            contentVL.childAlignment = TextAnchor.UpperLeft;
             contentVL.spacing = 4;
-            contentVL.padding = new RectOffset(50, 50, 4, 4); // Padding inside the scroll area
+            contentVL.padding = new RectOffset(30, 30, 4, 4); // Increased padding to fix stretching
             contentVL.childControlWidth = true;
             contentVL.childControlHeight = true;
             contentVL.childForceExpandWidth = true;
             contentVL.childForceExpandHeight = false;
             
             contentGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            
             scrollRect.viewport = viewportRT;
             scrollRect.content = contentRT;
             
-            // --- POPULATE CONTENT ---
-            
-            // Military
+            // --- MILITARY LAWS ---
             AddCategoryHeader(contentRT, "Military Laws");
-            AddLawRow(contentRT, "conscription", "Conscription", "Disarmed", "Volunteer", "Limited", "Extensive", "Required");
-            AddLawRow(contentRT, "war_bonds", "War Bonds", "Inactive", "Moderate", "Maximum");
-            AddLawRow(contentRT, "elitist_military", "Elitist Stance", "Default", "Expanded");
+            AddLawRow(contentRT, "conscription", "Conscription", "Disarmed", "Volunteer", "Limited", "Extensive", "Required"); 
+            AddLawRow(contentRT, "war_bonds", "War Bonds", "Inactive", "Moderate", "Maximum"); 
+            AddLawRow(contentRT, "elitist_military", "Elitist Stance", "Default", "Expanded"); 
             
-            // Governmental
+            // --- GOVERNMENTAL LAWS ---
             AddCategoryHeader(contentRT, "Governmental Laws");
-            AddLawRow(contentRT, "party_loyalty", "Party Loyalty", "Minimum", "Low", "Standard", "High", "Maximum");
-            AddLawRow(contentRT, "power_sharing", "Centralization", "Decentralized", "Balanced", "Centralized");
+            AddLawRow(contentRT, "party_loyalty", "Party Loyalty", "Minimum", "Low", "Standard", "High", "Maximum"); 
+            AddLawRow(contentRT, "power_sharing", "Centralization", "Decentralized", "Balanced", "Centralized"); 
 
-            // Social
+            // --- SOCIAL LAWS ---
             AddCategoryHeader(contentRT, "Social Laws");
-            AddLawRow(contentRT, "press_regulation", "Press Regulation", "Free Press", "Laxed", "Mixed", "State Focus", "Propaganda");
-            AddLawRow(contentRT, "firearm_regulation", "Firearm Reg.", "No Restr.", "Reduced", "Standard", "Expanded", "Illegal");
-            AddLawRow(contentRT, "religious_emphasis", "Religion", "Atheism", "Secularism", "State Rel.");
-            AddLawRow(contentRT, "population_growth", "Pop. Growth", "Balanced", "Encouraged", "Mandatory");
+            AddLawRow(contentRT, "press_regulation", "Press Regulation", "Free Press", "Laxed", "Mixed", "State Focus", "Propaganda"); 
+            AddLawRow(contentRT, "firearm_regulation", "Firearm Reg.", "No Restr.", "Reduced", "Standard", "Expanded", "Illegal"); 
+            AddLawRow(contentRT, "religious_emphasis", "Religion", "Atheism", "Secularism", "State Rel."); 
+            AddLawRow(contentRT, "population_growth", "Pop. Growth", "Balanced", "Encouraged", "Mandatory"); 
 
-            // Economic
+            // --- ECONOMIC LAWS ---
             AddCategoryHeader(contentRT, "Economic Laws");
-            AddLawRow(contentRT, "industrial_spec", "Industry Spec.", "Extraction", "Balanced", "Manufact.");
-            AddLawRow(contentRT, "resource_subsidy", "Res. Subsidy", "None", "Limited", "Moderate", "Generous");
-            AddLawRow(contentRT, "working_hours", "Working Hours", "Minimum", "Reduced", "Standard", "Extended", "Unlimited");
-            AddLawRow(contentRT, "research_focus", "Research Focus", "Civilian", "Balanced", "Military");
+            AddLawRow(contentRT, "industrial_spec", "Industry Spec.", "Extraction", "Balanced", "Manufact."); 
+            AddLawRow(contentRT, "resource_subsidy", "Res. Subsidy", "None", "Limited", "Moderate", "Generous"); 
+            AddLawRow(contentRT, "working_hours", "Working Hours", "Minimum", "Reduced", "Standard", "Extended", "Unlimited"); 
+            AddLawRow(contentRT, "research_focus", "Research Focus", "Civilian", "Balanced", "Military"); 
 
-            // Ideology
+            // --- IDEOLOGY LAWS ---
             AddCategoryHeader(contentRT, "Ideology Laws");
-            AddLawRow(contentRT, "monarch", "Monarch", "Ceremonial", "Constitutional", "Absolute");
-            AddLawRow(contentRT, "collective_theory", "Collective Theory", "Maoist", "Marxist", "Leninist", "Stalinist", "Trotskyism");
-            AddLawRow(contentRT, "elective_assembly", "Elective Assembly", "Direct", "Indirect", "Technocratic");
-            AddLawRow(contentRT, "democracy_style", "Democracy Style", "Parliamentary", "Semi-Pres.", "Presidential");
-            AddLawRow(contentRT, "state_doctrine", "State Doctrine", "Corporatist", "Classical", "Stratocracy", "Clerical", "Falangism");
+            AddLawRow(contentRT, "monarch", "Monarch", "Ceremonial", "Constitutional", "Absolute"); 
+            AddLawRow(contentRT, "collective_theory", "Collective Theory", "Maoist", "Marxist", "Leninist", "Stalinist", "Trotskyism"); 
+            AddLawRow(contentRT, "elective_assembly", "Elective Assembly", "Direct", "Indirect", "Technocratic"); 
+            AddLawRow(contentRT, "democracy_style", "Democracy Style", "Parliamentary", "Semi-Pres.", "Presidential"); 
+            AddLawRow(contentRT, "state_doctrine", "State Doctrine", "Corporatist", "Classical", "Stratocracy", "Clerical", "Falangism"); 
 
-            // --- 3. BOTTOM ROW (Back Button) ---
+            // Bottom Back Button
             var bottomRow = new GameObject("BottomRow");
             bottomRow.transform.SetParent(root.transform, false);
-            
-            // Horizontal Layout for Bottom Row
             var bottomHL = bottomRow.AddComponent<HorizontalLayoutGroup>();
             bottomHL.childAlignment = TextAnchor.MiddleCenter;
-            bottomHL.childControlWidth = true;
-            bottomHL.childControlHeight = true;
-            // FIX: Disable Force Expand to keep the button at its preferred width
-            bottomHL.childForceExpandWidth = false; 
-            bottomHL.childForceExpandHeight = false;
-            
             bottomRow.AddComponent<LayoutElement>().preferredHeight = 26f;
             
             BuildBackButton(bottomRow.transform, "Back", () => 
@@ -187,7 +170,6 @@ namespace RulerBox
             Transform content = root.transform.Find("LawsScroll/Viewport/Content");
             if (content != null)
             {
-                // Update highlights for active laws
                 UpdateRowHighlight(content, "ConscriptionRow", d.Law_Conscription);
                 UpdateRowHighlight(content, "WarBondsRow", d.Law_WarBonds);
                 UpdateRowHighlight(content, "ElitistStanceRow", d.Law_ElitistMilitary);
@@ -220,14 +202,11 @@ namespace RulerBox
             var txt = go.AddComponent<Text>();
             txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = text;
-            txt.alignment = TextAnchor.MiddleCenter;
+            txt.alignment = TextAnchor.MiddleLeft;
             txt.color = new Color(1f, 0.8f, 0.2f);
             txt.fontStyle = FontStyle.Bold;
             txt.fontSize = 10;
-            
-            var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 18f;
-            le.flexibleWidth = 1f;
+            go.AddComponent<LayoutElement>().preferredHeight = 14f;
         }
 
         private static void AddLawRow(Transform parent, string lawId, string displayName, params string[] levels)
@@ -240,7 +219,6 @@ namespace RulerBox
             v.spacing = 2;
             v.childControlWidth = true;
             v.childControlHeight = true;
-            v.childForceExpandWidth = true;
             
             var rowLE = rowGO.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 32f;
@@ -252,7 +230,7 @@ namespace RulerBox
             var label = labelGO.AddComponent<Text>();
             label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             label.text = displayName;
-            label.alignment = TextAnchor.MiddleCenter;
+            label.alignment = TextAnchor.MiddleLeft;
             label.color = Color.white;
             label.fontSize = 9;
             labelGO.AddComponent<LayoutElement>().preferredHeight = 12f;
@@ -261,14 +239,13 @@ namespace RulerBox
             var buttonsRow = new GameObject("ButtonsRow");
             buttonsRow.transform.SetParent(rowGO.transform, false);
             var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleCenter;
+            h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 1;
             h.childControlWidth = true;
             h.childControlHeight = true;
-            h.childForceExpandWidth = true; // Buttons fill the row width
-            h.childForceExpandHeight = false;
+            h.childForceExpandWidth = true;
             
-            buttonsRow.AddComponent<LayoutElement>().preferredHeight = 18f;
+            buttonsRow.AddComponent<LayoutElement>().preferredHeight = 16f;
             
             foreach (var level in levels)
             {
@@ -405,49 +382,108 @@ namespace RulerBox
             switch(lawId)
             {
                 case "conscription":
-                    if(level=="Disarmed") desc = "Manpower -50%, Tax +5%";
+                    if(level=="Disarmed") desc = "Manpower Cap -50%, Gain -50%\nTax +5%";
                     else if(level=="Volunteer") desc = "Default";
-                    else if(level=="Limited") desc = "Manpower +50%, Tax -10%, Build -10%";
-                    else if(level=="Extensive") desc = "Manpower +100%, Tax -25%, Build -25%";
-                    else if(level=="Required") desc = "Manpower +150%, Tax -65%, Build -50%";
+                    else if(level=="Limited") desc = "Manpower Cap +50%, Gain +48%\nTax -10%, Build Speed -10%\nRecruit Time +25%";
+                    else if(level=="Extensive") desc = "Manpower Cap +100%, Gain +99%\nTax -25%, Build Speed -25%\nRecruit Time +50%";
+                    else if(level=="Required") desc = "Manpower Cap +150%, Gain +150%\nTax -65%, Build Speed -50%\nRecruit Time +75%";
                     break;
                 case "war_bonds":
                     if(level=="Inactive") desc = "Default";
-                    else if(level=="Moderate") desc = "Tax x1.5, Stability -8%";
-                    else if(level=="Maximum") desc = "Tax x2.25, Stability -15%";
+                    else if(level=="Moderate") desc = "Tax x1.5\nStability -8%, War Exhaustion +0.05\nMil. Upkeep x0.75";
+                    else if(level=="Maximum") desc = "Tax x2.25\nStability -15%, War Exhaustion +0.15\nMil. Upkeep x0.5";
                     break;
                 case "elitist_military":
                     if(level=="Default") desc = "No effect";
-                    else if(level=="Expanded") desc = "Military Power +25%, Corruption +0.1%";
+                    else if(level=="Expanded") desc = "Military Power Gain +25%\nCorruption +0.1";
                     break;
                 case "party_loyalty":
-                    if(level=="Minimum") desc = "Tax x1.1, Ideology -15%";
+                    if(level=="Minimum") desc = "Tax x1.1, PP Gain +25%\nIdeology Power -15%";
+                    else if(level=="Low") desc = "PP Gain +15%\nIdeology Power -5%";
                     else if(level=="Standard") desc = "Default";
-                    else if(level=="Maximum") desc = "Tax x0.9, Ideology +25%";
+                    else if(level=="High") desc = "Ideology Power +10%\nPP Gain -10%";
+                    else if(level=="Maximum") desc = "Tax x0.9, PP Gain -20%\nIdeology Power +25%";
                     break;
                 case "power_sharing":
-                    if(level=="Decentralized") desc = "Tax +5%";
+                    if(level=="Decentralized") desc = "Tax +5%, Unrest Reduction +5%";
+                    else if(level=="Balanced") desc = "Default";
                     else if(level=="Centralized") desc = "Stability +2.5%";
                     break;
                 case "press_regulation":
-                    if(level=="Free Press") desc = "Tax x1.1, Corruption -0.1";
-                    else if(level=="Propaganda") desc = "Stability +10%, Tax x0.9";
+                    if(level=="Free Press") desc = "Tax x1.1, Corruption -0.1\nIntegration x1.25\nUnrest Reduction -25%";
+                    else if(level=="Laxed") desc = "Tax x1.05, Corruption -0.05\nIntegration x1.1\nUnrest Reduction -10%";
+                    else if(level=="Mixed") desc = "Tax x0.95, Stability +5\nIntegration x0.9\nUnrest Reduction +15%";
+                    else if(level=="State Focus") desc = "Tax x0.9, Stability +10\nIntegration x0.85\nUnrest Reduction +25%";
+                    else if(level=="Propaganda") desc = "Tax x0.9, Stability +10\nWE Gain -0.03\nUnrest Reduction +25%";
                     break;
                 case "firearm_regulation":
-                    if(level=="No Restr.") desc = "Tax x1.13, Stability -5%";
-                    else if(level=="Illegal") desc = "Stability +15%, Tax 0%";
+                    if(level=="No Restr.") desc = "Tax x1.13, City Resistance +50%\nStability -5, Unrest Red. -40%";
+                    else if(level=="Reduced") desc = "Tax x1.05, City Resistance +25%\nStability -2.5, Unrest Red. -20%";
+                    else if(level=="Standard") desc = "Default";
+                    else if(level=="Expanded") desc = "Stability +5, Unrest Red. +15%\nCity Resistance -33%";
+                    else if(level=="Illegal") desc = "Stability +15, Unrest Red. +40%\nCity Resistance -60%";
                     break;
                 case "religious_emphasis":
-                    if(level=="Atheism") desc = "Tax x1.05, Stability Normal";
-                    else if(level=="State Rel.") desc = "Stability +5%, Tax x0.95";
+                    if(level=="Atheism") desc = "Tax +5%, Ideology +5%\nResearch Output +10%\nUnrest Reduction -10%";
+                    else if(level=="Secularism") desc = "Default";
+                    else if(level=="State Rel.") desc = "Stability +5%, Manpower +10%\nUnrest Red. +10%, WE Gain -0.005\nIdeology -5%, Research -10%";
                     break;
                 case "population_growth":
-                    if(level=="Encouraged") desc = "Growth +2.5%, Tax x0.85";
-                    else if(level=="Mandatory") desc = "Growth +5%, Tax x0.7";
+                    if(level=="Balanced") desc = "Default";
+                    else if(level=="Encouraged") desc = "Pop Growth +2.5%\nTax -15%, Factory/Res Output -15%";
+                    else if(level=="Mandatory") desc = "Pop Growth +5%\nTax -30%, Factory/Res Output -30%";
+                    break;
+                case "industrial_spec":
+                    if(level=="Extraction") desc = "Resource Output +25%\nFactory Output -25%\nTax -20%";
+                    else if(level=="Balanced") desc = "Default";
+                    else if(level=="Manufact.") desc = "Factory Output +25%\nResource Output -25%\nTax -20%";
+                    break;
+                case "resource_subsidy":
+                    if(level=="None") desc = "Default";
+                    else if(level=="Limited") desc = "Trade Income x2\nTax -10%, Output -15%";
+                    else if(level=="Moderate") desc = "Trade Income x3.5\nTax -15%, Output -25%";
+                    else if(level=="Generous") desc = "Trade Income x5\nTax -25%, Output -30%";
                     break;
                 case "working_hours":
-                    if(level=="Minimum") desc = "Stability +10%, Tax x0.75";
-                    else if(level=="Unlimited") desc = "Stability -15%, Tax x1.5";
+                    if(level=="Minimum") desc = "Stability +10, Unrest Red. +50%\nTax -25%, Output -25%";
+                    else if(level=="Reduced") desc = "Stability +5, Unrest Red. +30%\nTax -15%, Output -10%";
+                    else if(level=="Standard") desc = "Default";
+                    else if(level=="Extended") desc = "Tax +25%, Output +10%\nStability -5, Unrest Red. -25%";
+                    else if(level=="Unlimited") desc = "Tax +50%, Output +30%\nStability -15, Unrest Red. -60%";
+                    break;
+                case "research_focus":
+                    if(level=="Civilian") desc = "Econ/Pol Research +30%\nRaw Research -15%\nResearch Cost +25%";
+                    else if(level=="Balanced") desc = "Default";
+                    else if(level=="Military") desc = "Mil Research +30%\nRaw Research -15%\nResearch Cost +25%";
+                    break;
+                case "monarch":
+                    if(level=="Ceremonial") desc = "Default";
+                    else if(level=="Constitutional") desc = "Stability +5, Manpower +10%\nPP Gain +20%, Tax +15%\nIdeology -25%, Unrest Red. -20%";
+                    else if(level=="Absolute") desc = "Stability +10, Manpower +20%\nPP Gain +20%, Tax +15%\nIdeology -50%, Unrest Red. -30%";
+                    break;
+                case "collective_theory":
+                    if(level=="Maoist") desc = "Resource Output +25%\nTax -7.5%";
+                    else if(level=="Marxism") desc = "Factory Output +15%\nTax -7.5%";
+                    else if(level=="Leninist") desc = "PP Gain +15%\nTax -7.5%";
+                    else if(level=="Stalinist") desc = "Stability +5, Unrest Red. +10%\nCorruption +0.02\nTax -7.5%";
+                    else if(level=="Trotskyism") desc = "WE Gain -0.02, Justification -15%\nTax -7.5%";
+                    break;
+                case "elective_assembly":
+                    if(level=="Direct") desc = "Tax +35%\nPP Gain -5%";
+                    else if(level=="Indirect") desc = "Leader XP +5";
+                    else if(level=="Technocratic") desc = "Research Efficiency +20%\nSpending Cost -10%";
+                    break;
+                case "democracy_style":
+                    if(level=="Parliamentary") desc = "Leader XP +15\nRecruit Pool +10";
+                    else if(level=="Semi-Pres.") desc = "Invest. Availability +25%\nInvest. Cost -5%";
+                    else if(level=="Presidential") desc = "PP Gain +15%\nStability +5";
+                    break;
+                case "state_doctrine":
+                    if(level=="Corporatist") desc = "Factory Output +25%";
+                    else if(level=="Classical") desc = "Aligned Leaders +50%\nBase XP -5";
+                    else if(level=="Stratocracy") desc = "Manpower +20%";
+                    else if(level=="Clerical") desc = "Pop Growth +0.5%\nWE Gain -0.0025";
+                    else if(level=="Falangism") desc = "Build Speed +10%, Unrest Red. +15%\nJustification +10%";
                     break;
             }
             return $"<b>{level}</b>\n{desc}";
