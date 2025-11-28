@@ -15,6 +15,7 @@ namespace RulerBox
         {
             return KingdomMetricsSystem.Get(k);
         }
+
         // Event Definitions
         public class EventDef  
         {
@@ -25,6 +26,7 @@ namespace RulerBox
             public Func<Kingdom, bool> Trigger;
             public List<EventOption> Options = new List<EventOption>();
         }
+        
         // Event Option Definition
         public class EventOption
         {
@@ -32,7 +34,9 @@ namespace RulerBox
             public string Tooltip;
             public Action<Kingdom> Action;
         }
+        
         public static readonly List<EventDef> Definitions = new List<EventDef>();
+        
         // Static constructor to initialize events
         static EventsList()
         {
@@ -143,9 +147,11 @@ namespace RulerBox
                     }
                 }
             });
+            
             // ==========================================
             // UNREST & STRIKES
             // ==========================================
+            
             // 4. Strikers Make Demands
             Definitions.Add(new EventDef
             {
@@ -197,6 +203,7 @@ namespace RulerBox
                     }
                 }
             });
+            
             // 5. Mass Demonstrations
             Definitions.Add(new EventDef
             {
@@ -234,9 +241,11 @@ namespace RulerBox
                     }
                 }
             });
+            
             // ==========================================
             // WAR & MILITARY
             // ==========================================
+            
             // 6. Widespread Mutinies
             Definitions.Add(new EventDef
             {
@@ -270,6 +279,7 @@ namespace RulerBox
                     }
                 }
             });
+            
             // 7. The Last Stand (Desperation Bonus)
             Definitions.Add(new EventDef
             {
@@ -298,9 +308,11 @@ namespace RulerBox
                     }
                 }
             });
+            
             // ==========================================
             // INSURGENCY
             // ==========================================
+            
             // 8. Spread of Insurgency
             Definitions.Add(new EventDef
             {
@@ -328,6 +340,7 @@ namespace RulerBox
                     }
                 }
             });
+            
             // 9. Capital Bombing (Insurgency Event)
             Definitions.Add(new EventDef
             {
@@ -361,9 +374,11 @@ namespace RulerBox
                     }
                 }
             });
+            
             // ==========================================
             // CORRUPTION & SCANDALS
             // ==========================================
+            
             // 10. Public Scandal
             Definitions.Add(new EventDef
             {
@@ -396,6 +411,7 @@ namespace RulerBox
                     }
                 }
             });
+            
             // 11. Corporate Dealing
             Definitions.Add(new EventDef
             {
@@ -424,6 +440,7 @@ namespace RulerBox
                     }
                 }
             });
+            
             // 12. A New Researcher
             Definitions.Add(new EventDef
             {
@@ -452,6 +469,7 @@ namespace RulerBox
                 }
             });
         }
+        
         // Method to get a random valid event for a kingdom
         public static EventDef GetRandomEvent(Kingdom k)
         {
