@@ -179,6 +179,7 @@ namespace RulerBox
             });
             root.SetActive(false);
         }
+
         // --- PUBLIC METHODS ---
         public static void SetVisible(bool visible)
         {
@@ -191,20 +192,24 @@ namespace RulerBox
                 root.SetActive(visible);
             }
         }
+        
         public static bool IsVisible()
         {
             return root != null && root.activeSelf;
         }
+        
         public static void Refresh(Kingdom k)
         {
             if (!IsVisible() || k == null) return;
             
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
+            
             // Totals
             SetColoredNumber(ecoIncomeText, d.Income, forcePositive: true);
             SetColoredNumber(ecoExpensesText, d.Expenses, forceNegative: true);
             SetColoredNumber(balanceText, d.Income - d.Expenses);
+            
             // Breakdown INCOME
             SetColoredNumber(incomeTaxBaseWealthText, d.TaxBaseWealth);
             SetColoredNumber(incomeTaxBaseFallbackText, d.TaxBaseFallbackGDP);
@@ -212,6 +217,7 @@ namespace RulerBox
             SetColoredNumber(incomeAfterWarText, d.IncomeAfterWarPenalty);
             SetColoredNumber(incomeAfterStabText, d.IncomeAfterStability);
             SetColoredNumber(incomeAfterCitiesText, d.IncomeAfterCityBonus);
+            
             // Breakdown EXPENSES
             SetColoredNumber(expensesMilitaryText, d.ExpensesMilitary, forceNegative: true);
             SetColoredNumber(expensesInfraText, d.ExpensesInfrastructure, forceNegative: true);
@@ -219,6 +225,7 @@ namespace RulerBox
             SetColoredNumber(expensesWarText, d.ExpensesWarOverhead, forceNegative: true);
             SetColoredNumber(expensesLawsText, d.ExpensesLawUpkeep, forceNegative: true);
         }
+
         // --- ORIGINAL HELPERS ---
 
         // Build a single row with label and value text
@@ -240,6 +247,7 @@ namespace RulerBox
             h.spacing = 4;
             h.childControlWidth = true;
             h.childForceExpandWidth = true;
+            
             // Label
             var labelGO = new GameObject("Label");
             labelGO.transform.SetParent(row.transform, false);
@@ -251,6 +259,7 @@ namespace RulerBox
             labelText.resizeTextForBestFit = true;
             labelText.resizeTextMinSize = 6;
             labelText.resizeTextMaxSize = 8;
+            
             // Value
             var valueGO = new GameObject("Value");
             valueGO.transform.SetParent(row.transform, false);
@@ -266,17 +275,20 @@ namespace RulerBox
             le.preferredHeight = 8;
             return valueText;
         }   
+
         // Build a single row for the scroll lists
         private static Text BuildListRow(Transform parent, string label)
         {
             var row = new GameObject(label.Replace(" ", "") + "ListRow");
             row.transform.SetParent(parent, false);
+            
             // Layout
             var h = row.AddComponent<HorizontalLayoutGroup>();
             h.childAlignment = TextAnchor.MiddleLeft;
             h.spacing = 3;
             h.childControlWidth = true;
             h.childForceExpandWidth = true;
+            
             // Label
             var labelGO = new GameObject("Label");
             labelGO.transform.SetParent(row.transform, false);
@@ -288,6 +300,7 @@ namespace RulerBox
             labelText.resizeTextForBestFit = true;
             labelText.resizeTextMinSize = 8;
             labelText.resizeTextMaxSize = 10;
+            
             // Value
             var valueGO = new GameObject("Value");
             valueGO.transform.SetParent(row.transform, false);
@@ -301,20 +314,24 @@ namespace RulerBox
             le.preferredHeight = 14;
             return valueText;
         }
+
         // Build a bottom button
         private static Button BuildBottomButton(Transform parent, string label, Action onClick = null)
         {
             var go = new GameObject(label.Replace(" ", "") + "Button");
             go.transform.SetParent(parent, false);
+            
             // Button background
             var img = go.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
             img.color = Color.white;
+            
             // Layout
             var le = go.AddComponent<LayoutElement>();
             le.preferredWidth = 90;
             le.preferredHeight = 20;
+            
             // Button component
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -329,6 +346,7 @@ namespace RulerBox
                     WorldTip.showNow($"{label} panel (WIP)", false, "top", 1.2f, "#FFFFFF");
                 }
             });
+            
             // Button label
             var txtGO = new GameObject("Text");
             txtGO.transform.SetParent(go.transform, false);
@@ -340,6 +358,7 @@ namespace RulerBox
             txt.resizeTextForBestFit = true;
             txt.resizeTextMinSize = 6;
             txt.resizeTextMaxSize = 8;
+            
             // Text RectTransform
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
@@ -348,21 +367,25 @@ namespace RulerBox
             rt.offsetMax = Vector2.zero;
             return btn;
         }
+
         // Build Income Scroll List
         private static void BuildIncomeScroll(Transform parent)
         {
             var scrollGO = new GameObject("IncomeScroll");
             scrollGO.transform.SetParent(parent, false);
+            
             // Layout
             var rt = scrollGO.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+            
             // Layout Element
             var le = scrollGO.AddComponent<LayoutElement>();
             le.preferredHeight = 50f;
             le.flexibleHeight = 0f;
+            
             // Background
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
@@ -374,11 +397,13 @@ namespace RulerBox
             {
                 bgImg.color = new Color(0f, 0f, 0f, 0.35f);
             }
+            
             // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            
             // Viewport
             var viewportGO = new GameObject("Viewport");
             viewportGO.transform.SetParent(scrollGO.transform, false);
@@ -389,9 +414,11 @@ namespace RulerBox
             viewportRT.offsetMax = new Vector2(-2f, -4f);
             var viewportImg = viewportGO.AddComponent<Image>();
             viewportImg.color = new Color(0f, 0f, 0f, 0.05f);
+            
             // Mask
             var mask = viewportGO.AddComponent<Mask>();
             mask.showMaskGraphic = false;
+            
             // Content
             var contentGO = new GameObject("Content");
             contentGO.transform.SetParent(viewportGO.transform, false);
@@ -401,6 +428,7 @@ namespace RulerBox
             contentRT.pivot     = new Vector2(0.5f, 1f);
             contentRT.anchoredPosition = Vector2.zero;
             contentRT.sizeDelta = new Vector2(0f, 0f);
+            
             // Vertical Layout
             var v = contentGO.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperLeft;
@@ -410,13 +438,16 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
+            
             // Content Size Fitter
             var fitter = contentGO.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            
             // Assign to ScrollRect
             scrollRect.viewport = viewportRT;
             scrollRect.content  = contentRT;
+            
             // income breakdown rows
             incomeTaxBaseWealthText   = BuildListRow(contentRT, "Base Tax");
             incomeTaxBaseFallbackText = BuildListRow(contentRT, "GDP Tax");
@@ -430,16 +461,19 @@ namespace RulerBox
         {
             var scrollGO = new GameObject("ExpensesScroll");
             scrollGO.transform.SetParent(parent, false);
+            
             // Layout
             var rt = scrollGO.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(0f, 0f);
             rt.anchorMax = new Vector2(1f, 1f);
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
+            
             // Layout Element
             var le = scrollGO.AddComponent<LayoutElement>();
             le.preferredHeight = 50f;
             le.flexibleHeight = 0f;
+            
             // Background
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
@@ -452,11 +486,13 @@ namespace RulerBox
             {
                 bgImg.color = new Color(0f, 0f, 0f, 0.35f);
             }
+            
             // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            
             // Viewport
             var viewportGO = new GameObject("Viewport");
             viewportGO.transform.SetParent(scrollGO.transform, false);
@@ -467,9 +503,11 @@ namespace RulerBox
             viewportRT.offsetMax = new Vector2(-2f, -4f);
             var viewportImg = viewportGO.AddComponent<Image>();
             viewportImg.color = new Color(0f, 0f, 0f, 0.05f);
+            
             // Mask
             var mask = viewportGO.AddComponent<Mask>();
             mask.showMaskGraphic = false;
+            
             // Content
             var contentGO = new GameObject("Content");
             contentGO.transform.SetParent(viewportGO.transform, false);
@@ -479,6 +517,7 @@ namespace RulerBox
             contentRT.pivot     = new Vector2(0.5f, 1f);
             contentRT.anchoredPosition = Vector2.zero;
             contentRT.sizeDelta = new Vector2(0f, 0f);
+            
             // Vertical Layout
             var v = contentGO.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperLeft;
@@ -488,13 +527,16 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
+            
             // Content Size Fitter
             var fitter = contentGO.AddComponent<ContentSizeFitter>();
             fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
+            
             // Assign to ScrollRect
             scrollRect.viewport = viewportRT;
             scrollRect.content  = contentRT;
+            
             // expense breakdown rows
             expensesMilitaryText = BuildListRow(contentRT, "Military upkeep");
             expensesInfraText    = BuildListRow(contentRT, "Infrastructure");
@@ -502,10 +544,12 @@ namespace RulerBox
             expensesWarText      = BuildListRow(contentRT, "War overhead");
             expensesLawsText     = BuildListRow(contentRT, "Laws & Policies");
         }
+
         // Set colored number text based on value
         private static void SetColoredNumber(Text text, double value, bool forcePositive = false, bool forceNegative = false)
         {
             if (text == null) return;
+            
             double abs = Math.Abs(value);
             string s;
             if (abs >= 1_000_000_000d) s = (value / 1_000_000_000d).ToString("0.#") + "B";
