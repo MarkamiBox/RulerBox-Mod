@@ -58,6 +58,7 @@ namespace RulerBox
             // Init Sub-Windows
             EconomyWindow.Initialize(contentContainer.transform);
             EconomicLawsWindow.Initialize(contentContainer.transform);
+            LawsWindow.Initialize(contentContainer.transform);
             InvestmentsWindow.Initialize(contentContainer.transform); 
             DiplomacyWindow.Initialize(contentContainer.transform);
             DiplomacyActionsWindow.Initialize(contentContainer.transform);
@@ -200,6 +201,7 @@ namespace RulerBox
             TradeWindow.SetVisible(false);
             DiplomacyWindow.SetVisible(false);
             DiplomacyActionsWindow.SetVisible(false);
+            LawsWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {
