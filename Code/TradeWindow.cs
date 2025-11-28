@@ -20,15 +20,18 @@ namespace RulerBox
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
             bgSprite          = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.InvHub.png");
 
+            // === ROOT ===
             root = new GameObject("TradeWindowRoot");
             root.transform.SetParent(parent, false);
 
+            // Full stretch
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
 
+            // Layout
             var v = root.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 6;
@@ -58,16 +61,19 @@ namespace RulerBox
             scrollLE.preferredHeight = 200f;
             scrollLE.flexibleHeight = 1f;
 
+            // === SCROLLVIEW CONTENT ===
             var bgImg = scrollGO.AddComponent<Image>();
             bgImg.sprite = windowInnerSprite;
             bgImg.type = Image.Type.Sliced;
             if(bgImg.sprite == null) bgImg.color = new Color(0,0,0,0.35f);
 
+            // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
 
+            // Viewport
             var viewportGO = new GameObject("Viewport");
             viewportGO.transform.SetParent(scrollGO.transform, false);
             var viewportRT = viewportGO.AddComponent<RectTransform>();
@@ -79,6 +85,7 @@ namespace RulerBox
             viewportGO.AddComponent<Image>().color = new Color(0, 0, 0, 0.01f);
             viewportGO.AddComponent<Mask>().showMaskGraphic = false;
 
+            // Content
             var contentGO = new GameObject("Content");
             contentGO.transform.SetParent(viewportGO.transform, false);
             var contentRT = contentGO.AddComponent<RectTransform>();
@@ -86,6 +93,7 @@ namespace RulerBox
             contentRT.anchorMax = new Vector2(1, 1);
             contentRT.pivot = new Vector2(0.5f, 1f);
 
+            // Content Layout
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVL.childAlignment = TextAnchor.UpperCenter;
             contentVL.spacing = 2; 
@@ -118,6 +126,7 @@ namespace RulerBox
             root.SetActive(false);
         }
 
+        // --- PUBLIC API ---
         public static void Open(string resourceId)
         {
             if (root == null) return;
@@ -158,15 +167,18 @@ namespace RulerBox
             }
         }
 
+        // --- UI BUILDERS ---
         private static void BuildKingdomRow(Transform parent, Kingdom player, Kingdom other)
         {
             var rowGO = new GameObject(other.data.id + "_TradeRow");
             rowGO.transform.SetParent(parent, false);
 
+            // Background
             var bg = rowGO.AddComponent<Image>();
             bg.sprite = bgSprite != null ? bgSprite : windowInnerSprite;
             bg.type = Image.Type.Sliced;
 
+            // Layout
             var rowHL = rowGO.AddComponent<HorizontalLayoutGroup>();
             rowHL.childAlignment = TextAnchor.MiddleLeft;
             rowHL.spacing = 8; 
@@ -175,6 +187,7 @@ namespace RulerBox
             rowHL.childControlHeight = true;
             rowHL.childForceExpandWidth = false;
 
+            // Layout Element
             var rowLE = rowGO.AddComponent<LayoutElement>();
             rowLE.preferredHeight = 40f;
             rowLE.preferredWidth = 155f;
@@ -272,17 +285,20 @@ namespace RulerBox
             );
         }
 
+        // Builds a vertical stack of two small buttons
         private static void BuildVerticalButtonStack(Transform parent, string topLabel, string botLabel, Action onTop, Action onBot)
         {
             var colGO = new GameObject("BtnCol");
             colGO.transform.SetParent(parent, false);
             
+            // Vertical Layout
             var vl = colGO.AddComponent<VerticalLayoutGroup>();
             vl.spacing = 1; 
             vl.childControlWidth = true;
             vl.childControlHeight = true;
             vl.childForceExpandHeight = false;
 
+            // Layout Element
             var le = colGO.AddComponent<LayoutElement>();
             le.preferredWidth = 14f;
             le.preferredHeight = 16f; 
@@ -321,6 +337,7 @@ namespace RulerBox
             MakeMini(botLabel, onBot);
         }
 
+        // Builds a small input field
         private static InputField BuildTinyInput(Transform parent, string def)
         {
             var go = new GameObject("Input");
@@ -360,6 +377,7 @@ namespace RulerBox
             return input;
         }
 
+        // Creates a text element
         private static Text CreateText(Transform parent, string content, int fontSize, FontStyle style, Color col)
         {
             var go = new GameObject("Text");
@@ -379,6 +397,7 @@ namespace RulerBox
             return txt;
         }
 
+        // Builds a button
         private static GameObject BuildButton(Transform parent, string label, Action onClick, float width, float height, Color? colorOverride = null)
         {
             var go = new GameObject("Btn_" + label);
@@ -420,6 +439,7 @@ namespace RulerBox
             return go;
         }
 
+        // Builds a kingdom flag UI element
         private static GameObject BuildFlag(Kingdom k)
         {
             var wrapper = new GameObject("FlagWrapper");
