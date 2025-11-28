@@ -44,8 +44,8 @@ namespace RulerBox
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 10;
-                h.padding = new RectOffset(8, 8, 8, 8);
+                h.spacing = 6;
+                h.padding = new RectOffset(4, 4, 4, 4);
                 h.childControlWidth = true;
                 h.childControlHeight = true;
                 h.childForceExpandWidth = true;
