@@ -13,13 +13,8 @@ namespace RulerBox
         private static Transform activeContent;
         private static Text activeHeader;
         
-        // Random names pool
-        private static readonly string[] Names = { 
-            "Alexander", "Cyrus", "Augustus", "Bismarck", "Churchill", 
-            "Caesar", "Napoleon", "Victoria", "Lincoln", "Gandhi",
-            "Charlemagne", "Saladin", "Genghis", "Oda", "Peter" 
-        };
-        
+        // Default random names pool (fallback)
+        private static readonly string[] Names = { "Alexander", "Cyrus", "Augustus", "Bismarck", "Churchill", "Caesar", "Napoleon", "Victoria", "Lincoln", "Gandhi" };
         private static List<LeaderState> recruitmentPool = new List<LeaderState>();
         private static bool initializedPool = false;
 
@@ -155,7 +150,7 @@ namespace RulerBox
                 if (visible) Refresh();
             }
         }
-        
+
         public static bool IsVisible() => root != null && root.activeSelf;
 
         public static void Refresh()
@@ -167,15 +162,17 @@ namespace RulerBox
             var d = KingdomMetricsSystem.Get(k);
             if (!initializedPool) GenerateRecruitmentPool(k);
 
+            // Safety Check for NRE
+            if (recruitmentContent == null || activeContent == null) return;
+
             // Update Capacity
             int count = d.ActiveLeaders != null ? d.ActiveLeaders.Count : 0;
-            activeHeader.text = $"{count}/3 Leaders";
+            if (activeHeader != null) activeHeader.text = $"{count}/3 Leaders";
 
             // Rebuild Recruitment List
             foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
             foreach (var leader in recruitmentPool)
             {
-                // Only show if not already hired
                 if (d.ActiveLeaders != null && d.ActiveLeaders.Any(l => l.Id == leader.Id)) continue;
                 CreateLeaderButton(recruitmentContent, leader, false);
             }
@@ -193,13 +190,14 @@ namespace RulerBox
 
         private static void CreateLeaderButton(Transform parent, LeaderState leader, bool isActive)
         {
+            if (parent == null || leader == null) return;
+
             var btnObj = new GameObject("LeaderBtn");
             btnObj.transform.SetParent(parent, false);
 
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
-            // Green tint if active, dark if recruit
             img.color = isActive ? new Color(0.2f, 0.4f, 0.2f, 0.8f) : new Color(0.3f, 0.3f, 0.35f, 0.8f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -221,7 +219,8 @@ namespace RulerBox
             var iconContainer = new GameObject("IconContainer");
             iconContainer.transform.SetParent(btnObj.transform, false);
             var iconBg = iconContainer.AddComponent<Image>();
-            // Use race background for style
+            
+            // Fallback Kingdom Style
             if (Main.selectedKingdom != null)
             {
                 iconBg.sprite = Main.selectedKingdom.getElementBackground();
@@ -237,17 +236,25 @@ namespace RulerBox
             iconObj.transform.SetParent(iconContainer.transform, false);
             var iconImg = iconObj.AddComponent<Image>();
             
-            // Try to use unit sprite based on leader type or fallback
+            // 1. Try Unit Actor Sprite
             Sprite sprite = null;
-            if (!string.IsNullOrEmpty(leader.IconPath))
+            if (leader.UnitLink != null)
+            {
+                // This fetches the sprite rendered for the actor.
+                // NOTE: getSpriteToRender() returns Sprite
+                try { sprite = leader.UnitLink.getSpriteToRender(); } catch { }
+            }
+            // 2. Try Generic/Fallback
+            if (sprite == null && !string.IsNullOrEmpty(leader.IconPath))
             {
                 sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
             }
-            if (sprite == null && Main.selectedKingdom != null)
+            // 3. Fallback to Kingdom Icon
+            if (sprite == null && Main.selectedKingdom != null) 
             {
-                // Fallback to kingdom icon if specific leader icon missing
                 sprite = Main.selectedKingdom.getElementIcon(); 
             }
+            
             iconImg.sprite = sprite;
             iconImg.preserveAspect = true;
             
@@ -305,25 +312,57 @@ namespace RulerBox
         private static void GenerateRecruitmentPool(Kingdom k)
         {
             recruitmentPool.Clear();
-            // 5 Random Leaders based on wiki types
-            recruitmentPool.Add(CreateLeader("Head of Government", 5f, 15f, 0f, 0f, 0f, 0f, "icon_crown"));
-            recruitmentPool.Add(CreateLeader("Chief of Staff", 0f, 0f, 10f, 0f, 0f, 0f, "icon_sword"));
-            recruitmentPool.Add(CreateLeader("Head of Research", 0f, 0f, 0f, 5f, 0f, 0f, "icon_scroll"));
-            recruitmentPool.Add(CreateLeader("Finance Minister", 0f, 0f, 0f, 0f, 15f, 0f, "icon_gold"));
-            recruitmentPool.Add(CreateLeader("Chief Judge", 3f, -3f, 0f, 0f, 0f, 0.0025f, "icon_hammer"));
+            if (k == null) return;
+
+            // Get Potential Actors
+            List<Actor> candidates = new List<Actor>();
+            if (k.units != null)
+            {
+                // Simple reservoir sample to get random units
+                foreach(Actor a in k.units)
+                {
+                    if (a == null || !a.isAlive() || !a.isAdult()) continue;
+                    if (candidates.Count < 5) candidates.Add(a);
+                    else if (UnityEngine.Random.value < 0.2f) candidates[UnityEngine.Random.Range(0, 5)] = a;
+                }
+            }
+
+            // Create 5 Leaders using actors if available
+            // 1. Head of Gov
+            recruitmentPool.Add(CreateLeader(k, candidates, "Head of Government", 5f, 15f, 0f, 0f, 0f, 0f));
+            // 2. Chief of Staff
+            recruitmentPool.Add(CreateLeader(k, candidates, "Chief of Staff", 0f, 0f, 10f, 0f, 0f, 0f));
+            // 3. Head of Research
+            recruitmentPool.Add(CreateLeader(k, candidates, "Head of Research", 0f, 0f, 0f, 5f, 0f, 0f));
+            // 4. Finance Minister
+            recruitmentPool.Add(CreateLeader(k, candidates, "Finance Minister", 0f, 0f, 0f, 0f, 15f, 0f));
+            // 5. Chief Judge
+            recruitmentPool.Add(CreateLeader(k, candidates, "Chief Judge", 3f, -3f, 0f, 0f, 0f, 0.0025f));
             
             initializedPool = true;
         }
 
-        private static LeaderState CreateLeader(string type, float stab, float pp, float atk, float res, float tax, float corr, string icon)
+        private static LeaderState CreateLeader(Kingdom k, List<Actor> candidates, string type, float stab, float pp, float atk, float res, float tax, float corr)
         {
+            // Pick a unit
+            Actor linkedUnit = null;
+            string name = Names[UnityEngine.Random.Range(0, Names.Length)];
+            
+            if (candidates != null && candidates.Count > 0)
+            {
+                // Pick and remove so we don't reuse same unit for multiple roles (optional)
+                int idx = UnityEngine.Random.Range(0, candidates.Count);
+                linkedUnit = candidates[idx];
+                name = linkedUnit.getName(); // Use actual unit name
+            }
+
             return new LeaderState
             {
                 Id = System.Guid.NewGuid().ToString(),
-                Name = Names[Random.Range(0, Names.Length)],
+                Name = name,
                 Type = type,
                 Level = 1,
-                IconPath = icon,
+                UnitLink = linkedUnit, // Bind the actor
                 StabilityBonus = stab,
                 PPGainBonus = pp / 100f,
                 AttackBonus = atk / 100f,
@@ -336,6 +375,11 @@ namespace RulerBox
         private static string GetLeaderTooltip(LeaderState l)
         {
             string s = $"<b>{l.Type}</b> (Lvl {l.Level})\n";
+            if (l.UnitLink != null)
+            {
+                string status = l.UnitLink.isAlive() ? "<color=#7CFC00>Alive</color>" : "<color=#FF5A5A>Deceased</color>";
+                s += $"Unit: {l.UnitLink.getName()} ({status})\n";
+            }
             if (l.StabilityBonus != 0) s += $"Stability: <color=#7CFC00>+{l.StabilityBonus}%</color>\n";
             if (l.PPGainBonus != 0) s += $"Pol. Power: {(l.PPGainBonus>0?"<color=#7CFC00>+":"<color=#FF5A5A>")}{l.PPGainBonus*100:0}%</color>\n";
             if (l.AttackBonus != 0) s += $"Army Attack: <color=#7CFC00>+{l.AttackBonus*100:0}%</color>\n";
