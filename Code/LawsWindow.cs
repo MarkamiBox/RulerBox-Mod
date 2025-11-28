@@ -19,14 +19,14 @@ namespace RulerBox
             root = new GameObject("LawsWindowRoot");
             root.transform.SetParent(parent, false);
             
-            // Full stretch
+            // Full stretch relative to parent container
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             
-            // Vertical layout
+            // Vertical layout for the whole window structure
             var v = root.AddComponent<VerticalLayoutGroup>();
             v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 6;
@@ -36,7 +36,7 @@ namespace RulerBox
             v.childForceExpandWidth = true;
             v.childForceExpandHeight = false;
             
-            // Title
+            // --- 1. TITLE ---
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(root.transform, false);
             var title = titleGO.AddComponent<Text>();
@@ -49,14 +49,15 @@ namespace RulerBox
             title.resizeTextMaxSize = 14;
             titleGO.AddComponent<LayoutElement>().preferredHeight = 24f;
             
-            // Scroll container
+            // --- 2. SCROLL VIEW ---
             var scrollGO = new GameObject("LawsScroll");
             scrollGO.transform.SetParent(root.transform, false);
+            
+            // Layout Element for Scroll View (flexible height to fill space)
             var scrollLE = scrollGO.AddComponent<LayoutElement>();
-            scrollLE.preferredHeight = 140f;
             scrollLE.flexibleHeight = 1f;
             
-            // Background
+            // Background for Scroll View
             var bgImg = scrollGO.AddComponent<Image>();
             if (windowInnerSprite != null)
             {
@@ -64,12 +65,17 @@ namespace RulerBox
                 bgImg.type = Image.Type.Sliced;
                 bgImg.color = Color.white;
             }
+            else
+            {
+                bgImg.color = new Color(0f, 0f, 0f, 0.35f);
+            }
             
-            // ScrollRect
+            // ScrollRect Component
             var scrollRect = scrollGO.AddComponent<ScrollRect>();
             scrollRect.horizontal = false;
             scrollRect.vertical = true;
             scrollRect.movementType = ScrollRect.MovementType.Clamped;
+            scrollRect.scrollSensitivity = 15f;
             
             // Viewport
             var viewportGO = new GameObject("Viewport");
@@ -77,9 +83,9 @@ namespace RulerBox
             var viewportRT = viewportGO.AddComponent<RectTransform>();
             viewportRT.anchorMin = Vector2.zero;
             viewportRT.anchorMax = Vector2.one;
-            viewportRT.offsetMin = new Vector2(2f, 4.5f);
-            viewportRT.offsetMax = new Vector2(-2f, -4f);
-            viewportGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f);
+            viewportRT.offsetMin = new Vector2(2f, 2f);
+            viewportRT.offsetMax = new Vector2(-2f, -2f);
+            viewportGO.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.01f); // Invisible raycast target
             viewportGO.AddComponent<Mask>().showMaskGraphic = false;
             
             // Content
@@ -90,58 +96,69 @@ namespace RulerBox
             contentRT.anchorMax = new Vector2(1f, 1f);
             contentRT.pivot = new Vector2(0.5f, 1f);
             
-            // Vertical Layout for content
+            // Content Layout
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
             contentVL.childAlignment = TextAnchor.UpperLeft;
             contentVL.spacing = 4;
-            contentVL.padding = new RectOffset(2, 2, 2, 2);
+            contentVL.padding = new RectOffset(4, 4, 4, 4); // Padding inside the scroll area
             contentVL.childControlWidth = true;
             contentVL.childControlHeight = true;
             contentVL.childForceExpandWidth = true;
             contentVL.childForceExpandHeight = false;
             
             contentGO.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
             scrollRect.viewport = viewportRT;
             scrollRect.content = contentRT;
             
-            // --- MILITARY LAWS --- [cite: 23]
-            AddCategoryHeader(contentRT, "Military Laws");
-            AddLawRow(contentRT, "conscription", "Conscription", "Disarmed", "Volunteer", "Limited", "Extensive", "Required"); // [cite: 23, 100]
-            AddLawRow(contentRT, "war_bonds", "War Bonds", "Inactive", "Moderate", "Maximum"); // [cite: 29, 114]
-            AddLawRow(contentRT, "elitist_military", "Elitist Stance", "Default", "Expanded"); // [cite: 33, 115]
+            // --- POPULATE CONTENT ---
             
-            // --- GOVERNMENTAL LAWS --- [cite: 36]
+            // Military
+            AddCategoryHeader(contentRT, "Military Laws");
+            AddLawRow(contentRT, "conscription", "Conscription", "Disarmed", "Volunteer", "Limited", "Extensive", "Required");
+            AddLawRow(contentRT, "war_bonds", "War Bonds", "Inactive", "Moderate", "Maximum");
+            AddLawRow(contentRT, "elitist_military", "Elitist Stance", "Default", "Expanded");
+            
+            // Governmental
             AddCategoryHeader(contentRT, "Governmental Laws");
-            AddLawRow(contentRT, "party_loyalty", "Party Loyalty", "Minimum", "Low", "Standard", "High", "Maximum"); // [cite: 36, 116]
-            AddLawRow(contentRT, "power_sharing", "Centralization", "Decentralized", "Balanced", "Centralized"); // [cite: 41, 118]
+            AddLawRow(contentRT, "party_loyalty", "Party Loyalty", "Minimum", "Low", "Standard", "High", "Maximum");
+            AddLawRow(contentRT, "power_sharing", "Centralization", "Decentralized", "Balanced", "Centralized");
 
-            // --- SOCIAL LAWS --- [cite: 43]
+            // Social
             AddCategoryHeader(contentRT, "Social Laws");
-            AddLawRow(contentRT, "press_regulation", "Press Regulation", "Free Press", "Laxed", "Mixed", "State Focus", "Propaganda"); // [cite: 43, 122]
-            AddLawRow(contentRT, "firearm_regulation", "Firearm Reg.", "No Restr.", "Reduced", "Standard", "Expanded", "Illegal"); // [cite: 47, 123]
-            AddLawRow(contentRT, "religious_emphasis", "Religion", "Atheism", "Secularism", "State Rel."); // [cite: 50, 124]
-            AddLawRow(contentRT, "population_growth", "Pop. Growth", "Balanced", "Encouraged", "Mandatory"); // [cite: 54, 125]
+            AddLawRow(contentRT, "press_regulation", "Press Regulation", "Free Press", "Laxed", "Mixed", "State Focus", "Propaganda");
+            AddLawRow(contentRT, "firearm_regulation", "Firearm Reg.", "No Restr.", "Reduced", "Standard", "Expanded", "Illegal");
+            AddLawRow(contentRT, "religious_emphasis", "Religion", "Atheism", "Secularism", "State Rel.");
+            AddLawRow(contentRT, "population_growth", "Pop. Growth", "Balanced", "Encouraged", "Mandatory");
 
-            // --- ECONOMIC LAWS --- [cite: 56]
+            // Economic
             AddCategoryHeader(contentRT, "Economic Laws");
-            AddLawRow(contentRT, "industrial_spec", "Industry Spec.", "Extraction", "Balanced", "Manufact."); // [cite: 56, 118]
-            AddLawRow(contentRT, "resource_subsidy", "Res. Subsidy", "None", "Limited", "Moderate", "Generous"); // [cite: 57, 119]
-            AddLawRow(contentRT, "working_hours", "Working Hours", "Minimum", "Reduced", "Standard", "Extended", "Unlimited"); // [cite: 59, 120]
-            AddLawRow(contentRT, "research_focus", "Research Focus", "Civilian", "Balanced", "Military"); // [cite: 63, 121]
+            AddLawRow(contentRT, "industrial_spec", "Industry Spec.", "Extraction", "Balanced", "Manufact.");
+            AddLawRow(contentRT, "resource_subsidy", "Res. Subsidy", "None", "Limited", "Moderate", "Generous");
+            AddLawRow(contentRT, "working_hours", "Working Hours", "Minimum", "Reduced", "Standard", "Extended", "Unlimited");
+            AddLawRow(contentRT, "research_focus", "Research Focus", "Civilian", "Balanced", "Military");
 
-            // --- IDEOLOGY LAWS --- [cite: 66]
+            // Ideology
             AddCategoryHeader(contentRT, "Ideology Laws");
-            AddLawRow(contentRT, "monarch", "Monarch", "Ceremonial", "Constitutional", "Absolute"); // [cite: 75, 126]
-            AddLawRow(contentRT, "collective_theory", "Collective Theory", "Maoist", "Marxist", "Leninist", "Stalinist", "Trotskyism"); // [cite: 80, 128]
-            AddLawRow(contentRT, "elective_assembly", "Elective Assembly", "Direct", "Indirect", "Technocratic"); // [cite: 85, 129]
-            AddLawRow(contentRT, "democracy_style", "Democracy Style", "Parliamentary", "Semi-Pres.", "Presidential"); // [cite: 88, 130]
-            AddLawRow(contentRT, "state_doctrine", "State Doctrine", "Corporatist", "Classical", "Stratocracy", "Clerical", "Falangism"); // [cite: 91, 131]
+            AddLawRow(contentRT, "monarch", "Monarch", "Ceremonial", "Constitutional", "Absolute");
+            AddLawRow(contentRT, "collective_theory", "Collective Theory", "Maoist", "Marxist", "Leninist", "Stalinist", "Trotskyism");
+            AddLawRow(contentRT, "elective_assembly", "Elective Assembly", "Direct", "Indirect", "Technocratic");
+            AddLawRow(contentRT, "democracy_style", "Democracy Style", "Parliamentary", "Semi-Pres.", "Presidential");
+            AddLawRow(contentRT, "state_doctrine", "State Doctrine", "Corporatist", "Classical", "Stratocracy", "Clerical", "Falangism");
 
-            // Bottom Back Button
+            // --- 3. BOTTOM ROW (Back Button) ---
             var bottomRow = new GameObject("BottomRow");
             bottomRow.transform.SetParent(root.transform, false);
+            
+            // Horizontal Layout for Bottom Row
             var bottomHL = bottomRow.AddComponent<HorizontalLayoutGroup>();
             bottomHL.childAlignment = TextAnchor.MiddleCenter;
+            bottomHL.childControlWidth = true;
+            bottomHL.childControlHeight = true;
+            // FIX: Disable Force Expand to keep the button at its preferred width
+            bottomHL.childForceExpandWidth = false; 
+            bottomHL.childForceExpandHeight = false;
+            
             bottomRow.AddComponent<LayoutElement>().preferredHeight = 26f;
             
             BuildBackButton(bottomRow.transform, "Back", () => 
@@ -170,6 +187,7 @@ namespace RulerBox
             Transform content = root.transform.Find("LawsScroll/Viewport/Content");
             if (content != null)
             {
+                // Update highlights for active laws
                 UpdateRowHighlight(content, "ConscriptionRow", d.Law_Conscription);
                 UpdateRowHighlight(content, "WarBondsRow", d.Law_WarBonds);
                 UpdateRowHighlight(content, "ElitistStanceRow", d.Law_ElitistMilitary);
@@ -206,7 +224,10 @@ namespace RulerBox
             txt.color = new Color(1f, 0.8f, 0.2f);
             txt.fontStyle = FontStyle.Bold;
             txt.fontSize = 10;
-            go.AddComponent<LayoutElement>().preferredHeight = 14f;
+            
+            var le = go.AddComponent<LayoutElement>();
+            le.preferredHeight = 18f;
+            le.flexibleWidth = 1f;
         }
 
         private static void AddLawRow(Transform parent, string lawId, string displayName, params string[] levels)
@@ -219,9 +240,11 @@ namespace RulerBox
             v.spacing = 2;
             v.childControlWidth = true;
             v.childControlHeight = true;
+            v.childForceExpandWidth = true;
             
             var rowLE = rowGO.AddComponent<LayoutElement>();
-            rowLE.preferredHeight = 30f; // Will grow with content usually
+            rowLE.preferredHeight = 32f;
+            rowLE.flexibleWidth = 1f;
             
             // Label
             var labelGO = new GameObject("Label");
@@ -242,9 +265,10 @@ namespace RulerBox
             h.spacing = 1;
             h.childControlWidth = true;
             h.childControlHeight = true;
-            h.childForceExpandWidth = true;
+            h.childForceExpandWidth = true; // Buttons fill the row width
+            h.childForceExpandHeight = false;
             
-            buttonsRow.AddComponent<LayoutElement>().preferredHeight = 16f;
+            buttonsRow.AddComponent<LayoutElement>().preferredHeight = 18f;
             
             foreach (var level in levels)
             {
@@ -262,7 +286,9 @@ namespace RulerBox
             img.type = Image.Type.Sliced;
             img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
             
-            go.AddComponent<LayoutElement>().flexibleWidth = 1f;
+            var le = go.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f;
+            le.preferredHeight = 18f;
             
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -272,8 +298,8 @@ namespace RulerBox
                 if (k == null) return;
                 var d = KingdomMetricsSystem.Get(k);
                 SetActiveLaw(d, lawId, level);
+                KingdomMetricsSystem.RecalculateForKingdom(k, d);
                 Refresh(k);
-                KingdomMetricsSystem.RecalculateForKingdom(k, d); // Force recalc immediately
                 TopPanelUI.Refresh(); 
             });
             
@@ -332,9 +358,7 @@ namespace RulerBox
                         var img = child.GetComponent<Image>();
                         if (img != null)
                         {
-                            // Simple check if button text matches active level
                             var txt = child.GetComponentInChildren<Text>();
-                            // Special handling for abbreviated button text if needed, currently exact match
                             bool match = (txt != null && txt.text == activeLevel) || child.name.StartsWith(activeLevel);
                             
                             img.color = match ? new Color(0.6f, 0.9f, 0.4f, 1f) : new Color(0.2f, 0.2f, 0.25f, 1f);
@@ -351,9 +375,11 @@ namespace RulerBox
             var img = go.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
+            img.color = Color.white;
             
             var le = go.AddComponent<LayoutElement>();
-            le.preferredWidth = 80; le.preferredHeight = 20;
+            le.preferredWidth = 80; 
+            le.preferredHeight = 20;
             
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
@@ -375,54 +401,53 @@ namespace RulerBox
 
         private static string GetLawTooltip(string lawId, string level)
         {
-            // Tooltips based on aaa.txt descriptions
             string desc = "";
             switch(lawId)
             {
                 case "conscription":
-                    if(level=="Disarmed") desc = "Manpower -50%, Tax +5% [cite: 109]";
-                    if(level=="Volunteer") desc = "Default [cite: 110]";
-                    if(level=="Limited") desc = "Manpower +50%, Tax -10%, Build -10% [cite: 112]";
-                    if(level=="Extensive") desc = "Manpower +100%, Tax -25%, Build -25% [cite: 113]";
-                    if(level=="Required") desc = "Manpower +150%, Tax -65%, Build -50% [cite: 114]";
+                    if(level=="Disarmed") desc = "Manpower -50%, Tax +5%";
+                    else if(level=="Volunteer") desc = "Default";
+                    else if(level=="Limited") desc = "Manpower +50%, Tax -10%, Build -10%";
+                    else if(level=="Extensive") desc = "Manpower +100%, Tax -25%, Build -25%";
+                    else if(level=="Required") desc = "Manpower +150%, Tax -65%, Build -50%";
                     break;
                 case "war_bonds":
-                    if(level=="Inactive") desc = "Default [cite: 114]";
-                    if(level=="Moderate") desc = "Tax x1.5, Stability -8% [cite: 115]";
-                    if(level=="Maximum") desc = "Tax x2.25, Stability -15% [cite: 115]";
+                    if(level=="Inactive") desc = "Default";
+                    else if(level=="Moderate") desc = "Tax x1.5, Stability -8%";
+                    else if(level=="Maximum") desc = "Tax x2.25, Stability -15%";
                     break;
                 case "elitist_military":
-                    if(level=="Default") desc = "No effect [cite: 116]";
-                    if(level=="Expanded") desc = "Military Power +25%, Corruption +0.1% [cite: 116]";
+                    if(level=="Default") desc = "No effect";
+                    else if(level=="Expanded") desc = "Military Power +25%, Corruption +0.1%";
                     break;
                 case "party_loyalty":
-                    if(level=="Minimum") desc = "Tax x1.1, Ideology -15% [cite: 117]";
-                    if(level=="Standard") desc = "Default [cite: 117]";
-                    if(level=="Maximum") desc = "Tax x0.9, Ideology +25% [cite: 117]";
+                    if(level=="Minimum") desc = "Tax x1.1, Ideology -15%";
+                    else if(level=="Standard") desc = "Default";
+                    else if(level=="Maximum") desc = "Tax x0.9, Ideology +25%";
                     break;
                 case "power_sharing":
-                    if(level=="Decentralized") desc = "Tax +5% [cite: 118]";
-                    if(level=="Centralized") desc = "Stability +2.5% [cite: 118]";
+                    if(level=="Decentralized") desc = "Tax +5%";
+                    else if(level=="Centralized") desc = "Stability +2.5%";
                     break;
                 case "press_regulation":
-                    if(level=="Free Press") desc = "Tax x1.1, Corruption -0.1 [cite: 122]";
-                    if(level=="Propaganda") desc = "Stability +10%, Tax x0.9 [cite: 123]";
+                    if(level=="Free Press") desc = "Tax x1.1, Corruption -0.1";
+                    else if(level=="Propaganda") desc = "Stability +10%, Tax x0.9";
                     break;
                 case "firearm_regulation":
-                    if(level=="No Restr.") desc = "Tax x1.13, Stability -5% [cite: 124]";
-                    if(level=="Illegal") desc = "Stability +15%, Tax 0% [cite: 124]";
+                    if(level=="No Restr.") desc = "Tax x1.13, Stability -5%";
+                    else if(level=="Illegal") desc = "Stability +15%, Tax 0%";
                     break;
                 case "religious_emphasis":
-                    if(level=="Atheism") desc = "Tax x1.05, Stability Normal [cite: 125]";
-                    if(level=="State Rel.") desc = "Stability +5%, Tax x0.95 [cite: 125]";
+                    if(level=="Atheism") desc = "Tax x1.05, Stability Normal";
+                    else if(level=="State Rel.") desc = "Stability +5%, Tax x0.95";
                     break;
                 case "population_growth":
-                    if(level=="Encouraged") desc = "Growth +2.5%, Tax x0.85 [cite: 126]";
-                    if(level=="Mandatory") desc = "Growth +5%, Tax x0.7 [cite: 126]";
+                    if(level=="Encouraged") desc = "Growth +2.5%, Tax x0.85";
+                    else if(level=="Mandatory") desc = "Growth +5%, Tax x0.7";
                     break;
                 case "working_hours":
-                    if(level=="Minimum") desc = "Stability +10%, Tax x0.75 [cite: 120]";
-                    if(level=="Unlimited") desc = "Stability -15%, Tax x1.5 [cite: 120]";
+                    if(level=="Minimum") desc = "Stability +10%, Tax x0.75";
+                    else if(level=="Unlimited") desc = "Stability -15%, Tax x1.5";
                     break;
             }
             return $"<b>{level}</b>\n{desc}";
