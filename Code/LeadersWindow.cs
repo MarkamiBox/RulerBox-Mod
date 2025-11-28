@@ -13,11 +13,9 @@ namespace RulerBox
         private static Transform activeContent;
         private static Text activeHeader;
         
-        // Track the last kingdom to know when to refresh the pool
         private static Kingdom lastKingdom;
         private static List<LeaderState> recruitmentPool = new List<LeaderState>();
 
-        // Random titles for generated leaders
         private static readonly string[] RandomTitles = { 
             "High Marshall", "Royal Advisor", "Grand Treasurer", "Spymaster", 
             "Chief Justice", "Head of Research", "Fleet Admiral", "High Priest", 
@@ -29,14 +27,12 @@ namespace RulerBox
             if (root != null) return;
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
 
-            // Root
             root = new GameObject("LeadersWindow");
             root.transform.SetParent(parent, false);
             var rt = root.AddComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
-            // Main Horizontal Layout
             var h = root.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 6;
             h.padding = new RectOffset(6, 6, 6, 6);
@@ -44,10 +40,7 @@ namespace RulerBox
             h.childControlHeight = true;
             h.childForceExpandWidth = true;
 
-            // --- LEFT COLUMN (Recruitment) ---
             CreateRecruitmentPanel(root.transform);
-
-            // --- RIGHT COLUMN (Active) ---
             CreateActivePanel(root.transform);
 
             root.SetActive(false);
@@ -67,7 +60,6 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandHeight = false;
 
-            // Header
             var header = CreateText(panel.transform, "Recruit Leaders", 10, FontStyle.Bold);
             header.alignment = TextAnchor.MiddleCenter;
 
@@ -103,7 +95,7 @@ namespace RulerBox
 
             var cV = content.AddComponent<VerticalLayoutGroup>();
             cV.spacing = 2;
-            cV.childControlWidth = true; 
+            cV.childControlWidth = true;
             cV.childForceExpandHeight = false;
             
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -132,12 +124,10 @@ namespace RulerBox
             v.childControlHeight = true;
             v.childForceExpandHeight = false;
 
-            // Capacity Header
             activeHeader = CreateText(panel.transform, "0/3 Leaders", 10, FontStyle.Bold);
             activeHeader.alignment = TextAnchor.MiddleCenter;
             activeHeader.color = Color.yellow;
 
-            // Active List Container
             var listObj = new GameObject("ActiveList");
             listObj.transform.SetParent(panel.transform, false);
             activeContent = listObj.transform;
@@ -145,6 +135,7 @@ namespace RulerBox
             var listV = listObj.AddComponent<VerticalLayoutGroup>();
             listV.spacing = 2;
             listV.childControlWidth = true;
+            listV.childControlHeight = true;
             listV.childForceExpandHeight = false;
             
             listObj.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -186,12 +177,11 @@ namespace RulerBox
             foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
             foreach (var leader in recruitmentPool)
             {
-                // Don't show if already hired
                 if (d.ActiveLeaders != null && d.ActiveLeaders.Any(l => l.Id == leader.Id)) continue;
                 CreateLeaderButton(recruitmentContent, leader, false);
             }
 
-            // 2. Rebuild Active List (Right side)
+            // 2. Rebuild Active List
             foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
             if (d.ActiveLeaders != null)
             {
@@ -203,91 +193,94 @@ namespace RulerBox
         }
 
         // ====================================================================================
-        // BUTTON CREATION
+        // BUTTON CREATION (FIXED LAYOUT)
         // ====================================================================================
         private static void CreateLeaderButton(Transform parent, LeaderState leader, bool isActive)
         {
             if (parent == null || leader == null) return;
 
-            // ROOT BUTTON
             var btnObj = new GameObject("LeaderBtn");
             btnObj.transform.SetParent(parent, false);
 
             var img = btnObj.AddComponent<Image>();
             img.sprite = windowInnerSprite;
             img.type = Image.Type.Sliced;
-            img.color = isActive ?
-                new Color(0.2f, 0.45f, 0.2f, 0.9f) :
-                new Color(0.25f, 0.25f, 0.3f, 0.9f);
+            img.color = isActive ? new Color(0.2f, 0.45f, 0.2f, 0.9f) : new Color(0.25f, 0.25f, 0.3f, 0.9f);
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 54f;
-            le.minHeight = 54f;
+            le.preferredHeight = 44f;
+            le.minHeight = 44f;
             le.flexibleWidth = 1f;
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 6;
+            h.spacing = 8;
             h.padding = new RectOffset(6, 6, 4, 4);
-            h.childControlWidth = true;
+            // FIX: Enable child control so children have size
+            h.childControlWidth = true; 
             h.childControlHeight = true;
-            h.childForceExpandWidth = false;
+            h.childForceExpandWidth = false; 
             h.childForceExpandHeight = false;
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // ======================================================================
-            // AVATAR - REAL ACTOR SPRITE with PrefabUnitElement.show()
-            // ======================================================================
-            var avatarGO = new GameObject("Avatar");
-            avatarGO.transform.SetParent(btnObj.transform, false);
-
-            var avatarRT = avatarGO.AddComponent<RectTransform>();
-            avatarRT.sizeDelta = new Vector2(38, 38);
-
-            if (leader.UnitLink != null && leader.UnitLink.isAlive())
+            // --- LEFT: Icon ---
+            var iconContainer = new GameObject("IconContainer");
+            iconContainer.transform.SetParent(btnObj.transform, false);
+            var iconBg = iconContainer.AddComponent<Image>();
+            
+            if (Main.selectedKingdom != null)
             {
-                // real unit avatar
-                var avatar = avatarGO.AddComponent<PrefabUnitElement>();
-                avatar.show(leader.UnitLink);   // <-- CORRETTO!
-                avatarRT.localScale = new Vector3(0.75f, 0.75f, 1f);
+                iconBg.sprite = Main.selectedKingdom.getElementBackground();
+                if(Main.selectedKingdom.kingdomColor != null) 
+                    iconBg.color = Main.selectedKingdom.kingdomColor.getColorMain32();
             }
-            else
-            {
-                // fallback icon
-                var fallback = avatarGO.AddComponent<Image>();
-                fallback.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.ResBread.png");
-                fallback.color = Color.white;
-            }
+            
+            var iconContainerLE = iconContainer.AddComponent<LayoutElement>();
+            iconContainerLE.preferredWidth = 32f; 
+            iconContainerLE.preferredHeight = 32f;
+            iconContainerLE.minWidth = 32f;
 
-            // ======================================================================
-            // TEXT COLUMN
-            // ======================================================================
-            var textCol = new GameObject("TextCol");
-            textCol.transform.SetParent(btnObj.transform, false);
+            var iconObj = new GameObject("Icon");
+            iconObj.transform.SetParent(iconContainer.transform, false);
+            var iconImg = iconObj.AddComponent<Image>();
+            
+            Sprite sprite = null;
+            // Safe sprite loading
+            try {
+                if (leader.UnitLink != null) sprite = leader.UnitLink.getSpriteToRender(); 
+            } catch { }
 
-            var v = textCol.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 1;
+            if (sprite == null && !string.IsNullOrEmpty(leader.IconPath)) sprite = Resources.Load<Sprite>("ui/Icons/" + leader.IconPath);
+            if (sprite == null && Main.selectedKingdom != null) sprite = Main.selectedKingdom.getElementIcon(); 
+            
+            iconImg.sprite = sprite;
+            iconImg.preserveAspect = true;
+            
+            var iconRT = iconObj.GetComponent<RectTransform>();
+            iconRT.anchorMin = Vector2.zero; iconRT.anchorMax = Vector2.one;
+            iconRT.offsetMin = new Vector2(2,2); iconRT.offsetMax = new Vector2(-2,-2);
+
+            // --- RIGHT: Info Text ---
+            var infoObj = new GameObject("Info");
+            infoObj.transform.SetParent(btnObj.transform, false);
+            var v = infoObj.AddComponent<VerticalLayoutGroup>();
+            v.childAlignment = TextAnchor.MiddleLeft;
+            v.spacing = 0;
+            // FIX: Enable child control here too
+            v.childControlWidth = true; 
             v.childControlHeight = true;
-            v.childControlWidth = true;
             v.childForceExpandHeight = false;
-            v.childForceExpandWidth = true;
 
-            // NAME
-            var nameText = CreateText(textCol.transform, leader.Name, 12, FontStyle.Bold);
+            var infoLE = infoObj.AddComponent<LayoutElement>();
+            infoLE.flexibleWidth = 1f;
 
-            // TITLE
-            var titleText = CreateText(textCol.transform, leader.Type, 10, FontStyle.Normal, new Color(0.95f, 0.95f, 0.4f));
+            CreateText(infoObj.transform, $"{leader.Name}", 9, FontStyle.Bold);
+            CreateText(infoObj.transform, $"{leader.Type}", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
 
-            // STATS
-            string statsLine =
-                $"Stab +{leader.StabilityBonus:0}   " +
-                $"PP +{leader.PPGainBonus * 100f:0}%   " +
-                $"ATK +{leader.AttackBonus * 100f:0}%";
-
-            var statsText = CreateText(textCol.transform, statsLine, 9, FontStyle.Normal, new Color(0.85f, 0.85f, 0.85f));
+            ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
         private static void OnLeaderClicked(LeaderState leader, bool isActive)
@@ -298,7 +291,6 @@ namespace RulerBox
 
             if (isActive)
             {
-                // Dismiss
                 d.ActiveLeaders.Remove(leader);
                 KingdomMetricsSystem.RecalculateForKingdom(k, d);
                 Refresh();
@@ -306,7 +298,6 @@ namespace RulerBox
             }
             else
             {
-                // Recruit
                 if (d.ActiveLeaders.Count >= 3)
                 {
                     WorldTip.showNow("Cabinet is full (3/3)", false, "top", 1.5f, "#FF5A5A");
@@ -329,9 +320,10 @@ namespace RulerBox
 
             List<Actor> candidates = new List<Actor>();
 
-            // FIX: Safely access units list and filter out nulls to prevent crashes
+            // FIX: Robust check for null units to prevent crash
             if (k.units != null)
             {
+                // We verify 'a' is not null before checking isAlive/isAdult
                 candidates = k.units
                     .Where(a => a != null && a.isAlive() && a.isAdult() && !a.isKing() && !a.isCityLeader())
                     .OrderBy(x => UnityEngine.Random.value)
@@ -341,14 +333,13 @@ namespace RulerBox
 
             int needed = 5;
 
-            // Create leaders from real units found
             foreach(var unit in candidates)
             {
                 recruitmentPool.Add(CreateRandomLeader(unit));
                 needed--;
             }
 
-            // Fill rest with "Abstract" leaders if we didn't find enough real units
+            // Fill rest with abstract leaders
             for(int i=0; i<needed; i++)
             {
                 recruitmentPool.Add(CreateRandomLeader(null));
@@ -359,25 +350,21 @@ namespace RulerBox
         {
             string title = RandomTitles[UnityEngine.Random.Range(0, RandomTitles.Length)];
             
-            // Random Stats
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
-
-            // Give 1-2 random perks
             int perks = UnityEngine.Random.Range(1, 3);
             for(int i=0; i<perks; i++)
             {
                 int type = UnityEngine.Random.Range(0, 6);
                 switch(type)
                 {
-                    case 0: stab += UnityEngine.Random.Range(2f, 6f); break; // +Stability
-                    case 1: pp += UnityEngine.Random.Range(5f, 15f); break;   // +Political Power
-                    case 2: atk += UnityEngine.Random.Range(5f, 15f); break;  // +Army Attack
-                    case 3: res += UnityEngine.Random.Range(5f, 15f); break;  // +Research
-                    case 4: tax += UnityEngine.Random.Range(5f, 15f); break;  // +Tax
-                    case 5: corr += UnityEngine.Random.Range(0.05f, 0.15f); break; // -Corruption
+                    case 0: stab += UnityEngine.Random.Range(2f, 6f); break; 
+                    case 1: pp += UnityEngine.Random.Range(5f, 15f); break;   
+                    case 2: atk += UnityEngine.Random.Range(5f, 15f); break; 
+                    case 3: res += UnityEngine.Random.Range(5f, 15f); break;  
+                    case 4: tax += UnityEngine.Random.Range(5f, 15f); break;  
+                    case 5: corr += UnityEngine.Random.Range(0.05f, 0.15f); break; 
                 }
             }
-
             return CreateLeader(unit, title, stab, pp, atk, res, tax, corr);
         }
 
@@ -392,7 +379,6 @@ namespace RulerBox
             }
             else
             {
-                // Fallback name generator
                 string[] names = { "Cyrus", "Darius", "Alexander", "Sargon", "Hammurabi", "Leonidas", "Pericles", "Solon" };
                 name = names[UnityEngine.Random.Range(0, names.Length)];
             }
@@ -434,20 +420,20 @@ namespace RulerBox
             return s;
         }
 
-        private static Text CreateText(Transform parent, string txt, int size = 11, FontStyle style = FontStyle.Normal, Color? color = null)
+        private static Text CreateText(Transform parent, string content, int size, FontStyle style, Color? col = null)
         {
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
-
-            var t = go.AddComponent<Text>();
-            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            t.text = txt;
-            t.fontSize = size;
-            t.fontStyle = style;
-            t.color = color ?? Color.white;
-            t.alignment = TextAnchor.MiddleLeft;
-
-            return t;
+            var txt = go.AddComponent<Text>();
+            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.text = content;
+            txt.fontSize = size;
+            txt.fontStyle = style;
+            txt.color = col ?? Color.white;
+            txt.alignment = TextAnchor.MiddleLeft;
+            txt.resizeTextForBestFit = false;
+            txt.supportRichText = true;
+            return txt;
         }
     }
 }
