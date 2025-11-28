@@ -488,7 +488,6 @@ namespace RulerBox
             scroll.viewport = viewport.GetComponent<RectTransform>(); 
             scroll.content = cRT;
             CreateActionBtn("Laws", () => TopPanelUI.OpenLaws());
-            CreateActionBtn("Doctrines", null);
             CreateActionBtn("Leaders", null);
             CreateActionBtn("Policies", null);
             CreateActionBtn("Ideologies", null);
