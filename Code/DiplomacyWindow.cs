@@ -487,7 +487,7 @@ namespace RulerBox
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
             scroll.viewport = viewport.GetComponent<RectTransform>(); 
             scroll.content = cRT;
-            CreateActionBtn("Laws", () => TopPanelUI.OpenEconomicLaws());
+            CreateActionBtn("Laws", () => TopPanelUI.OpenLaws());
             CreateActionBtn("Doctrines", null);
             CreateActionBtn("Leaders", null);
             CreateActionBtn("Policies", null);
