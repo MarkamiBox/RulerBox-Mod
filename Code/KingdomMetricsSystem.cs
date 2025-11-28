@@ -87,7 +87,7 @@ namespace RulerBox
             d.StabilityTargetModifier = 0f;
             d.WarExhaustionGainMultiplier = 1.0f;
             d.ManpowerMaxMultiplier = 1.0f;
-            d.ManpowerRegenRate = 0.015f; // Base
+            d.ManpowerRegenRate = 0.015f; // Base 1.5%
             d.PopulationGrowthBonus = 0f;
             d.CorruptionLevel = 0f;
             d.MilitaryUpkeepModifier = 1.0f;
@@ -106,11 +106,14 @@ namespace RulerBox
             d.InvestmentAvailabilityModifier = 1.0f;
             d.LeaderXPModifier = 0f;
             d.JustificationTimeModifier = 1.0f;
+            d.GeniusChanceModifier = 0f;
+            d.PlagueResistanceModifier = 0f;
 
-            // 1. Apply Rise of Nations Laws
+            // 1. Apply Laws Modifiers
             ApplyRiseOfNationsLaws(d);
+            ApplyEconomicLaws_Modifiers(d);
 
-            // 2. Economy Calc
+            // 2. Economy Calc (Income)
             double totalWealth = 0;
             var units = k.getUnits();
             if (units != null) {
@@ -151,7 +154,7 @@ namespace RulerBox
             
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
-            // Expenses
+            // 3. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
             long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
             long demo = 0; 
@@ -164,8 +167,9 @@ namespace RulerBox
             long warOverhead = SafeLong(baseExpenses * (warOverheadPct / 100.0));
             d.ExpensesWarOverhead = warOverhead;
 
-            long lawCost = 0; 
-            d.ExpensesLawUpkeep = lawCost;
+            // Calculate Economic Laws Spending
+            long econSpending = CalculateEconomicSpending(d);
+            d.ExpensesLawUpkeep = econSpending;
             
             long tradeOut = TradeManager.GetTradeExpenses(k);
             d.TradeExpenses = tradeOut;
@@ -174,7 +178,7 @@ namespace RulerBox
             long corruptionCost = SafeLong((baseExpenses + warOverhead) * d.CorruptionLevel);
             d.ExpensesCorruption = corruptionCost;
 
-            d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost);
+            d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost + econSpending);
 
             // Treasury Update
             d.TreasuryTimer += deltaWorldSeconds;
@@ -194,6 +198,241 @@ namespace RulerBox
             UpdateStability(k, d, yearsPassed);
         }
         
+        // --- Economic Laws (New System) ---
+        private static void ApplyEconomicLaws_Modifiers(Data d)
+        {
+            // 1. Taxation
+            switch (d.TaxationLevel)
+            {
+                case "Minimum": 
+                    d.TaxRateLocal *= 0.40f; // -60%
+                    d.StabilityTargetModifier += 20f;
+                    d.WarExhaustionGainMultiplier -= 0.10f;
+                    break;
+                case "Low": 
+                    d.TaxRateLocal *= 0.70f; // -30%
+                    d.StabilityTargetModifier += 10f;
+                    d.WarExhaustionGainMultiplier -= 0.05f;
+                    break;
+                case "Normal":
+                    d.StabilityTargetModifier -= 5f; // From tooltip description
+                    break;
+                case "High": 
+                    d.TaxRateLocal *= 1.30f; 
+                    d.StabilityTargetModifier -= 15f;
+                    d.WarExhaustionGainMultiplier += 0.03f;
+                    break;
+                case "Maximum": 
+                    d.TaxRateLocal *= 1.75f; 
+                    d.StabilityTargetModifier -= 40f;
+                    d.WarExhaustionGainMultiplier += 0.10f;
+                    break;
+            }
+
+            // 2. Military Spending
+            switch (d.MilitarySpending)
+            {
+                case "None":
+                    // Base: Very Slow (1.5%/m) -> d.ManpowerRegenRate = 0.015 is default
+                    break;
+                case "Low":
+                    d.ManpowerMaxMultiplier *= 1.4f;
+                    d.ManpowerRegenRate = 0.030f; // 3.0%
+                    d.StabilityTargetModifier += 7.5f;
+                    d.WarExhaustionGainMultiplier += 0.20f;
+                    break;
+                case "Medium":
+                    d.ManpowerMaxMultiplier *= 1.6f;
+                    d.ManpowerRegenRate = 0.050f; // 5.0%
+                    d.StabilityTargetModifier += 10.0f;
+                    d.WarExhaustionGainMultiplier += 0.30f;
+                    break;
+                case "High":
+                    d.ManpowerMaxMultiplier *= 1.8f;
+                    d.ManpowerRegenRate = 0.075f; // 7.5%
+                    d.StabilityTargetModifier += 12.5f;
+                    d.WarExhaustionGainMultiplier += 0.35f;
+                    break;
+                case "Maximum":
+                    d.ManpowerMaxMultiplier *= 2.0f;
+                    d.ManpowerRegenRate = 0.100f; // 10.0%
+                    d.StabilityTargetModifier += 15.0f;
+                    d.WarExhaustionGainMultiplier += 0.40f;
+                    break;
+            }
+
+            // 3. Security Spending
+            // Tooltip: Stab -15, WE Gain +1.5%?, Corruption +4%?
+            // "Security" usually implies repression here based on negative stability stats
+            switch(d.SecuritySpending)
+            {
+                case "Low": 
+                    d.StabilityTargetModifier -= 15.0f; 
+                    d.WarExhaustionGainMultiplier += 0.015f; 
+                    d.CorruptionLevel += 0.04f; 
+                    break;
+                case "Medium": 
+                    d.StabilityTargetModifier -= 10.0f; 
+                    d.WarExhaustionGainMultiplier += 0.01f; 
+                    d.CorruptionLevel += 0.06f; 
+                    break;
+                case "High": 
+                    d.StabilityTargetModifier -= 5.0f; 
+                    d.WarExhaustionGainMultiplier += 0.005f; 
+                    d.CorruptionLevel += 0.08f; 
+                    break;
+                case "Maximum": 
+                    // Stab Normal
+                    d.WarExhaustionGainMultiplier += 0.10f; 
+                    d.CorruptionLevel += 0.10f; 
+                    break;
+            }
+
+            // 4. Government Spending
+            switch(d.GovernmentSpending)
+            {
+                case "Low": 
+                    d.FactoryOutputModifier *= 0.95f; // Eff -5%
+                    d.StabilityTargetModifier -= 4.0f;
+                    break;
+                case "Medium": 
+                    // Normal Eff
+                    d.CorruptionLevel -= 0.10f; 
+                    break;
+                case "High": 
+                    d.FactoryOutputModifier *= 1.10f; 
+                    d.StabilityTargetModifier += 10.0f; 
+                    d.CorruptionLevel -= 0.20f; 
+                    break;
+                case "Maximum": 
+                    d.FactoryOutputModifier *= 1.20f; 
+                    d.StabilityTargetModifier += 20.0f; 
+                    d.CorruptionLevel -= 0.30f; 
+                    break;
+            }
+
+            // 5. Healthcare (Welfare)
+            switch(d.WelfareSpending)
+            {
+                case "Low":
+                    d.PlagueResistanceModifier += 0.20f;
+                    d.StabilityTargetModifier -= 5.0f;
+                    break;
+                case "Medium":
+                    d.PlagueResistanceModifier += 0.40f;
+                    d.WarExhaustionGainMultiplier -= 0.03f;
+                    break;
+                case "High":
+                    d.PlagueResistanceModifier += 0.60f;
+                    d.StabilityTargetModifier += 5.0f;
+                    d.WarExhaustionGainMultiplier -= 0.06f;
+                    break;
+                case "Maximum":
+                    d.PlagueResistanceModifier += 0.80f;
+                    d.StabilityTargetModifier += 10.0f;
+                    d.WarExhaustionGainMultiplier -= 0.10f;
+                    break;
+            }
+
+            // 6. Education
+            switch(d.EducationSpending)
+            {
+                case "Low":
+                    d.GeniusChanceModifier += 0.02f;
+                    d.WarExhaustionGainMultiplier -= 0.02f;
+                    break;
+                case "Medium":
+                    d.GeniusChanceModifier += 0.05f;
+                    d.StabilityTargetModifier += 10.0f;
+                    d.WarExhaustionGainMultiplier -= 0.04f;
+                    break;
+                case "High":
+                    d.GeniusChanceModifier += 0.08f;
+                    d.StabilityTargetModifier += 20.0f;
+                    d.WarExhaustionGainMultiplier -= 0.07f;
+                    break;
+                case "Maximum":
+                    d.GeniusChanceModifier += 0.10f;
+                    d.StabilityTargetModifier += 30.0f;
+                    d.WarExhaustionGainMultiplier -= 0.10f;
+                    break;
+            }
+
+            // 7. Research Spending
+            switch(d.ResearchSpending)
+            {
+                case "Low":
+                    d.ResearchOutputModifier *= 2.5f;
+                    d.StabilityTargetModifier -= 5.0f;
+                    break;
+                case "Medium":
+                    d.ResearchOutputModifier *= 4.0f;
+                    d.WarExhaustionGainMultiplier -= 0.04f;
+                    break;
+                case "High":
+                    d.ResearchOutputModifier *= 5.0f;
+                    d.StabilityTargetModifier += 5.0f;
+                    d.WarExhaustionGainMultiplier -= 0.08f;
+                    break;
+                case "Maximum":
+                    d.ResearchOutputModifier *= 6.0f;
+                    d.StabilityTargetModifier += 10.0f;
+                    d.WarExhaustionGainMultiplier -= 0.12f;
+                    break;
+            }
+
+            // 8. Anti Corruption
+            switch(d.AntiCorruption)
+            {
+                case "Low":
+                    d.CorruptionLevel -= 0.20f;
+                    d.StabilityTargetModifier += 12.0f;
+                    break;
+                case "Medium":
+                    d.CorruptionLevel -= 0.30f;
+                    d.StabilityTargetModifier += 18.0f;
+                    break;
+                case "High":
+                    d.CorruptionLevel -= 0.40f;
+                    d.StabilityTargetModifier += 24.0f;
+                    break;
+                case "Maximum":
+                    d.CorruptionLevel -= 0.50f;
+                    d.StabilityTargetModifier += 30.0f;
+                    break;
+            }
+        }
+
+        private static long CalculateEconomicSpending(Data d)
+        {
+            long total = 0;
+            // Costs calculated as % of Income
+            long inc = d.Income; 
+
+            total += GetCost(d.MilitarySpending, inc, 0.35f, 0.40f, 0.45f, 0.50f);
+            total += GetCost(d.SecuritySpending, inc, 0.1125f, 0.125f, 0.1375f, 0.15f);
+            total += GetCost(d.GovernmentSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
+            total += GetCost(d.WelfareSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
+            total += GetCost(d.EducationSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
+            total += GetCost(d.ResearchSpending, inc, 0.15f, 0.20f, 0.25f, 0.30f);
+            total += GetCost(d.AntiCorruption, inc, 0.15f, 0.20f, 0.25f, 0.30f);
+            
+            return total;
+        }
+
+        private static long GetCost(string level, long income, float low, float med, float high, float max)
+        {
+            float pct = 0f;
+            switch(level)
+            {
+                case "Low": pct = low; break;
+                case "Medium": pct = med; break;
+                case "High": pct = high; break;
+                case "Maximum": pct = max; break;
+            }
+            return (long)(income * pct);
+        }
+
         private static void ApplyRiseOfNationsLaws(Data d)
         {
             // 1. Conscription
@@ -209,21 +448,18 @@ namespace RulerBox
                     d.ManpowerRegenRate *= 1.5f;
                     d.TaxRateLocal *= 0.90f; 
                     d.BuildingSpeedModifier *= 0.90f; 
-                    // Recruit Time +25% (Not implemented directly, could affect manpower regen)
                     break;
                 case "Extensive":
                     d.ManpowerMaxMultiplier *= 2.0f; 
                     d.ManpowerRegenRate *= 2.0f;
                     d.TaxRateLocal *= 0.75f; 
                     d.BuildingSpeedModifier *= 0.75f; 
-                    // Recruit Time +50%
                     break;
                 case "Required":
                     d.ManpowerMaxMultiplier *= 2.5f; 
                     d.ManpowerRegenRate *= 2.5f;
                     d.TaxRateLocal *= 0.35f; 
                     d.BuildingSpeedModifier *= 0.50f; 
-                    // Recruit Time +75%
                     break;
             }
 
@@ -234,14 +470,14 @@ namespace RulerBox
                     d.TaxRateLocal *= 1.5f;
                     d.MilitaryUpkeepModifier *= 0.75f;
                     d.StabilityTargetModifier -= 8f;
-                    d.UnrestReductionModifier *= 0.8f; // Implied reduction
+                    d.UnrestReductionModifier *= 0.8f; 
                     d.WarExhaustionGainMultiplier += 0.05f;
                     break;
                 case "Maximum":
                     d.TaxRateLocal *= 2.25f;
                     d.MilitaryUpkeepModifier *= 0.5f;
                     d.StabilityTargetModifier -= 15f;
-                    d.UnrestReductionModifier *= 0.65f; // Implied reduction
+                    d.UnrestReductionModifier *= 0.65f; 
                     d.WarExhaustionGainMultiplier += 0.15f;
                     break;
             }
@@ -249,8 +485,7 @@ namespace RulerBox
             // 3. Elitist Military Stance
             if (d.Law_ElitistMilitary == "Expanded")
             {
-                d.CorruptionLevel += 0.001f; // +0.1%
-                // Military Power Gain +25% (handled in XP/Manpower logic elsewhere ideally)
+                d.CorruptionLevel += 0.001f;
             }
 
             // 4. Party Loyalty
@@ -299,32 +534,32 @@ namespace RulerBox
                     d.TaxRateLocal *= 1.1f; 
                     d.CorruptionLevel -= 0.1f; 
                     d.IntegrationSpeedModifier *= 1.25f;
-                    d.UnrestReductionModifier *= 0.75f; // -25%
+                    d.UnrestReductionModifier *= 0.75f;
                     break;
                 case "Laxed": 
                     d.TaxRateLocal *= 1.05f; 
                     d.CorruptionLevel -= 0.05f; 
                     d.IntegrationSpeedModifier *= 1.1f;
-                    d.UnrestReductionModifier *= 0.9f; // -10%
+                    d.UnrestReductionModifier *= 0.9f; 
                     break;
                 case "Mixed": 
                     d.TaxRateLocal *= 0.95f; 
                     d.StabilityTargetModifier += 5f; 
                     d.IntegrationSpeedModifier *= 0.9f;
-                    d.UnrestReductionModifier *= 1.15f; // +15%
+                    d.UnrestReductionModifier *= 1.15f; 
                     break;
                 case "State Focus": 
                     d.TaxRateLocal *= 0.9f; 
                     d.StabilityTargetModifier += 10f; 
                     d.IntegrationSpeedModifier *= 0.85f;
-                    d.UnrestReductionModifier *= 1.25f; // +25%
+                    d.UnrestReductionModifier *= 1.25f; 
                     break;
                 case "Propaganda": 
                     d.TaxRateLocal *= 0.9f; 
                     d.StabilityTargetModifier += 10f; 
                     d.WarExhaustionGainMultiplier -= 0.03f; 
-                    d.PoliticalPowerGainModifier *= 1.1f; // Assumption based on control
-                    d.UnrestReductionModifier *= 1.25f; // +25% (assumed similar to State Focus)
+                    d.PoliticalPowerGainModifier *= 1.1f; 
+                    d.UnrestReductionModifier *= 1.25f; 
                     break;
             }
 
@@ -334,25 +569,25 @@ namespace RulerBox
                 case "No Restr.": 
                     d.TaxRateLocal *= 1.13f; 
                     d.StabilityTargetModifier -= 5f; 
-                    d.CityResistanceModifier *= 1.5f; // +50%
-                    d.UnrestReductionModifier *= 0.6f; // -40%
+                    d.CityResistanceModifier *= 1.5f; 
+                    d.UnrestReductionModifier *= 0.6f;
                     break;
                 case "Reduced": 
                     d.TaxRateLocal *= 1.05f; 
                     d.StabilityTargetModifier -= 2.5f; 
-                    d.CityResistanceModifier *= 1.25f; // +25%
-                    d.UnrestReductionModifier *= 0.8f; // -20%
+                    d.CityResistanceModifier *= 1.25f; 
+                    d.UnrestReductionModifier *= 0.8f; 
                     break;
                 case "Expanded": 
                     d.StabilityTargetModifier += 5f; 
-                    d.CityResistanceModifier *= 0.67f; // -33% approx
-                    d.UnrestReductionModifier *= 1.15f; // +15%
+                    d.CityResistanceModifier *= 0.67f; 
+                    d.UnrestReductionModifier *= 1.15f;
                     d.RebelSuppressionModifier += 0.5f;
                     break;
                 case "Illegal": 
                     d.StabilityTargetModifier += 15f; 
-                    d.CityResistanceModifier *= 0.4f; // -60%
-                    d.UnrestReductionModifier *= 1.4f; // +40%
+                    d.CityResistanceModifier *= 0.4f; 
+                    d.UnrestReductionModifier *= 1.4f; 
                     d.RebelSuppressionModifier += 1.0f;
                     break;
             }
@@ -362,21 +597,21 @@ namespace RulerBox
             {
                 case "Atheism": 
                     d.TaxRateLocal *= 1.05f; 
-                    d.ResearchOutputModifier *= 1.1f; // +10%?
+                    d.ResearchOutputModifier *= 1.1f; 
                     d.IdeologyPowerModifier *= 1.05f;
                     d.IntegrationSpeedModifier *= 1.05f;
-                    d.UnrestReductionModifier *= 0.9f; // -10%
+                    d.UnrestReductionModifier *= 0.9f; 
                     break;
                 case "State Rel.": 
-                    d.TaxRateLocal *= 0.95f; // Not explicitly stated, inferred trade-off? Text says "reduces... tax income"
-                    d.ResearchOutputModifier *= 0.9f; // Reduces research
+                    d.TaxRateLocal *= 0.95f; 
+                    d.ResearchOutputModifier *= 0.9f; 
                     d.StabilityTargetModifier += 5f; 
                     d.PopulationGrowthBonus += 0.0125f;
                     d.WarExhaustionGainMultiplier -= 0.005f; 
                     d.UnrestReductionModifier *= 1.1f;
                     d.IntegrationSpeedModifier *= 0.95f;
                     d.IdeologyPowerModifier *= 0.95f;
-                    d.ManpowerMaxMultiplier *= 1.1f; // +10% Manpower Gain
+                    d.ManpowerMaxMultiplier *= 1.1f; 
                     break;
             }
 
@@ -419,7 +654,7 @@ namespace RulerBox
                     d.TradeIncomeModifier *= 2f; 
                     d.TaxRateLocal *= 0.9f; 
                     d.FactoryOutputModifier *= 0.8f; 
-                    d.ResourceOutputModifier *= 0.85f; // Check exact values
+                    d.ResourceOutputModifier *= 0.85f; 
                     break;
                 case "Moderate": 
                     d.TradeIncomeModifier *= 3.5f; 
@@ -474,11 +709,9 @@ namespace RulerBox
             switch (d.Law_ResearchFocus)
             {
                 case "Civilian": 
-                    // Specific research bonuses implemented elsewhere if possible
                     d.ResearchOutputModifier *= 0.85f; 
                     break;
                 case "Military": 
-                    // Specific research bonuses
                     d.ResearchOutputModifier *= 0.85f; 
                     break;
             }
@@ -521,7 +754,7 @@ namespace RulerBox
             {
                 case "Direct": d.TaxRateLocal *= 1.35f; d.PoliticalPowerGainModifier *= 0.95f; break;
                 case "Indirect": d.LeaderXPModifier += 5f; break;
-                case "Technocratic": d.ResearchOutputModifier *= 1.2f; break; // "Efficiency" mapped to output
+                case "Technocratic": d.ResearchOutputModifier *= 1.2f; break;
             }
             
             // 17. Democracy Style
@@ -536,7 +769,7 @@ namespace RulerBox
             switch(d.Law_StateDoctrine)
             {
                 case "Corporatist": d.FactoryOutputModifier *= 1.25f; break;
-                case "Classical": d.LeaderXPModifier -= 5f; break; // Tradeoff for alignment
+                case "Classical": d.LeaderXPModifier -= 5f; break; 
                 case "Stratocracy": d.ManpowerMaxMultiplier *= 1.2f; break;
                 case "Clerical": d.PopulationGrowthBonus += 0.005f; d.WarExhaustionGainMultiplier -= 0.0025f; d.UnrestReductionModifier *= 1.1f; break;
                 case "Falangism": d.BuildingSpeedModifier *= 1.1f; d.IntegrationSpeedModifier *= 1.1f; d.UnrestReductionModifier *= 1.15f; d.JustificationTimeModifier *= 1.1f; break;
@@ -567,7 +800,6 @@ namespace RulerBox
 
         private static void UpdateResources(Kingdom k, Data d)
         {
-            // Basic implementation of resource tracking
             if (d.ResourceRates == null) d.ResourceRates = new Dictionary<string, int>();
             if (d.ResourceStockpiles == null) d.ResourceStockpiles = new Dictionary<string, int>();
 
@@ -598,7 +830,6 @@ namespace RulerBox
         {
             d.Population = currentPop;
             d.AvgGrowthRate = (d.PopulationGrowthBonus * 100f); 
-            // Simplified demographic update for snippet
             d.Adults = k.countAdults();
             d.Soldiers = k.countTotalWarriors();
         }
@@ -623,13 +854,10 @@ namespace RulerBox
         private static void UpdateWarExhaustion(Kingdom k, Data d, float years)
         {
              // Basic simulation of War Exhaustion logic
-             // Applying modifier: d.WarExhaustionGainMultiplier
-             // Logic would be similar to previous version but multiplied by this factor
         }
 
         private static void UpdateStability(Kingdom k, Data d, float years)
         {
-            // Apply StabilityTargetModifier to base 50
              float target = 50f + d.StabilityTargetModifier;
              d.Stability = Mathf.MoveTowards(d.Stability, target, 5f * years);
         }
@@ -656,7 +884,17 @@ namespace RulerBox
             public long ExpensesCorruption;
             public long Balance => Income - Expenses;
             
-            // Law States
+            // Economic Laws
+            public string TaxationLevel = "Normal";
+            public string MilitarySpending = "None";
+            public string SecuritySpending = "None";
+            public string GovernmentSpending = "None";
+            public string WelfareSpending = "None";
+            public string EducationSpending = "None";
+            public string ResearchSpending = "None";
+            public string AntiCorruption = "None";
+
+            // Rise of Nations Laws
             public string Law_Conscription = "Volunteer";
             public string Law_WarBonds = "Inactive";
             public string Law_ElitistMilitary = "Default";
@@ -735,6 +973,8 @@ namespace RulerBox
             public float InvestmentAvailabilityModifier = 1.0f;
             public float LeaderXPModifier = 0f;
             public float JustificationTimeModifier = 1.0f;
+            public float GeniusChanceModifier = 0f;
+            public float PlagueResistanceModifier = 0f;
 
             // Misc
             public Dictionary<string, int> ResourceStockpiles = new Dictionary<string, int>();
@@ -771,6 +1011,5 @@ namespace RulerBox
     public static class Patch_Building_Construction
     {
         // Note: Ideally this would patch updateBuild, but for visualization we might adjust progress speed logic elsewhere. 
-        // This is a placeholder to indicate where building speed logic connects.
     }
 }
