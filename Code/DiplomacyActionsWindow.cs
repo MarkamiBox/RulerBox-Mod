@@ -344,6 +344,7 @@ namespace RulerBox
             le.flexibleHeight = 0.1f;
 
             // --- DECLARE WAR ---
+            // --- DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -351,10 +352,26 @@ namespace RulerBox
                         WorldTip.showNow("We are already at war!", false, "top", 2f, "#FF0000");
                         return;
                     }
+
+                    // --- NEW LOGIC START ---
+                    // Check for shared alliance and dissolve if necessary
+                    if (Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance())
+                    {
+                        var myAlliance = Main.selectedKingdom.getAlliance();
+                        var theirAlliance = targetKingdom.getAlliance();
+                        
+                        if (myAlliance == theirAlliance)
+                        {
+                            World.world.alliances.dissolveAlliance(myAlliance);
+                            WorldTip.showNow("Alliance destroyed by betrayal!", false, "top", 3f, "#FF0000");
+                        }
+                    }
+                    // --- NEW LOGIC END ---
+
                     EventsSystem.AllowPlayerWar = true;
                     EventsSystem.IsPlayerInitiated = true;
                     try {
-                        // FIXED: Changed from "war_whisper" to "whisper_of_war" which is the standard Spite/War asset
+                        // (Existing war start logic...)
                         var warAsset = AssetManager.war_types_library.get("whisper_of_war");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);

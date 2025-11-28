@@ -456,43 +456,43 @@ namespace RulerBox
             });
             
             // Auto-close if there are no choices
+            // Determine if this is an interactive popup or just informational
             bool hasChoices = (onAccept != null) || (onRefuse != null);
             popupAutoCloseEnabled = !hasChoices;
             popupTimer = 0f;
             
-            // Configure which buttons are visible depending on type.
-            switch (type)
+            // Configure buttons
+            if (!hasChoices)
             {
-                case EventButtonType.War:
-                    popupOkButton.gameObject.SetActive(true);
-                    popupAcceptButton.gameObject.SetActive(false);
-                    popupRefuseButton.gameObject.SetActive(false);
-                    break;
-                case EventButtonType.Peace:
-                case EventButtonType.Diplomacy:
-                    popupOkButton.gameObject.SetActive(false);
-                    popupAcceptButton.gameObject.SetActive(true);
-                    popupRefuseButton.gameObject.SetActive(true);
-                    break;
-                case EventButtonType.Random:
-                default:
-                    // Random event: if it has choices, show Accept/Refuse instead of OK
-                    bool hasAccept = onAccept != null;
-                    bool hasRefuse = onRefuse != null;
-                    bool hasOk     = onOk     != null;
-                    if (hasAccept || hasRefuse)
-                    {
-                        popupOkButton.gameObject.SetActive(false);
-                        popupAcceptButton.gameObject.SetActive(hasAccept);
-                        popupRefuseButton.gameObject.SetActive(hasRefuse);
-                    }
-                    else
-                    {
-                        popupOkButton.gameObject.SetActive(hasOk);
+                // If no choices are provided, show OK button regardless of type
+                popupOkButton.gameObject.SetActive(true);
+                popupAcceptButton.gameObject.SetActive(false);
+                popupRefuseButton.gameObject.SetActive(false);
+            }
+            else
+            {
+                // If choices exist, configure based on type
+                switch (type)
+                {
+                    case EventButtonType.War:
+                        popupOkButton.gameObject.SetActive(true);
                         popupAcceptButton.gameObject.SetActive(false);
                         popupRefuseButton.gameObject.SetActive(false);
-                    }
-                    break;
+                        break;
+                    case EventButtonType.Peace:
+                    case EventButtonType.Diplomacy:
+                        popupOkButton.gameObject.SetActive(false);
+                        popupAcceptButton.gameObject.SetActive(true);
+                        popupRefuseButton.gameObject.SetActive(true);
+                        break;
+                    case EventButtonType.Random:
+                    default:
+                        // Random event logic for choices
+                        popupOkButton.gameObject.SetActive(false);
+                        popupAcceptButton.gameObject.SetActive(true);
+                        popupRefuseButton.gameObject.SetActive(true);
+                        break;
+                }
             }
             if (popupAcceptButton != null)
             {
