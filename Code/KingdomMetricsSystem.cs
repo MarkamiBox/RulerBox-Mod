@@ -250,21 +250,25 @@ namespace RulerBox
 
         private static void ApplyLeaderModifiers(Data d)
         {
-            LeadersWindow.Refresh();
             if (d.ActiveLeaders == null) return;
-
+            
             for (int i = d.ActiveLeaders.Count - 1; i >= 0; i--)
             {
                 var leader = d.ActiveLeaders[i];
                 
-                // Check if unit is dead or null
-                if (leader.UnitLink == null || !leader.UnitLink.isAlive())
+                // CRASH FIX: Check if leader object itself is null
+                if (leader == null)
                 {
                     d.ActiveLeaders.RemoveAt(i);
-                    // Optionally: Notify player
+                    continue;
+                }
+
+                // Check if unit is dead (only if it has a link)
+                if (leader.UnitLink != null && !leader.UnitLink.isAlive())
+                {
+                    d.ActiveLeaders.RemoveAt(i);
                     string name = leader.Name ?? "Leader";
-                    WorldTip.showNow($"{name} has died/vanished!", true, "top", 3f);
-                    LeadersWindow.Refresh(); // Force refresh UI if open
+                    WorldTip.showNow($"{name} has died!", true, "top", 3f);
                     continue;
                 }
 
