@@ -353,7 +353,6 @@ namespace RulerBox
                         return;
                     }
 
-                    // --- NEW LOGIC START ---
                     // Check for shared alliance and dissolve if necessary
                     if (Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance())
                     {
