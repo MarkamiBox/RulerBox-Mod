@@ -30,7 +30,6 @@ namespace RulerBox
 
             try 
             {
-                // Reset static references to ensure clean state
                 recruitmentContent = null;
                 activeContent = null;
                 activeHeader = null;
@@ -60,7 +59,6 @@ namespace RulerBox
             catch (System.Exception e)
             {
                 Debug.LogError("[RulerBox] LeadersWindow Init CRASHED: " + e.ToString());
-                // CLEANUP: Destroy broken root so we can try again later
                 if (root != null) Object.Destroy(root);
                 root = null;
             }
@@ -75,10 +73,7 @@ namespace RulerBox
                 if (hub != null)
                 {
                     Transform container = hub.transform.Find("ContentContainer");
-                    if (container != null)
-                    {
-                        Initialize(container);
-                    }
+                    if (container != null) Initialize(container);
                 }
             }
             catch { }
@@ -87,7 +82,6 @@ namespace RulerBox
         public static void SetVisible(bool visible)
         {
             if (root == null) TrySelfInitialize();
-            
             if (root != null)
             {
                 root.SetActive(visible);
@@ -99,7 +93,6 @@ namespace RulerBox
 
         public static void Refresh()
         {
-            // SAFETY CHECK: If UI isn't ready, don't crash the game
             if (root == null || recruitmentContent == null || activeContent == null) return;
             if (!root.activeSelf) return;
 
@@ -111,21 +104,18 @@ namespace RulerBox
                 var d = KingdomMetricsSystem.Get(k);
                 if (d == null) return;
 
-                // Generate Pool Logic
                 if (lastKingdom != k || recruitmentPool.Count == 0)
                 {
                     GenerateRecruitmentPool(k);
                     lastKingdom = k;
                 }
 
-                // Update Header
                 int activeCount = d.ActiveLeaders != null ? d.ActiveLeaders.Count : 0;
                 if (activeHeader != null) activeHeader.text = $"{activeCount}/3 Leaders";
 
-                // --- RECRUITMENT LIST ---
+                // RECRUITMENT LIST
                 if (recruitmentContent != null)
                 {
-                    // Clear old items manually to be safe
                     List<GameObject> toDestroy = new List<GameObject>();
                     foreach (Transform t in recruitmentContent) toDestroy.Add(t.gameObject);
                     foreach (var go in toDestroy) Object.Destroy(go);
@@ -138,7 +128,7 @@ namespace RulerBox
                     }
                 }
 
-                // --- ACTIVE LIST ---
+                // ACTIVE LIST
                 if (activeContent != null)
                 {
                     List<GameObject> toDestroy = new List<GameObject>();
@@ -154,12 +144,11 @@ namespace RulerBox
                     }
                 }
 
-                // Force Layout Update
                 Canvas.ForceUpdateCanvases();
             }
             catch (System.Exception e)
             {
-                Debug.LogWarning("[RulerBox] LeadersWindow Refresh Error (Recoverable): " + e.Message);
+                Debug.LogWarning("[RulerBox] LeadersWindow Refresh Error: " + e.Message);
             }
         }
 
@@ -206,7 +195,7 @@ namespace RulerBox
             if (s == null) s = Main.selectedKingdom?.getElementIcon();
             avatarImg.sprite = s;
 
-            // Text
+            // Text Stack
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
@@ -234,18 +223,30 @@ namespace RulerBox
         private static void CreateRecruitPanel(Transform parent)
         {
             var container = CreatePanelBase(parent, "RecruitPanel", 1f);
+            
             var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
-            header.GetComponent<LayoutElement>().preferredHeight = 30f;
+            
+            // FIX: Add LayoutElement explicitly before accessing it
+            var le = header.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 30f;
+            le.minHeight = 30f;
+
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
 
         private static void CreateActivePanel(Transform parent)
         {
             var container = CreatePanelBase(parent, "ActivePanel", 0.8f);
+            
             activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, Color.yellow);
             activeHeader.alignment = TextAnchor.MiddleCenter;
-            activeHeader.GetComponent<LayoutElement>().preferredHeight = 30f;
+            
+            // FIX: Add LayoutElement explicitly before accessing it
+            var le = activeHeader.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 30f;
+            le.minHeight = 30f;
+
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
 
@@ -257,7 +258,7 @@ namespace RulerBox
             le.flexibleWidth = flexibleWidth; le.flexibleHeight = 1f;
             
             var bg = panel.AddComponent<Image>();
-            bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced;
+            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = new Color(0, 0, 0, 0.3f);
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
@@ -272,8 +273,10 @@ namespace RulerBox
             scrollObj.transform.SetParent(parent, false);
             var le = scrollObj.AddComponent<LayoutElement>();
             le.flexibleHeight = 1f;
+            
             var bg = scrollObj.AddComponent<Image>();
             bg.color = new Color(0, 0, 0, 0.2f);
+            
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
