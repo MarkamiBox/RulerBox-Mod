@@ -203,13 +203,13 @@ namespace RulerBox
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
                 
-                // Add padding
+                // Add padding so sprite fits inside the circle
                 unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
 
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 
-                // --- FIX: Safe sprite retrieval ---
+                // --- FIX: USE REFLECTION TO GET SPRITE (INTERNAL METHOD) ---
                 Sprite unitSprite = GetSpriteViaReflection(leader.UnitLink);
                 
                 if (unitSprite != null)
@@ -261,9 +261,10 @@ namespace RulerBox
         {
             if (actor == null) return null;
             
-            // 1. Try to invoke "getSpriteToRender" (Internal method that returns the full character look)
             try 
             {
+                // 1. Try to invoke "getSpriteToRender" (Internal method that returns the full character look)
+                // We use BindingFlags.NonPublic to access internal methods.
                 MethodInfo method = actor.GetType().GetMethod("getSpriteToRender", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                 if (method != null)
                 {
@@ -272,11 +273,28 @@ namespace RulerBox
             }
             catch { }
 
-            // 2. Fallback to Asset Icon (Does not use getSprite() to avoid errors)
             try 
             {
-                // We use the 'asset' field directly. If the 'Actor' class is stripped,
-                // we assume 'asset' is still accessible as a field or property.
+                // 2. Fallback: Try calling public methods we saw in the source code if direct internal access fails
+                // calculateMainSprite is public in source, but might be hidden in reference assembly
+                MethodInfo calcMain = actor.GetType().GetMethod("calculateMainSprite", BindingFlags.Instance | BindingFlags.Public);
+                MethodInfo calcColor = actor.GetType().GetMethod("calculateColoredSprite", BindingFlags.Instance | BindingFlags.Public);
+
+                if (calcMain != null && calcColor != null)
+                {
+                    Sprite main = (Sprite)calcMain.Invoke(actor, null);
+                    if (main != null)
+                    {
+                        return (Sprite)calcColor.Invoke(actor, new object[] { main, true });
+                    }
+                }
+            }
+            catch { }
+
+            // 3. Final Fallback: Asset Icon
+            // This ensures we always show *something* even if everything else fails.
+            try 
+            {
                 if (actor.asset != null && !string.IsNullOrEmpty(actor.asset.icon))
                 {
                     return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
