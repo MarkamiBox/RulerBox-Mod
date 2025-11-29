@@ -36,7 +36,7 @@ namespace RulerBox
             // Background / blocker
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f); // Kept original color/alpha
 
             // 2. Main Layout Container
             var mainContainer = new GameObject("MainContainer");
@@ -63,7 +63,7 @@ namespace RulerBox
             scrollLE.flexibleHeight = 1f; // Fill remaining space
 
             var scrollBg = scrollObj.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0.3f);
+            scrollBg.color = new Color(0, 0, 0, 0.3f); // Kept original color
 
             var scrollRect = scrollObj.AddComponent<ScrollRect>();
             scrollRect.horizontal = true;
@@ -82,22 +82,30 @@ namespace RulerBox
             content.transform.SetParent(viewport.transform, false);
             scrollContent = content.AddComponent<RectTransform>();
             
+            // --- FIX: Content Anchors for Horizontal Scrolling ---
+            // Anchor Min (0,0) and Max (0,1) stretches it vertically but keeps it anchored to the left
+            var cRT = scrollContent.GetComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 0); 
+            cRT.anchorMax = new Vector2(0, 1); 
+            cRT.pivot = new Vector2(0, 1);
+            cRT.sizeDelta = Vector2.zero; // Reset offsets
+            
             // Content Layout (Horizontal rows of vertical bars)
             var hGroup = content.AddComponent<HorizontalLayoutGroup>();
             hGroup.childAlignment = TextAnchor.LowerLeft;
             hGroup.spacing = 10;
             hGroup.padding = new RectOffset(5, 5, 5, 5);
-            hGroup.childControlHeight = true;
+            hGroup.childControlHeight = true; // Stretch children vertically to fill the scroll view height
             hGroup.childControlWidth = false;
             hGroup.childForceExpandHeight = true;
             hGroup.childForceExpandWidth = false;
 
             var fitter = content.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; // Grow width based on content
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;   // Height matches viewport (controlled by anchors)
 
             scrollRect.viewport = vpRT;
-            scrollRect.content = (RectTransform)scrollContent;
+            scrollRect.content = cRT;
 
             root.SetActive(false);
         }
@@ -170,9 +178,12 @@ namespace RulerBox
             scoreRT.sizeDelta = new Vector2(100, 20);
 
             // 2. Bar Graph (Middle)
-            // Normalized height based on max score (max height ~ 200 units?)
+            // Normalized height based on max score.
+            // We want it to fill the available space, but since VerticalLayoutGroup is controlling positions,
+            // we give it a specific preferred height relative to the max score.
             float fillAmount = (maxScore > 0) ? (data.score / maxScore) : 0;
-            float barHeight = Mathf.Max(10f, fillAmount * 250f); // Min height 10, Max 250
+            // Assuming scroll view is roughly 300-400px high, we use 250 as max bar height baseline
+            float barHeight = Mathf.Max(10f, fillAmount * 250f); 
 
             var barObj = new GameObject("Bar");
             barObj.transform.SetParent(col.transform, false);
@@ -215,39 +226,41 @@ namespace RulerBox
 
         private static float CalculatePowerScore(Kingdom k)
         {
+            // Get or Create data from KingdomMetricsSystem
+            var d = KingdomMetricsSystem.Get(k);
+            
+            // Ensure data is fresh, even if this kingdom isn't the currently selected one
+            // We pass a small delta time just to trigger the calculation logic
+            KingdomMetricsSystem.RecalculateForKingdom(k, d);
+
             float score = 0f;
 
-            // 1. Army Strength (High Weight)
-            int warriors = k.countTotalWarriors();
-            score += warriors * 5.0f;
+            // 1. Economy (Income + Treasury) - GDP logic from Metrics
+            // Income is roughly DailyGDP. Treasury is accumulated wealth.
+            score += d.Income * 0.5f; 
+            score += d.Treasury * 0.01f; // Treasury can be huge, weight it lower
 
-            // 2. Population (Medium Weight)
-            int pop = k.getPopulationPeople();
-            score += pop * 1.0f;
+            // 2. Military Power (Army Strength + Manpower Potential)
+            // d.Soldiers is current count. d.ManpowerMax is potential.
+            score += d.Soldiers * 10.0f;
+            score += d.ManpowerMax * 2.0f;
 
-            // 3. Buildings (Development)
-            if (k.cities != null)
+            // 3. Population & Development
+            score += d.Population * 1.5f;
+            score += d.Cities * 50.0f; // Cities are valuable hubs
+            score += d.Buildings * 2.0f; // Infrastructure
+
+            // 4. Resources (Stockpiles)
+            // Sum of all resources in stockpile
+            long totalResources = 0;
+            if (d.ResourceStockpiles != null)
             {
-                foreach (var city in k.cities)
+                foreach(var val in d.ResourceStockpiles.Values)
                 {
-                    if (city.buildings != null)
-                        score += city.buildings.Count * 2.0f;
+                    totalResources += val;
                 }
             }
-
-            // 4. Resources & GDP Estimation
-            // Player kingdom has detailed GDP, AI doesn't always update fully in Metrics.
-            // We approximate GDP: (Pop * Base) + (Warriors * Upkeep) + (TechLevel * Bonus)
-            float estimatedGDP = (pop * 10f) + (warriors * 5f);
-            
-            // Check if we have specific metrics available
-            if (KingdomMetricsSystem.db.TryGetValue(k, out var data))
-            {
-                // Use cached income if available and recent
-                estimatedGDP = data.Income;
-            }
-            
-            score += estimatedGDP * 0.1f; // Weight GDP lower as it's a big number
+            score += totalResources * 0.1f;
 
             return score;
         }
