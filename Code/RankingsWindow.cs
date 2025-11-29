@@ -289,10 +289,10 @@ namespace RulerBox
             var headerObj = new GameObject("Header");
             headerObj.transform.SetParent(parent, false);
             var le = headerObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 20f;
-            le.minHeight = 20f;
+            le.preferredHeight = 10f;
+            le.minHeight = 10f;
 
-            var txt = CreateText(headerObj.transform, title, 5, FontStyle.Bold, Color.white);
+            var txt = CreateText(headerObj.transform, title, 8, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
