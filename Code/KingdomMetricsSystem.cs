@@ -137,6 +137,7 @@ namespace RulerBox
             ApplyRiseOfNationsLaws(d);
             ApplyEconomicLaws_Modifiers(d);
             ApplyLeaderModifiers(d); 
+            ApplyActivePolicies(d);
 
             // --- Base Corruption Calculation ---
             // 2.5% corruption per city beyond the first
@@ -919,6 +920,80 @@ namespace RulerBox
                 case "Stratocracy": d.ManpowerMaxMultiplier *= 1.2f; break;
                 case "Clerical": d.PopulationGrowthBonus += 0.005f; d.WarExhaustionGainMultiplier -= 0.0025f; d.UnrestReductionModifier *= 1.1f; break;
                 case "Falangism": d.BuildingSpeedModifier *= 1.1f; d.IntegrationSpeedModifier *= 1.1f; d.UnrestReductionModifier *= 1.15f; d.JustificationTimeModifier *= 1.1f; break;
+            }
+        }
+
+        private static void ApplyActivePolicies(Data d)
+        {
+            if (d.ActivePolicies == null) return;
+
+            foreach (string pid in d.ActivePolicies)
+            {
+                // Find definition to get Upkeep cost
+                var def = PoliciesWindow.Policies.Find(p => p.Id == pid);
+                if (def != null)
+                {
+                    d.ExpensesLawUpkeep += def.Upkeep;
+                }
+
+                // Apply Effects
+                switch (pid)
+                {
+                    case "welfare_act":
+                        d.StabilityTargetModifier += 5f;
+                        d.TaxRateLocal *= 0.95f;
+                        break;
+                    case "public_service":
+                        d.FactoryOutputModifier *= 1.2f;
+                        d.ResourceOutputModifier *= 1.2f;
+                        break;
+                    case "military_service":
+                        d.MilitaryUpkeepModifier *= 0.9f;
+                        d.ManpowerMaxMultiplier *= 1.2f;
+                        break;
+                    case "central_authority":
+                        d.UnrestReductionModifier *= 1.33f; // "Unrest Reduction +33%"
+                        d.IntegrationSpeedModifier *= 1.25f;
+                        break;
+                    case "prosperity_act":
+                        d.TaxRateLocal *= 1.1f;
+                        break;
+                    case "infrastructure":
+                        d.TaxRateLocal *= 1.1f;
+                        d.BuildingSpeedModifier *= 1.05f;
+                        break;
+                    case "war_fund":
+                        d.TaxRateLocal *= 1.4f;
+                        d.MilitaryUpkeepModifier *= 0.75f;
+                        d.StabilityTargetModifier -= 10f;
+                        d.UnrestReductionModifier *= 0.85f;
+                        d.WarExhaustionGainMultiplier += 0.01f; 
+                        break;
+                    case "martial_law":
+                        d.TaxRateLocal *= 0.75f;
+                        d.StabilityTargetModifier += 60f;
+                        d.UnrestReductionModifier *= 1.33f;
+                        d.FactoryOutputModifier *= 0.8f;
+                        d.ResourceOutputModifier *= 0.8f;
+                        break;
+                    case "research_bureau":
+                        d.ResearchOutputModifier *= 1.2f;
+                        break;
+                    case "encourage_dev":
+                        d.TaxRateLocal *= 0.9f;
+                        d.InvestmentAvailabilityModifier *= 1.5f;
+                        break;
+                    case "tax_reform":
+                        d.TaxRateLocal *= 1.25f;
+                        break;
+                    case "forced_labour":
+                        d.TaxRateLocal *= 1.15f;
+                        d.FactoryOutputModifier *= 1.4f;
+                        d.ResourceOutputModifier *= 1.5f;
+                        d.PopulationGrowthBonus -= 0.02f;
+                        d.CorruptionLevel -= 0.05f;
+                        break;
+                }
             }
         }
 
