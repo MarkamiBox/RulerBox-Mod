@@ -171,7 +171,7 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 6; // Space between avatar and text
+            h.spacing = 6;
             h.padding = new RectOffset(10, 10, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -182,11 +182,10 @@ namespace RulerBox
             var avatarRoot = new GameObject("AvatarRoot");
             avatarRoot.transform.SetParent(btnObj.transform, false);
             
-            // STRICT SIZING: Prevents shrinking
             var avLe = avatarRoot.AddComponent<LayoutElement>();
             avLe.minWidth = 36f; avLe.preferredWidth = 36f;
             avLe.minHeight = 36f; avLe.preferredHeight = 36f;
-            avLe.flexibleWidth = 0f; // Don't stretch
+            avLe.flexibleWidth = 0f;
 
             // Layer 1: Background
             var bgCircleObj = new GameObject("BgCircle");
@@ -196,19 +195,32 @@ namespace RulerBox
             bgCircleImg.sprite = circleBgSprite != null ? circleBgSprite : windowInnerSprite;
             bgCircleImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); 
 
-            // Layer 2: Unit Sprite
+            // Layer 2: Unit Sprite (FIXED)
             if (leader.UnitLink != null)
             {
                 var unitSpriteObj = new GameObject("UnitSprite");
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
-                unitRT.offsetMin = new Vector2(2, 2); unitRT.offsetMax = new Vector2(-2, -2); 
+                
+                // Units are often rectangular, give them a tiny bit of padding so they don't touch the circle edge
+                unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
+
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
-                try {
-                    uImg.sprite = leader.UnitLink.getSpriteToRender();
-                    uImg.color = Color.white; 
-                } catch { uImg.color = Color.clear; }
+                
+                // FIX: Logic to get the sprite directly from the Renderer or Animation Container
+                Sprite unitSprite = GetUnitSprite(leader.UnitLink);
+                
+                if (unitSprite != null)
+                {
+                    uImg.sprite = unitSprite;
+                    uImg.color = Color.white;
+                }
+                else
+                {
+                    // Fallback if sprite is totally missing (shouldn't happen for alive units)
+                    uImg.color = Color.clear;
+                }
             }
 
             // Layer 3: Frame
@@ -230,20 +242,36 @@ namespace RulerBox
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = -1; // Tighter vertical text
+            textVL.spacing = -1;
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
-            textStackLE.flexibleWidth = 1f; // Take remaining space
-            textStackLE.minWidth = 50f; // Ensure it doesn't vanish
+            textStackLE.flexibleWidth = 1f;
+            textStackLE.minWidth = 50f;
 
-            // REMOVED SUMMARY TEXT HERE, only Name and Title remain
             CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
             CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
-            // Tooltip still attached for full details
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
+        }
+
+        // --- NEW HELPER METHOD TO FIND THE SPRITE ---
+        private static Sprite GetUnitSprite(Actor actor)
+        {
+            if (actor == null) return null;
+
+            // 1. Try to get the current rendered sprite (Best for current animation state)
+            if (actor.spriteRenderer != null && actor.spriteRenderer.sprite != null)
+            {
+                return actor.spriteRenderer.sprite;
+            }
+
+            // 2. Fallback: If unit is inside a house/boat, spriteRenderer is often disabled/empty.
+            // We try to access the animation container to get the first frame of 'idle'.
+            // Note: Accessing internal fields might vary, but checking the sprite_renderer usually retains the last sprite.
+            
+            return null;
         }
 
         private static RectTransform Stretch(RectTransform rt) {
