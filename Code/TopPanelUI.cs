@@ -133,6 +133,7 @@ namespace RulerBox
             TechnologyWindow.SetVisible(false);
             EconomyWindow.SetVisible(false);
             EconomicLawsWindow.SetVisible(false);
+            RankingsWindow.SetVisible(false);
             InvestmentsWindow.SetVisible(false);
             ResourcesTradeWindow.SetVisible(false); 
             TradeWindow.SetVisible(false);
