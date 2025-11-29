@@ -2,11 +2,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection; // Added for Reflection
 
 namespace RulerBox
 {
     public static class LeadersWindow
     {
+        // ... (Keep existing fields: root, windowInnerSprite, etc.) ...
         private static GameObject root;
         private static Sprite windowInnerSprite;
         private static Sprite circleBgSprite; 
@@ -19,6 +21,7 @@ namespace RulerBox
         private static Kingdom lastKingdom;
         private static List<LeaderState> recruitmentPool = new List<LeaderState>();
 
+        // ... (Keep RandomTitles array) ...
         private static readonly string[] RandomTitles = { 
             "High Marshall", "Royal Advisor", "Grand Treasurer", "Spymaster", 
             "Chief Justice", "Head of Research", "Fleet Admiral", "High Priest", 
@@ -26,6 +29,7 @@ namespace RulerBox
             "Corrupt Official", "Tyrant", "Usurper", "Fanatic", "Visionary"
         };
 
+        // ... (Keep Initialize, TrySelfInitialize, SetVisible, IsVisible, Refresh) ...
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
@@ -68,7 +72,8 @@ namespace RulerBox
                 root = null;
             }
         }
-
+        
+        // ... (Include TrySelfInitialize, SetVisible, IsVisible, Refresh methods exactly as before) ...
         private static void TrySelfInitialize()
         {
             if (root != null) return;
@@ -149,6 +154,7 @@ namespace RulerBox
             }
         }
 
+        // --- UPDATED CREATE LEADER ITEM WITH REFLECTION ---
         private static void CreateLeaderItem(Transform parent, LeaderState leader, bool isActive)
         {
             if (parent == null || leader == null) return;
@@ -195,21 +201,21 @@ namespace RulerBox
             bgCircleImg.sprite = circleBgSprite != null ? circleBgSprite : windowInnerSprite;
             bgCircleImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); 
 
-            // Layer 2: Unit Sprite (FIXED)
+            // Layer 2: Unit Sprite
             if (leader.UnitLink != null)
             {
                 var unitSpriteObj = new GameObject("UnitSprite");
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
                 
-                // Units are often rectangular, give them a tiny bit of padding so they don't touch the circle edge
+                // Add padding so sprite fits inside the circle
                 unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
 
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 
-                // FIX: Use GetComponent or the correct method to get the sprite
-                Sprite unitSprite = GetUnitSprite(leader.UnitLink);
+                // --- FIX: USE REFLECTION TO GET SPRITE ---
+                Sprite unitSprite = GetSpriteViaReflection(leader.UnitLink);
                 
                 if (unitSprite != null)
                 {
@@ -255,30 +261,31 @@ namespace RulerBox
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
-        // --- NEW HELPER METHOD TO FIND THE SPRITE ---
-        private static Sprite GetUnitSprite(Actor actor)
+        // --- NEW HELPER: Use Reflection to avoid "Actor does not contain definition" error ---
+        private static Sprite GetSpriteViaReflection(Actor actor)
         {
             if (actor == null) return null;
-
-            // Option 1: Try to get the sprite from the SpriteRenderer component
-            SpriteRenderer sr = actor.GetComponent<SpriteRenderer>();
-            if (sr != null && sr.sprite != null)
+            try 
             {
-                return sr.sprite;
+                // Try to call the internal method "getSpriteToRender" which returns the current composed sprite
+                MethodInfo method = typeof(Actor).GetMethod("getSpriteToRender", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                if (method != null)
+                {
+                    return (Sprite)method.Invoke(actor, null);
+                }
+                
+                // Fallback: Use "getSprite" which is public but might only return the icon
+                return actor.getSprite();
             }
-
-            // Option 2: Try the internal method if accessible (sometimes internal methods are exposed in mod environments)
-            // return actor.getSpriteToRender(); // Commented out as it caused issues previously
-
-            // Option 3: Fallback to getting the icon from the asset if the runtime sprite is missing (e.g. inside a house)
-            if (actor.asset != null && !string.IsNullOrEmpty(actor.asset.icon))
+            catch 
             {
-                 // This tries to load the static icon for the unit type
-                 return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
+                // Final fallback if everything explodes
+                if (actor.asset != null) return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
+                return null;
             }
-
-            return null;
         }
+
+        // ... (Keep existing methods: RectTransform Stretch, CreateRecruitPanel, CreateActivePanel) ...
 
         private static RectTransform Stretch(RectTransform rt) {
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
@@ -312,6 +319,8 @@ namespace RulerBox
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
 
+        // ... (Keep CreatePanelBase, CreateScrollList, OnLeaderClicked, GenerateRecruitmentPool, CreateRandomLeader, ApplyStat) ...
+
         private static GameObject CreatePanelBase(Transform parent, string name, float flexibleWidth)
         {
             var panel = new GameObject(name);
@@ -341,7 +350,7 @@ namespace RulerBox
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; 
-            scroll.horizontal = true; // CHANGED: Enabled Horizontal Scroll
+            scroll.horizontal = true; 
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 20f;
             
@@ -364,7 +373,6 @@ namespace RulerBox
             v.childControlHeight = true; 
             v.childForceExpandHeight = false;
             
-            // CHANGED: Added HorizontalFit for horizontal scrolling capability
             var csf = content.AddComponent<ContentSizeFitter>();
             csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
@@ -482,7 +490,7 @@ namespace RulerBox
             }
         }
 
-        // REMOVED FormatSummary METHOD as it is no longer used in the main view
+        // ... (Keep GetLeaderTooltip and CreateText) ...
 
         private static string GetLeaderTooltip(LeaderState l)
         {
