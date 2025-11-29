@@ -238,12 +238,11 @@ namespace RulerBox
             textStackLE.flexibleWidth = 1f; // Take remaining space
             textStackLE.minWidth = 50f; // Ensure it doesn't vanish
 
+            // REMOVED SUMMARY TEXT HERE, only Name and Title remain
             CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
             CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
-            string summary = FormatSummary(leader);
-            CreateText(textStack.transform, summary, 8, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
-
+            // Tooltip still attached for full details
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
@@ -307,7 +306,8 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.3f); 
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
-            scroll.vertical = true; scroll.horizontal = false;
+            scroll.vertical = true; 
+            scroll.horizontal = true; // CHANGED: Enabled Horizontal Scroll
             scroll.movementType = ScrollRect.MovementType.Clamped;
             scroll.scrollSensitivity = 20f;
             
@@ -325,8 +325,15 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
-            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            v.spacing = 4; 
+            v.childControlWidth = true; 
+            v.childControlHeight = true; 
+            v.childForceExpandHeight = false;
+            
+            // CHANGED: Added HorizontalFit for horizontal scrolling capability
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            csf.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
             
             scroll.viewport = vpRT; scroll.content = cRT;
             return content.transform;
@@ -441,20 +448,7 @@ namespace RulerBox
             }
         }
 
-        private static string FormatSummary(LeaderState l)
-        {
-            string s = "";
-            string Col(float val, string txt) => val >= 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
-            string ColCorr(float val, string txt) => val >= 0 ? $"<color=#7CFC00>-{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
-
-            if (Mathf.Abs(l.StabilityBonus) > 1f) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
-            if (Mathf.Abs(l.PPGainBonus) > 0.05f) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
-            if (Mathf.Abs(l.AttackBonus) > 0.05f) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
-            if (Mathf.Abs(l.CorruptionReduction) > 0.05f) s += ColCorr(l.CorruptionReduction, $"Corr {Mathf.Abs(l.CorruptionReduction)*100:0}%") + " ";
-            
-            if (s == "") s = "Check tooltip...";
-            return s;
-        }
+        // REMOVED FormatSummary METHOD as it is no longer used in the main view
 
         private static string GetLeaderTooltip(LeaderState l)
         {
