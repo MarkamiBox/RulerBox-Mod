@@ -48,9 +48,8 @@ namespace RulerBox
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 2;
-                // INCREASED PADDING: Helps prevent items from stretching too wide
-                h.padding = new RectOffset(1, 1, 1, 1); 
+                h.spacing = 8;
+                h.padding = new RectOffset(16, 16, 8, 8); // Balanced padding
                 h.childControlWidth = true;
                 h.childControlHeight = true;
                 h.childForceExpandWidth = true;
@@ -119,7 +118,6 @@ namespace RulerBox
                 int activeCount = d.ActiveLeaders != null ? d.ActiveLeaders.Count : 0;
                 if (activeHeader != null) activeHeader.text = $"{activeCount}/3 Leaders";
 
-                // RECRUITMENT LIST
                 if (recruitmentContent != null)
                 {
                     foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
@@ -131,7 +129,6 @@ namespace RulerBox
                     }
                 }
 
-                // ACTIVE LIST
                 if (activeContent != null)
                 {
                     foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
@@ -160,9 +157,8 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            // --- COMPACT SIZE ---
-            le.minHeight = 42f; 
-            le.preferredHeight = 42f;
+            le.minHeight = 44f; 
+            le.preferredHeight = 44f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
@@ -175,19 +171,22 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 6; 
-            h.padding = new RectOffset(60, 60, 4, 4);
+            h.spacing = 4; // Space between avatar and text
+            h.padding = new RectOffset(4, 4, 2, 2); // Minimal padding inside button
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- AVATAR SYSTEM (Scaled Down) ---
+            // --- AVATAR ROOT ---
             var avatarRoot = new GameObject("AvatarRoot");
             avatarRoot.transform.SetParent(btnObj.transform, false);
+            
+            // STRICT SIZING: Prevents shrinking
             var avLe = avatarRoot.AddComponent<LayoutElement>();
-            avLe.minWidth = 32f; avLe.preferredWidth = 32f;
-            avLe.minHeight = 32f; avLe.preferredHeight = 32f;
+            avLe.minWidth = 36f; avLe.preferredWidth = 36f;
+            avLe.minHeight = 36f; avLe.preferredHeight = 36f;
+            avLe.flexibleWidth = 0f; // Don't stretch
 
             // Layer 1: Background
             var bgCircleObj = new GameObject("BgCircle");
@@ -225,18 +224,19 @@ namespace RulerBox
                 frameImg.color = Color.gray;
             }
 
-            // --- TEXT INFO (Smaller Fonts) ---
+            // --- TEXT INFO ---
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 0; 
+            textVL.spacing = -1; // Tighter vertical text
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
-            textStackLE.flexibleWidth = 1f;
+            textStackLE.flexibleWidth = 1f; // Take remaining space
+            textStackLE.minWidth = 50f; // Ensure it doesn't vanish
 
             CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
             CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
@@ -255,7 +255,6 @@ namespace RulerBox
 
         private static void CreateRecruitPanel(Transform parent)
         {
-            // Set panel width weight. Lower = narrower.
             var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
             
             var header = CreateText(container.transform, "Recruit Leaders", 11, FontStyle.Bold, Color.white);
@@ -292,7 +291,7 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.5f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.padding = new RectOffset(1, 1, 1, 1);
+            v.spacing = 4; v.padding = new RectOffset(4, 4, 4, 4);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
