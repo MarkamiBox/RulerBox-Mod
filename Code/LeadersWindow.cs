@@ -2,13 +2,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection; // Added for Reflection
+using System.Reflection;
 
 namespace RulerBox
 {
     public static class LeadersWindow
     {
-        // ... (Keep existing fields: root, windowInnerSprite, etc.) ...
         private static GameObject root;
         private static Sprite windowInnerSprite;
         private static Sprite circleBgSprite; 
@@ -21,7 +20,6 @@ namespace RulerBox
         private static Kingdom lastKingdom;
         private static List<LeaderState> recruitmentPool = new List<LeaderState>();
 
-        // ... (Keep RandomTitles array) ...
         private static readonly string[] RandomTitles = { 
             "High Marshall", "Royal Advisor", "Grand Treasurer", "Spymaster", 
             "Chief Justice", "Head of Research", "Fleet Admiral", "High Priest", 
@@ -29,7 +27,6 @@ namespace RulerBox
             "Corrupt Official", "Tyrant", "Usurper", "Fanatic", "Visionary"
         };
 
-        // ... (Keep Initialize, TrySelfInitialize, SetVisible, IsVisible, Refresh) ...
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
@@ -72,8 +69,7 @@ namespace RulerBox
                 root = null;
             }
         }
-        
-        // ... (Include TrySelfInitialize, SetVisible, IsVisible, Refresh methods exactly as before) ...
+
         private static void TrySelfInitialize()
         {
             if (root != null) return;
@@ -154,7 +150,6 @@ namespace RulerBox
             }
         }
 
-        // --- UPDATED CREATE LEADER ITEM WITH REFLECTION ---
         private static void CreateLeaderItem(Transform parent, LeaderState leader, bool isActive)
         {
             if (parent == null || leader == null) return;
@@ -208,13 +203,13 @@ namespace RulerBox
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
                 
-                // Add padding so sprite fits inside the circle
+                // Add padding
                 unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
 
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 
-                // --- FIX: USE REFLECTION TO GET SPRITE ---
+                // --- FIX: Safe sprite retrieval ---
                 Sprite unitSprite = GetSpriteViaReflection(leader.UnitLink);
                 
                 if (unitSprite != null)
@@ -261,31 +256,36 @@ namespace RulerBox
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
-        // --- NEW HELPER: Use Reflection to avoid "Actor does not contain definition" error ---
+        // --- FIXED HELPER METHOD ---
         private static Sprite GetSpriteViaReflection(Actor actor)
         {
             if (actor == null) return null;
+            
+            // 1. Try to invoke "getSpriteToRender" (Internal method that returns the full character look)
             try 
             {
-                // Try to call the internal method "getSpriteToRender" which returns the current composed sprite
-                MethodInfo method = typeof(Actor).GetMethod("getSpriteToRender", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+                MethodInfo method = actor.GetType().GetMethod("getSpriteToRender", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
                 if (method != null)
                 {
                     return (Sprite)method.Invoke(actor, null);
                 }
-                
-                // Fallback: Use "getSprite" which is public but might only return the icon
-                return actor.getSprite();
             }
-            catch 
-            {
-                // Final fallback if everything explodes
-                if (actor.asset != null) return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
-                return null;
-            }
-        }
+            catch { }
 
-        // ... (Keep existing methods: RectTransform Stretch, CreateRecruitPanel, CreateActivePanel) ...
+            // 2. Fallback to Asset Icon (Does not use getSprite() to avoid errors)
+            try 
+            {
+                // We use the 'asset' field directly. If the 'Actor' class is stripped,
+                // we assume 'asset' is still accessible as a field or property.
+                if (actor.asset != null && !string.IsNullOrEmpty(actor.asset.icon))
+                {
+                    return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
+                }
+            }
+            catch { }
+
+            return null;
+        }
 
         private static RectTransform Stretch(RectTransform rt) {
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
@@ -318,8 +318,6 @@ namespace RulerBox
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
-
-        // ... (Keep CreatePanelBase, CreateScrollList, OnLeaderClicked, GenerateRecruitmentPool, CreateRandomLeader, ApplyStat) ...
 
         private static GameObject CreatePanelBase(Transform parent, string name, float flexibleWidth)
         {
@@ -461,7 +459,7 @@ namespace RulerBox
                 }
 
                 if (isBad) badTraitsApplied++; else goodTraitsApplied++;
-                ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, isBad);
+                ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, isMalus: isBad);
             }
 
             string name = (unit != null) ? unit.getName() : "Generated Leader";
@@ -489,8 +487,6 @@ namespace RulerBox
                 case 5: corr += UnityEngine.Random.Range(0.08f, 0.2f) * (isMalus ? -1f : 1f); break; 
             }
         }
-
-        // ... (Keep GetLeaderTooltip and CreateText) ...
 
         private static string GetLeaderTooltip(LeaderState l)
         {
