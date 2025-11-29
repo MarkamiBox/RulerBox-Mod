@@ -139,8 +139,7 @@ namespace RulerBox
             ResourcesTradeWindow.SetVisible(false); 
             TradeWindow.SetVisible(false);
             PoliciesWindow.SetVisible(false);
-            
-            // Fix: Also hide LeadersWindow when switching tabs
+            LawsWindow.SetVisible(false);
             LeadersWindow.SetVisible(false);
 
             var selectedColor   = new Color(0.25f, 0.25f, 0.3f, 0.01f);
@@ -175,6 +174,7 @@ namespace RulerBox
             
             EconomicLawsWindow.SetVisible(false);
             RankingsWindow.SetVisible(false);
+            LawsWindow.SetVisible(false);
             PoliciesWindow.SetVisible(false);
             showEconomicLaws = true;
             showInvestments = false;
@@ -224,6 +224,7 @@ namespace RulerBox
             LeadersWindow.SetVisible(false);
             RankingsWindow.SetVisible(false);
             PoliciesWindow.SetVisible(false);
+            LawsWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {
