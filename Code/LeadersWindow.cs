@@ -10,6 +10,11 @@ namespace RulerBox
         private static GameObject root;
         private static Sprite windowInnerSprite;
         
+        // Placeholders for avatar circle sprites. Replace these paths if you find the exact game assets.
+        // If not found, it will fall back to the windowInnerSprite (square frame).
+        private static Sprite circleBgSprite; // Solid circle for background
+        private static Sprite circleFrameSprite; // Hollow circle for the colored ring
+
         private static Transform recruitmentContent;
         private static Transform activeContent;
         private static Text activeHeader;
@@ -35,7 +40,12 @@ namespace RulerBox
                 activeContent = null;
                 activeHeader = null;
 
+                // Load resources
                 windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+                // Try to load standard circle sprites from game resources. 
+                // NOTE: You might need to adjust these paths to match actual game assets if these don't exist.
+                circleBgSprite = Resources.Load<Sprite>("ui/elements/circle_bg"); 
+                circleFrameSprite = Resources.Load<Sprite>("ui/elements/circle_frame");
 
                 root = new GameObject("LeadersWindow");
                 root.transform.SetParent(parent, false);
@@ -44,8 +54,8 @@ namespace RulerBox
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 4;
-                h.padding = new RectOffset(4, 4, 4, 4);
+                h.spacing = 12; // Increased spacing between panels
+                h.padding = new RectOffset(10, 10, 10, 10);
                 h.childControlWidth = true;
                 h.childControlHeight = true;
                 h.childForceExpandWidth = true;
@@ -117,10 +127,7 @@ namespace RulerBox
                 // RECRUITMENT LIST
                 if (recruitmentContent != null)
                 {
-                    List<GameObject> toDestroy = new List<GameObject>();
-                    foreach (Transform t in recruitmentContent) toDestroy.Add(t.gameObject);
-                    foreach (var go in toDestroy) Object.Destroy(go);
-
+                    foreach (Transform t in recruitmentContent) Object.Destroy(t.gameObject);
                     foreach (var leader in recruitmentPool)
                     {
                         if (leader == null) continue;
@@ -132,10 +139,7 @@ namespace RulerBox
                 // ACTIVE LIST
                 if (activeContent != null)
                 {
-                    List<GameObject> toDestroy = new List<GameObject>();
-                    foreach (Transform t in activeContent) toDestroy.Add(t.gameObject);
-                    foreach (var go in toDestroy) Object.Destroy(go);
-
+                    foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
                     if (d.ActiveLeaders != null)
                     {
                         foreach (var leader in d.ActiveLeaders)
@@ -161,14 +165,14 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            le.minHeight = 54f;
-            le.preferredHeight = 54f;
+            // Increased height for larger avatar and better spacing
+            le.minHeight = 64f; 
+            le.preferredHeight = 64f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            // Greenish for active, Blue-grey for recruit
             bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -176,66 +180,62 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4;
-            h.padding = new RectOffset(3, 3, 4, 4);
+            h.spacing = 12; // More space between avatar and text
+            h.padding = new RectOffset(8, 8, 6, 6);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- AVATAR (CIRCULAR WITH UNIT SPRITE) ---
-            var avatarContainer = new GameObject("AvatarContainer");
-            avatarContainer.transform.SetParent(btnObj.transform, false);
-            
-            var avLe = avatarContainer.AddComponent<LayoutElement>();
-            avLe.minWidth = 46f; 
-            avLe.preferredWidth = 46f;
-            avLe.minHeight = 46f; 
-            avLe.preferredHeight = 46f;
+            // --- NEW LAYERED AVATAR SYSTEM ---
+            var avatarRoot = new GameObject("AvatarRoot");
+            avatarRoot.transform.SetParent(btnObj.transform, false);
+            var avLe = avatarRoot.AddComponent<LayoutElement>();
+            avLe.minWidth = 52f; avLe.preferredWidth = 52f;
+            avLe.minHeight = 52f; avLe.preferredHeight = 52f;
 
-            // 1. Background Circle (Kingdom Icon shape)
-            var bgImg = avatarContainer.AddComponent<Image>();
-            if (leader.UnitLink != null && leader.UnitLink.kingdom != null)
-                bgImg.sprite = leader.UnitLink.kingdom.getElementIcon();
-            else if (Main.selectedKingdom != null)
-                bgImg.sprite = Main.selectedKingdom.getElementIcon();
-            
-            // Dark grey background for contrast
-            bgImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            // Layer 1: Dark Inner Background Circle
+            var bgCircleObj = new GameObject("BgCircle");
+            bgCircleObj.transform.SetParent(avatarRoot.transform, false);
+            Stretch(bgCircleObj.AddComponent<RectTransform>());
+            var bgCircleImg = bgCircleObj.AddComponent<Image>();
+            // Use loaded circle sprite, fallback to sliced square if missing
+            bgCircleImg.sprite = circleBgSprite != null ? circleBgSprite : windowInnerSprite;
+            bgCircleImg.type = circleBgSprite != null ? Image.Type.Simple : Image.Type.Sliced;
+            bgCircleImg.color = new Color(0.15f, 0.15f, 0.15f, 1f); // Dark gray
 
-            // 2. Unit Sprite Overlay
+            // Layer 2: Unit Sprite centered inside
             if (leader.UnitLink != null)
             {
-                var spriteObj = new GameObject("UnitSprite");
-                spriteObj.transform.SetParent(avatarContainer.transform, false);
-                
-                var rt = spriteObj.AddComponent<RectTransform>();
-                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-                rt.sizeDelta = Vector2.zero;
-                rt.offsetMin = new Vector2(2,2); rt.offsetMax = new Vector2(-2,-2);
-
-                var uImg = spriteObj.AddComponent<Image>();
+                var unitSpriteObj = new GameObject("UnitSprite");
+                unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
+                var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
+                // Add padding so unit is inside the frame borders
+                unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
+                var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
-
-                try 
-                {
+                try {
                     uImg.sprite = leader.UnitLink.getSpriteToRender();
-                    
-                    // --- FIX: Use correct API method from DiplomacyWindow ---
-                    if (leader.UnitLink.kingdom != null && leader.UnitLink.kingdom.kingdomColor != null)
-                    {
-                        uImg.color = leader.UnitLink.kingdom.kingdomColor.getColorMain32(); 
-                    }
-                    else
-                    {
-                        uImg.color = Color.white;
-                    }
-                } 
-                catch 
-                { 
-                    uImg.color = Color.white; // Fallback
-                }
+                    uImg.color = Color.white; // Base sprite color
+                } catch { uImg.color = Color.clear; }
             }
+
+            // Layer 3: Colored Frame Ring on top
+            var frameObj = new GameObject("FrameRing");
+            frameObj.transform.SetParent(avatarRoot.transform, false);
+            Stretch(frameObj.AddComponent<RectTransform>());
+            var frameImg = frameObj.AddComponent<Image>();
+            // Use loaded frame sprite, fallback to sliced square
+            frameImg.sprite = circleFrameSprite != null ? circleFrameSprite : windowInnerSprite;
+            frameImg.type = circleFrameSprite != null ? Image.Type.Simple : Image.Type.Sliced;
+            
+            // Apply Kingdom Color to the frame
+            if (leader.UnitLink != null && leader.UnitLink.kingdom != null) {
+                frameImg.color = leader.UnitLink.kingdom.getColor().getColorMain(); 
+            } else {
+                frameImg.color = Color.gray;
+            }
+            // ---------------------------------
 
             // --- TEXT INFO ---
             var textStack = new GameObject("InfoStack");
@@ -243,47 +243,53 @@ namespace RulerBox
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 1;
+            textVL.spacing = 2; // Spacing between lines
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 9, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 8, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 10, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
+            string summary = FormatSummary(leader);
+            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
+
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
+        }
+
+        // Helper to stretch RectTransform to fill parent
+        private static RectTransform Stretch(RectTransform rt) {
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+            return rt;
         }
 
         private static void CreateRecruitPanel(Transform parent)
         {
-            // === EDIT HERE TO CHANGE WIDTH ===
-            // Default 1.0f. Increase to 1.5f for wider, decrease to 0.5f for narrower.
-            var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
+            // Increased flexibleWidth slightly
+            var container = CreatePanelBase(parent, "RecruitPanel", 1.1f); 
             
-            var header = CreateText(container.transform, "Recruit Leaders", 8, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f; 
-            le.minHeight = 30f;
+            le.preferredHeight = 32f; le.minHeight = 32f;
 
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
 
         private static void CreateActivePanel(Transform parent)
         {
-            // === EDIT HERE TO CHANGE WIDTH ===
-            // Default 0.9f. Increase to 1.2f for wider.
+            // Increased flexibleWidth slightly
             var container = CreatePanelBase(parent, "ActivePanel", 0.9f); 
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 8, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f; 
-            le.minHeight = 30f;
+            le.preferredHeight = 32f; le.minHeight = 32f;
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
@@ -297,10 +303,11 @@ namespace RulerBox
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.4f); 
+            bg.color = new Color(0, 0, 0, 0.5f); // Slightly darker panel
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 6; v.padding = new RectOffset(6, 6, 6, 6);
+            // Increased padding so items don't touch edges
+            v.spacing = 6; v.padding = new RectOffset(8, 8, 8, 8);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
@@ -313,18 +320,19 @@ namespace RulerBox
             le.flexibleHeight = 1f;
             
             var bg = scrollObj.AddComponent<Image>();
-            bg.color = new Color(0, 0, 0, 0.25f); 
+            bg.color = new Color(0, 0, 0, 0.3f); 
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 20f;
+            scroll.scrollSensitivity = 25f;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
             var vpRT = viewport.AddComponent<RectTransform>();
             vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
-            vpRT.offsetMin = new Vector2(4, 4); vpRT.offsetMax = new Vector2(-4, -4);
+            // Adjusted viewport padding
+            vpRT.offsetMin = new Vector2(2, 2); vpRT.offsetMax = new Vector2(-2, -2);
             viewport.AddComponent<RectMask2D>();
 
             var content = new GameObject("Content");
@@ -334,7 +342,8 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 5; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
+            // Spacing between items in list
+            v.spacing = 6; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             
             scroll.viewport = vpRT; scroll.content = cRT;
@@ -395,19 +404,41 @@ namespace RulerBox
             }
         }
 
-        // --- NEW: GENERATE MIXED STATS (BONUS + MALUS) ---
+        // --- UPDATED: GENERATE MIXED STATS (Guarantees Good + Bad usually) ---
         private static LeaderState CreateRandomLeader(Actor unit)
         {
             string title = RandomTitles[UnityEngine.Random.Range(0, RandomTitles.Length)];
             
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
             
-            // STRICT RULE: 1 Good Trait, 1 Bad Trait, 1 Random Trait
-            // This ensures "Bonus and Malus at the same time"
+            // 10% chance for a purely "good" leader
+            bool mostlyGood = UnityEngine.Random.value < 0.10f;
             
-            ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, false); // FORCE BONUS
-            ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, true);  // FORCE MALUS
-            ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, UnityEngine.Random.value > 0.5f); // RANDOM
+            int traitCount = UnityEngine.Random.Range(2, 5); // 2 to 4 traits
+            int badTraitsApplied = 0;
+            int goodTraitsApplied = 0;
+
+            for(int i=0; i < traitCount; i++)
+            {
+                bool isBad = false;
+                if (!mostlyGood)
+                {
+                    // Logic to ensure mix: 
+                    // If it's the last trait and we haven't had a bad one yet, force bad.
+                    // If it's the last trait and we haven't had a good one yet, force good.
+                    if (i == traitCount - 1) {
+                        if (badTraitsApplied == 0) isBad = true;
+                        else if (goodTraitsApplied == 0) isBad = false;
+                        else isBad = UnityEngine.Random.value > 0.5f;
+                    } else {
+                         // Normal roll: 40% chance of bad trait
+                         isBad = UnityEngine.Random.value < 0.4f;
+                    }
+                }
+
+                if (isBad) badTraitsApplied++; else goodTraitsApplied++;
+                ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, isBad);
+            }
 
             string name = (unit != null) ? unit.getName() : "Generated Leader";
             
@@ -424,21 +455,36 @@ namespace RulerBox
             float sign = isMalus ? -1f : 1f; // Negative multiplier for Malus
             int type = UnityEngine.Random.Range(0, 6);
 
+            // Adjusted ranges for slightly stronger traits given they are mixed
             switch(type)
             {
-                case 0: stab += UnityEngine.Random.Range(3f, 8f) * sign; break; 
-                case 1: pp += UnityEngine.Random.Range(10f, 25f) * sign; break;   
-                case 2: atk += UnityEngine.Random.Range(10f, 30f) * sign; break; 
-                case 3: res += UnityEngine.Random.Range(10f, 25f) * sign; break;  
-                case 4: tax += UnityEngine.Random.Range(10f, 20f) * sign; break;  
+                case 0: stab += UnityEngine.Random.Range(4f, 10f) * sign; break; 
+                case 1: pp += UnityEngine.Random.Range(15f, 30f) * sign; break;   
+                case 2: atk += UnityEngine.Random.Range(15f, 35f) * sign; break; 
+                case 3: res += UnityEngine.Random.Range(15f, 30f) * sign; break;  
+                case 4: tax += UnityEngine.Random.Range(15f, 25f) * sign; break;  
                 case 5: 
-                    // Corruption Special Logic:
-                    // Positive 'corr' reduces corruption (Good).
-                    // If isMalus (Bad), we multiply by -1 to make it negative (Increase corruption).
-                    // If Bonus (Good), we multiply by 1 to make it positive (Decrease corruption).
-                    corr += UnityEngine.Random.Range(0.05f, 0.15f) * (isMalus ? -1f : 1f); 
+                    // Corruption Logic: Positive 'corr' reduces corruption (Good).
+                    // If isMalus (Bad), use negative sign to increase corruption.
+                    corr += UnityEngine.Random.Range(0.08f, 0.2f) * (isMalus ? -1f : 1f); 
                     break; 
             }
+        }
+
+        private static string FormatSummary(LeaderState l)
+        {
+            string s = "";
+            string Col(float val, string txt) => val >= 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
+            string ColCorr(float val, string txt) => val >= 0 ? $"<color=#7CFC00>-{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
+
+            // Only show significant values in summary
+            if (Mathf.Abs(l.StabilityBonus) > 1f) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
+            if (Mathf.Abs(l.PPGainBonus) > 0.05f) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
+            if (Mathf.Abs(l.AttackBonus) > 0.05f) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
+            if (Mathf.Abs(l.CorruptionReduction) > 0.05f) s += ColCorr(l.CorruptionReduction, $"Corr {Mathf.Abs(l.CorruptionReduction)*100:0}%") + " ";
+            
+            if (s == "") s = "Check tooltip for details...";
+            return s;
         }
 
         private static string GetLeaderTooltip(LeaderState l)
@@ -456,7 +502,7 @@ namespace RulerBox
             string Col(float v) => v >= 0 ? "<color=#7CFC00>" : "<color=#FF5A5A>";
             
             if (l.StabilityBonus != 0) s += $"Stability: {Col(l.StabilityBonus)}{l.StabilityBonus:0.#}</color>\n";
-            if (l.PPGainBonus != 0) s += $"Political Power: {Col(l.PPGainBonus)}{Val(l.PPGainBonus, "%")}</color>\n";
+            if (l.PPGainBonus != 0) s += $"Pol. Power: {Col(l.PPGainBonus)}{Val(l.PPGainBonus, "%")}</color>\n";
             if (l.AttackBonus != 0) s += $"Army Attack: {Col(l.AttackBonus)}{Val(l.AttackBonus, "%")}</color>\n";
             if (l.ResearchBonus != 0) s += $"Research: {Col(l.ResearchBonus)}{Val(l.ResearchBonus, "%")}</color>\n";
             if (l.TaxBonus != 0) s += $"Tax Income: {Col(l.TaxBonus)}{Val(l.TaxBonus, "%")}</color>\n";
