@@ -36,7 +36,7 @@ namespace RulerBox
             // Background / blocker
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.95f);
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f);
 
             // 2. Main Layout Container
             var mainContainer = new GameObject("MainContainer");
@@ -98,24 +98,6 @@ namespace RulerBox
 
             scrollRect.viewport = vpRT;
             scrollRect.content = (RectTransform)scrollContent;
-
-            // 5. Close Button (Centered at bottom for ease)
-            var closeBtnObj = new GameObject("CloseButton");
-            closeBtnObj.transform.SetParent(mainContainer.transform, false);
-            var closeLE = closeBtnObj.AddComponent<LayoutElement>();
-            closeLE.preferredHeight = 40f;
-            closeLE.minHeight = 40f;
-            
-            var closeBtn = closeBtnObj.AddComponent<Button>();
-            var closeImg = closeBtnObj.AddComponent<Image>();
-            if (windowInnerSprite != null) { closeImg.sprite = windowInnerSprite; closeImg.type = Image.Type.Sliced; }
-            closeImg.color = new Color(0.3f, 0.3f, 0.3f, 1f);
-            closeBtn.onClick.AddListener(() => SetVisible(false));
-
-            var closeTxt = CreateText(closeBtnObj.transform, "Close", 14, FontStyle.Bold, Color.white);
-            closeTxt.alignment = TextAnchor.MiddleCenter;
-            closeTxt.GetComponent<RectTransform>().offsetMin = Vector2.zero;
-            closeTxt.GetComponent<RectTransform>().offsetMax = Vector2.zero;
 
             root.SetActive(false);
         }
