@@ -250,8 +250,8 @@ namespace RulerBox
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 10, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 9, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 8, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
@@ -262,7 +262,7 @@ namespace RulerBox
             // Default 1.0f. Increase to 1.5f for wider, decrease to 0.5f for narrower.
             var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
             
-            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 8, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
@@ -277,11 +277,12 @@ namespace RulerBox
             // Default 0.9f. Increase to 1.2f for wider.
             var container = CreatePanelBase(parent, "ActivePanel", 0.9f); 
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 8, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f; le.minHeight = 30f;
+            le.preferredHeight = 30f; 
+            le.minHeight = 30f;
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
