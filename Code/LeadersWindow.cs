@@ -176,7 +176,7 @@ namespace RulerBox
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 6; 
-            h.padding = new RectOffset(40, 40, 4, 4);
+            h.padding = new RectOffset(60, 60, 4, 4);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
