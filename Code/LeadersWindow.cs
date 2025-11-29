@@ -44,7 +44,7 @@ namespace RulerBox
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 8;
+                h.spacing = 2;
                 h.padding = new RectOffset(1, 1, 1, 1);
                 h.childControlWidth = true;
                 h.childControlHeight = true;
@@ -232,7 +232,7 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.001f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 5; v.padding = new RectOffset(4, 4, 4, 4);
+            v.spacing = 1; v.padding = new RectOffset(1, 1, 1, 1);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
