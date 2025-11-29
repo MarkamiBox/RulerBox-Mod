@@ -21,24 +21,64 @@ namespace RulerBox
             public string Id;
             public string Name;
             public string Description;
-            public int Cost;
+            public int Cost;   // One-time Gold Cost
+            public int Upkeep; // Gold per update
+            
+            // Used for tooltip generation
+            public string EffectsDescription; 
         }
 
         // --- POLICIES FROM YOUR TEXT FILE ---
+        // (Costs scaled x10 from PP values for Gold balance)
         public static readonly List<PolicyDef> Policies = new List<PolicyDef>
         {
-            new PolicyDef { Id = "vassalage", Name = "Vassalage", Cost = 100, Description = "Allows the recruitment of vassals to manage distant lands, increasing tax efficiency but slightly raising autonomy." },
-            new PolicyDef { Id = "mercenary_contracts", Name = "Mercenary Contracts", Cost = 250, Description = "Enables hiring mercenary companies for immediate military support at a high gold cost." },
-            new PolicyDef { Id = "royal_guard", Name = "Royal Guard", Cost = 500, Description = "Establish an elite guard unit for the monarch, increasing stability and defense but at a high upkeep cost." },
-            new PolicyDef { Id = "feudal_obligations", Name = "Feudal Obligations", Cost = 150, Description = "Standardizes military service requirements from lords, increasing manpower but slightly lowering stability." },
-            new PolicyDef { Id = "spy_network", Name = "Spy Network", Cost = 300, Description = "Develops a kingdom-wide spy network to uncover plots and increase diplomatic visibility." },
-            new PolicyDef { Id = "naval_dominance", Name = "Naval Dominance", Cost = 400, Description = "Focuses resources on building a powerful navy to control trade routes and coastal regions." },
-            new PolicyDef { Id = "fortification_effort", Name = "Fortification Effort", Cost = 200, Description = "Mandates the construction of defensive structures in border provinces, increasing defensiveness but costing gold." },
-            new PolicyDef { Id = "diplomatic_corps", Name = "Diplomatic Corps", Cost = 150, Description = "Establishes a permanent corps of diplomats to improve relations with neighboring kingdoms." },
-            new PolicyDef { Id = "legal_reform", Name = "Legal Reform", Cost = 350, Description = "Standardizes laws across the kingdom, increasing stability and tax income but costing significant gold to implement." },
-            new PolicyDef { Id = "cultural_assimilation", Name = "Cultural Assimilation", Cost = 250, Description = "Promotes the dominant culture in newly conquered lands, speeding up integration but increasing unrest." },
-            new PolicyDef { Id = "religious_inquisition", Name = "Religious Inquisition", Cost = 400, Description = "Enforces religious unity, increasing stability and piety but significantly raising unrest in diverse regions." },
-            new PolicyDef { Id = "trade_guilds", Name = "Trade Guilds", Cost = 200, Description = "Encourages the formation of trade guilds, boosting trade income and production but reducing royal control over the economy." }
+            new PolicyDef { Id = "welfare_act", Name = "The Welfare Act", Cost = 400, Upkeep = 6, 
+                Description = "We will assist in providing the needs to those who are unable to provide for themselves.",
+                EffectsDescription = "Stability: +5\nTax Income: -5%" },
+
+            new PolicyDef { Id = "public_service", Name = "The Public Service Act", Cost = 550, Upkeep = 8, 
+                Description = "Encourage population to employ themselves in the public sector to improve output.",
+                EffectsDescription = "Factory Output: +20%\nResource Output: +20%" },
+
+            new PolicyDef { Id = "military_service", Name = "The Military Service Act", Cost = 400, Upkeep = 7, 
+                Description = "We will incentivize those who join in our armed forces.",
+                EffectsDescription = "Military Upkeep: -10%\nManpower Cap: +20%" },
+
+            new PolicyDef { Id = "central_authority", Name = "Strengthen Central Authority", Cost = 500, Upkeep = 5, 
+                Description = "Hasten integration of newly conquered lands by taking a more aggressive stance.",
+                EffectsDescription = "Unrest Reduction: +33%\nIntegration Speed: +25%" },
+
+            new PolicyDef { Id = "prosperity_act", Name = "The Prosperity Act", Cost = 200, Upkeep = 2, 
+                Description = "As long as we are united, our nation will be better off than ever.",
+                EffectsDescription = "Tax Income: +10%" },
+
+            new PolicyDef { Id = "infrastructure", Name = "Improve Infrastructure", Cost = 400, Upkeep = 7, 
+                Description = "By improving our national highways and ports, we seek to strengthen our economic position.",
+                EffectsDescription = "Tax Income: +10%\nBuilding Speed: +5%" },
+
+            new PolicyDef { Id = "war_fund", Name = "Emergency War Fund", Cost = 1000, Upkeep = 40, 
+                Description = "Raise additional funds to maintain our military in these dire times!",
+                EffectsDescription = "Tax Income: +40%\nMilitary Upkeep: -25%\nStability: -10\nUnrest Reduction: -15%\nWE Gain: +0.01" },
+
+            new PolicyDef { Id = "martial_law", Name = "Martial Law", Cost = 1000, Upkeep = 20, 
+                Description = "The military will fulfill the duties of maintaining order.",
+                EffectsDescription = "Tax Income: -25%\nStability: +60\nUnrest Reduction: +33%\nOutput: -20%" },
+
+            new PolicyDef { Id = "research_bureau", Name = "Advance Research Bureau", Cost = 550, Upkeep = 8, 
+                Description = "Place a higher priority on advancing our research efforts.",
+                EffectsDescription = "Research Output: +20%" },
+
+            new PolicyDef { Id = "encourage_dev", Name = "Encourage Development", Cost = 750, Upkeep = 5, 
+                Description = "Tax breaks and incentives aimed at encouraging domestic development.",
+                EffectsDescription = "Tax Income: -10%\nInvestment Avail: +50%" },
+            
+            new PolicyDef { Id = "tax_reform", Name = "Tax Reform", Cost = 600, Upkeep = 6, 
+                Description = "Making taxes easier to be filled and harder for tax evasion to happen.",
+                EffectsDescription = "Tax Income: +25%" },
+
+            new PolicyDef { Id = "forced_labour", Name = "Forced Labour", Cost = 350, Upkeep = 6, 
+                Description = "Employ dissidents in factories and mines. 'Off to the gulag!'",
+                EffectsDescription = "Tax: +15%\nOutput: +40%\nPop Growth: -2%\nCorruption: -5%" }
         };
 
         public static void Initialize(Transform parent)
@@ -61,7 +101,7 @@ namespace RulerBox
                 rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
-                // Two Column Layout (Like LeadersWindow)
+                // Two Column Layout
                 var h = root.AddComponent<HorizontalLayoutGroup>();
                 h.spacing = 2;
                 h.padding = new RectOffset(1, 1, 1, 1);
@@ -70,7 +110,6 @@ namespace RulerBox
                 h.childForceExpandWidth = true;
                 h.childForceExpandHeight = true;
 
-                // Create Left (Available) and Right (Enacted) panels
                 CreateAvailablePanel(root.transform);
                 CreateActivePanel(root.transform);
 
@@ -103,7 +142,6 @@ namespace RulerBox
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
 
-            // Ensure list exists
             if (d.ActivePolicies == null) d.ActivePolicies = new HashSet<string>();
 
             // --- REFRESH AVAILABLE LIST ---
@@ -113,13 +151,11 @@ namespace RulerBox
                 
                 foreach (var policy in Policies)
                 {
-                    // If NOT active, show in available list
                     if (!d.ActivePolicies.Contains(policy.Id))
                     {
                         CreatePolicyItem(availableContent, policy, false);
                     }
                 }
-                
                 int availableCount = Policies.Count - d.ActivePolicies.Count;
                 if(availableHeader != null) availableHeader.text = $"Available ({availableCount})";
             }
@@ -137,7 +173,6 @@ namespace RulerBox
                         CreatePolicyItem(activeContent, policy, true);
                     }
                 }
-                
                 if(activeHeader != null) activeHeader.text = $"Enacted ({d.ActivePolicies.Count})";
             }
         }
@@ -155,7 +190,6 @@ namespace RulerBox
             var bg = btnObj.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            // Greenish for active, Dark Blueish for available
             bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -164,13 +198,12 @@ namespace RulerBox
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 2;
-            h.padding = new RectOffset(70, 70, 2, 2); 
+            h.padding = new RectOffset(10, 10, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // Text Stack
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
@@ -184,10 +217,8 @@ namespace RulerBox
             textStackLE.flexibleWidth = 1f;
             textStackLE.minWidth = 50f;
 
-            // Name
             CreateText(textStack.transform, policy.Name, 9, FontStyle.Bold, Color.white);
             
-            // Cost or Status
             if (isActive)
             {
                 CreateText(textStack.transform, "Enacted", 8, FontStyle.Italic, new Color(0.6f, 0.9f, 0.6f));
@@ -209,13 +240,11 @@ namespace RulerBox
 
             if (isActive)
             {
-                // Repeal
                 d.ActivePolicies.Remove(policy.Id);
                 WorldTip.showNow($"Repealed {policy.Name}", false, "top", 1.5f, "#FF5A5A");
             }
             else
             {
-                // Enact
                 if (d.Treasury >= policy.Cost)
                 {
                     d.Treasury -= policy.Cost;
@@ -225,45 +254,49 @@ namespace RulerBox
                 else
                 {
                     WorldTip.showNow($"Not enough gold ({d.Treasury}/{policy.Cost})", false, "top", 1.5f, "#FF5A5A");
-                    return; // Don't refresh if failed
+                    return; 
                 }
             }
             
             KingdomMetricsSystem.RecalculateForKingdom(k, d);
             Refresh();
-            TopPanelUI.Refresh(); // Update gold display
+            TopPanelUI.Refresh();
         }
 
+        // --- TOOLTIP WITH SHIFT SUPPORT ---
         private static string GetPolicyTooltip(PolicyDef p)
         {
-            return $"<b><color=#FFD700>{p.Name}</color></b>\n\n{p.Description}\n\n<color=#888888>(Click to Toggle)</color>";
+            bool showDetails = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+            
+            string baseInfo = $"<b><color=#FFD700>{p.Name}</color></b>\n{p.Description}";
+            string costInfo = $"\n\nUpkeep: <color=#FF5A5A>{p.Upkeep}g</color> / update";
+
+            if (showDetails)
+            {
+                return baseInfo + costInfo + $"\n\n<b>Effects:</b>\n{p.EffectsDescription}";
+            }
+            else
+            {
+                return baseInfo + "\n\nHold <b>[SHIFT]</b> for Effects";
+            }
         }
 
-        // --- UI CREATION HELPERS (Reused structure) ---
-
+        // --- UI HELPERS ---
         private static void CreateAvailablePanel(Transform parent)
         {
             var container = CreatePanelBase(parent, "AvailablePanel"); 
-            
             availableHeader = CreateText(container.transform, "Available", 9, FontStyle.Bold, Color.white);
             availableHeader.alignment = TextAnchor.MiddleCenter;
-            
-            var le = availableHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 24f; le.minHeight = 24f;
-
+            availableHeader.gameObject.AddComponent<LayoutElement>().preferredHeight = 24f;
             availableContent = CreateScrollList(container.transform, "AvailableScroll");
         }
 
         private static void CreateActivePanel(Transform parent)
         {
             var container = CreatePanelBase(parent, "ActivePanel"); 
-            
             activeHeader = CreateText(container.transform, "Enacted", 9, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
-            
-            var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 24f; le.minHeight = 24f;
-
+            activeHeader.gameObject.AddComponent<LayoutElement>().preferredHeight = 24f;
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
 
@@ -271,16 +304,14 @@ namespace RulerBox
         {
             var panel = new GameObject(name);
             panel.transform.SetParent(parent, false);
-            var le = panel.AddComponent<LayoutElement>();
-            le.flexibleWidth = 1f; le.flexibleHeight = 1f;
+            panel.AddComponent<LayoutElement>().flexibleWidth = 1f;
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
             bg.color = new Color(0, 0, 0, 0.001f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 1; 
-            v.padding = new RectOffset(1, 1, 1, 1);
+            v.spacing = 1; v.padding = new RectOffset(1, 1, 1, 1);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
@@ -289,17 +320,13 @@ namespace RulerBox
         {
             var scrollObj = new GameObject(name);
             scrollObj.transform.SetParent(parent, false);
-            var le = scrollObj.AddComponent<LayoutElement>();
-            le.flexibleHeight = 1f;
+            scrollObj.AddComponent<LayoutElement>().flexibleHeight = 1f;
             
             var bg = scrollObj.AddComponent<Image>();
             bg.color = new Color(0, 0, 0, 0.3f); 
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
-            scroll.vertical = true; 
-            scroll.horizontal = false; 
-            scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 20f;
+            scroll.vertical = true; scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
@@ -315,15 +342,9 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 2; 
-            v.childControlWidth = true; 
-            v.childControlHeight = true; 
-            v.childForceExpandHeight = false;
+            v.spacing = 2; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             
-            // --- IMPORTANT: CONTENT RESIZING ---
-            var csf = content.AddComponent<ContentSizeFitter>();
-            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            // Horizontal fit not needed for list items, they expand to width
+            content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             
             scroll.viewport = vpRT; scroll.content = cRT;
             return content.transform;
