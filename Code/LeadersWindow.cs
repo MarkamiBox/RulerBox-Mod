@@ -208,7 +208,7 @@ namespace RulerBox
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 
-                // FIX: Logic to get the sprite directly from the Renderer or Animation Container
+                // FIX: Use GetComponent or the correct method to get the sprite
                 Sprite unitSprite = GetUnitSprite(leader.UnitLink);
                 
                 if (unitSprite != null)
@@ -218,7 +218,6 @@ namespace RulerBox
                 }
                 else
                 {
-                    // Fallback if sprite is totally missing (shouldn't happen for alive units)
                     uImg.color = Color.clear;
                 }
             }
@@ -261,16 +260,23 @@ namespace RulerBox
         {
             if (actor == null) return null;
 
-            // 1. Try to get the current rendered sprite (Best for current animation state)
-            if (actor.spriteRenderer != null && actor.spriteRenderer.sprite != null)
+            // Option 1: Try to get the sprite from the SpriteRenderer component
+            SpriteRenderer sr = actor.GetComponent<SpriteRenderer>();
+            if (sr != null && sr.sprite != null)
             {
-                return actor.spriteRenderer.sprite;
+                return sr.sprite;
             }
 
-            // 2. Fallback: If unit is inside a house/boat, spriteRenderer is often disabled/empty.
-            // We try to access the animation container to get the first frame of 'idle'.
-            // Note: Accessing internal fields might vary, but checking the sprite_renderer usually retains the last sprite.
-            
+            // Option 2: Try the internal method if accessible (sometimes internal methods are exposed in mod environments)
+            // return actor.getSpriteToRender(); // Commented out as it caused issues previously
+
+            // Option 3: Fallback to getting the icon from the asset if the runtime sprite is missing (e.g. inside a house)
+            if (actor.asset != null && !string.IsNullOrEmpty(actor.asset.icon))
+            {
+                 // This tries to load the static icon for the unit type
+                 return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
+            }
+
             return null;
         }
 
