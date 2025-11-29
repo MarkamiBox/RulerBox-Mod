@@ -100,19 +100,19 @@ namespace RulerBox
             float yearsPassed = secondsPerYear > 0f ? deltaWorldSeconds / secondsPerYear : 0f;
             if (yearsPassed <= 0f) yearsPassed = 0.0001f;
 
-            // 0. Update Counts
+            // 0. Update Counts (Population, Cities, etc.)
             UpdateCounts(k, d);
 
             // 1. Base Tax & Reset Modifiers
             d.TaxRateLocal = Mathf.Clamp01(k.getTaxRateLocal());
             
-            // Reset all modifiers to default before applying laws/leaders
+            // --- Reset Modifiers to Defaults ---
             d.StabilityTargetModifier = 0f;
             d.WarExhaustionGainMultiplier = 1.0f;
             d.ManpowerMaxMultiplier = 1.0f;
             d.ManpowerRegenRate = 0.015f; 
             d.PopulationGrowthBonus = 0f;
-            d.CorruptionLevel = 0f;
+            d.CorruptionLevel = 0f; // Reset Corruption to 0 start
             d.MilitaryUpkeepModifier = 1.0f;
             d.BuildingSpeedModifier = 1.0f;
             d.ResearchOutputModifier = 1.0f;
@@ -133,10 +133,20 @@ namespace RulerBox
             d.PlagueResistanceModifier = 0f;
             d.MilitaryAttackModifier = 0f; 
 
-            // 2. Apply Laws & Leaders
+            // 2. Apply Laws & Leaders (Modifiers)
             ApplyRiseOfNationsLaws(d);
             ApplyEconomicLaws_Modifiers(d);
             ApplyLeaderModifiers(d); 
+
+            // --- Base Corruption Calculation ---
+            // Base: 0% for capital + 2.5% for each additional city
+            // This ensures large empires struggle more without Anti-Corruption laws.
+            if (d.Cities > 1)
+            {
+                d.CorruptionLevel += (d.Cities - 1) * 0.025f;
+            }
+            // Clamp Corruption (0% to 100%)
+            d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
 
             // 3. Economy Calc (Income)
             double totalWealth = 0;
@@ -148,73 +158,97 @@ namespace RulerBox
             }
             d.TaxBaseWealth = totalWealth;
             
+            // Fallback GDP if units have no money (e.g., fresh spawn)
             double baseTaxable = totalWealth;
             if (baseTaxable <= 0) baseTaxable = k.getPopulationPeople() * d.PerCapitaGDP;
             d.TaxBaseFallbackGDP = baseTaxable;
 
+            // Calculate Raw Income
             double taxableBase = baseTaxable * d.TaxRateLocal;
             d.IncomeBeforeModifiers = SafeLong(taxableBase);
 
+            // Apply War Penalty
             float we01 = Mathf.Clamp01(d.WarExhaustion / 100f);
-            d.TaxPenaltyFromWar = we01 * d.MaxWeTaxPenaltyPct;
+            d.TaxPenaltyFromWar = we01 * d.MaxWeTaxPenaltyPct; // Max 40% penalty at 100 WE
             taxableBase *= (1.0 - d.TaxPenaltyFromWar / 100.0);
             d.IncomeAfterWarPenalty = SafeLong(taxableBase);
             
-            d.TaxModifierFromStability = ((d.Stability - 50f) / 50f) * d.MaxStabTaxBonusPct;
+            // Apply Stability Bonus/Penalty (Base 50 is neutral)
+            d.TaxModifierFromStability = ((d.Stability - 50f) / 50f) * d.MaxStabTaxBonusPct; 
             taxableBase *= (1.0 + d.TaxModifierFromStability / 100.0);
             d.IncomeAfterStability = SafeLong(taxableBase);
             
+            // Apply City Bonus (Urbanization)
             float cityBonus = Mathf.Clamp(d.Cities * d.CityWealthBonusPerCityPct, 0f, d.CityWealthBonusCapPct);
             d.TaxModifierFromCities = cityBonus;
             taxableBase *= (1.0 + cityBonus / 100.0);
             d.IncomeAfterCityBonus = SafeLong(taxableBase);
             
+            // Apply Industrial Modifiers
             float industryMod = (d.FactoryOutputModifier + d.ResourceOutputModifier) / 2f;
             float econScale = ComputeEconomyScale(k.getPopulationPeople()) * industryMod;
             
+            // Trade Income
             long tradeIn = SafeLong(TradeManager.GetTradeIncome(k) * d.TradeIncomeModifier);
             d.TradeIncome = tradeIn;
             
+            // Final Income Calculation
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
             // 4. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
             long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
-            long demo = 0; 
+            long demo = 0; // Placeholder for demographic costs (e.g. pensions) if implemented
+            
             d.ExpensesMilitary = military;
             d.ExpensesInfrastructure = infra;
             d.ExpensesDemography = demo;
             
             long baseExpenses = military + infra + demo;
+            
+            // War Overhead (Extra cost scaling with War Exhaustion)
             float warOverheadPct = we01 * d.MaxWarOverheadPct;
             long warOverhead = SafeLong(baseExpenses * (warOverheadPct / 100.0));
             d.ExpensesWarOverhead = warOverhead;
 
+            // Law Upkeep
             long econSpending = CalculateEconomicSpending(d);
             d.ExpensesLawUpkeep = econSpending;
             
+            // Trade Import Costs
             long tradeOut = TradeManager.GetTradeExpenses(k);
             d.TradeExpenses = tradeOut;
 
-            d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
+            // Corruption Drain (Removes a % of total base expenses + overhead)
+            // This represents money "lost" to inefficiency/graft
             long corruptionCost = SafeLong((baseExpenses + warOverhead) * d.CorruptionLevel);
             d.ExpensesCorruption = corruptionCost;
 
+            // Final Expenses Calculation
             d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost + econSpending);
 
+            // 5. Update Treasury
+            // We update the actual gold amount every 5 seconds to prevent rapid flickering,
+            // but the rate (Balance) is displayed instantly.
             d.TreasuryTimer += deltaWorldSeconds;
             if (d.TreasuryTimer >= 5f)
             {
+                // Balance is per year, so we add (Balance / 12) * (5 seconds / 60 seconds per year) approx?
+                // Actually, Income/Expenses are likely "Per Year" rates.
+                // If 1 Year = 60 Seconds:
+                // 5 seconds = 1/12th of a year.
                 long yearlyBalance = d.Income - d.Expenses;
-                d.Treasury += SafeLong(yearlyBalance / 12.0);
+                d.Treasury += SafeLong(yearlyBalance / 12.0); 
                 d.TreasuryTimer = 0f;
             }
             
+            // 6. Update Sub-systems
             UpdateResources(k, d);
             UpdateManpower(k, d, deltaWorldSeconds);
-            UpdateWarExhaustion(k, d, yearsPassed);
+            UpdateWarExhaustion(k, d, deltaWorldSeconds); // Calculates WEChange
+            
             if (!d.HasInitializedStability) { d.Stability = 50f; d.HasInitializedStability = true; }
-            UpdateStability(k, d, yearsPassed);
+            UpdateStability(k, d, deltaWorldSeconds);     // Calculates StabilityChange
         }
 
         private static void UpdateCounts(Kingdom k, Data d)
@@ -934,19 +968,71 @@ namespace RulerBox
             }
         }
         
-        private static void UpdateWarExhaustion(Kingdom k, Data d, float years)
+        private static void UpdateWarExhaustion(Kingdom k, Data d, float delta)
         {
-             // Basic simulation of War Exhaustion logic
-             // Applying modifier: d.WarExhaustionGainMultiplier
-             float gain = (d.WEChange * d.WarExhaustionGainMultiplier);
-             d.WarExhaustion = Mathf.Clamp(d.WarExhaustion + gain, 0f, 100f);
+            // 1. Check for active wars
+            var wars = World.world.wars.getWars(k);
+            bool atWar = false;
+            foreach(var w in wars)
+            {
+                if (!w.hasEnded()) { atWar = true; break; }
+            }
+
+            // 2. Calculate Change
+            if (atWar)
+            {
+                // Base gain: +0.8 per second (modified by laws)
+                // E.g. 60 seconds (1 year) of war = +48 WE (without modifiers)
+                float baseGain = 0.8f * delta;
+                d.WEChange = baseGain * d.WarExhaustionGainMultiplier;
+                
+                // Move towards 100
+                d.WarExhaustion = Mathf.MoveTowards(d.WarExhaustion, 100f, d.WEChange);
+            }
+            else
+            {
+                // Base decay: -1.5 per second (faster recovery peace)
+                float decay = 1.5f * delta;
+                d.WEChange = -decay;
+                
+                // Move towards 0
+                d.WarExhaustion = Mathf.MoveTowards(d.WarExhaustion, 0f, decay);
+            }
+
+            // 3. Update Effect Placeholders for Tooltips
+            // Manpower Capacity reduced by WE% (e.g. 50 WE = -25% capacity)
+            d.WarEffectOnManpowerPct = (d.WarExhaustion / 2f); 
+            
+            // Stability Drift caused by War (e.g. 100 WE = -10 stability/year)
+            d.WarEffectOnStabilityPerYear = (d.WarExhaustion * 0.1f);
         }
 
-        private static void UpdateStability(Kingdom k, Data d, float years)
+        private static void UpdateStability(Kingdom k, Data d, float delta)
         {
-            // Apply StabilityTargetModifier to base 50
-             float target = 50f + d.StabilityTargetModifier;
-             d.Stability = Mathf.MoveTowards(d.Stability, target, 5f * years);
+            // 1. Calculate Target Stability
+            // Base 50 + Modifiers (Laws, Leaders, etc.)
+            float target = 50f + d.StabilityTargetModifier;
+            
+            // Apply Corruption Penalty directly to target equilibrium
+            // e.g. 10% Corruption = -5 Stability target
+            target -= (d.CorruptionLevel * 50f);
+
+            // Apply War Exhaustion Penalty to target
+            // e.g. 50 WE = -5 Stability target
+            target -= (d.WarExhaustion * 0.1f);
+
+            // 2. Calculate Drift
+            float oldStab = d.Stability;
+            
+            // Move towards target at speed of 2.0 per second
+            // This makes stability changes feel "weighty" rather than instant
+            d.Stability = Mathf.MoveTowards(d.Stability, target, 2.0f * delta);
+            
+            // 3. Set Change Rate for UI
+            // We multiply by (1/delta) to get the rate per second, 
+            // but for UI readability we might just want the raw difference per tick 
+            // or formatted nicely. The UI expects a value to color Green/Red.
+            d.StabilityChange = (d.Stability - oldStab) / delta; 
         }
 
         public static readonly Dictionary<Kingdom, Data> db = new Dictionary<Kingdom, Data>();
