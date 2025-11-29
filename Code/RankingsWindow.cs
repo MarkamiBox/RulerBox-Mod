@@ -85,8 +85,8 @@ namespace RulerBox
             // Content Layout (Horizontal rows of vertical bars)
             var hGroup = content.AddComponent<HorizontalLayoutGroup>();
             hGroup.childAlignment = TextAnchor.LowerLeft;
-            hGroup.spacing = 15;
-            hGroup.padding = new RectOffset(20, 20, 20, 20);
+            hGroup.spacing = 10;
+            hGroup.padding = new RectOffset(5, 5, 5, 5);
             hGroup.childControlHeight = true;
             hGroup.childControlWidth = false;
             hGroup.childForceExpandHeight = true;
@@ -257,10 +257,10 @@ namespace RulerBox
             var headerObj = new GameObject("Header");
             headerObj.transform.SetParent(parent, false);
             var le = headerObj.AddComponent<LayoutElement>();
-            le.preferredHeight = 40f;
-            le.minHeight = 40f;
+            le.preferredHeight = 20f;
+            le.minHeight = 20f;
 
-            var txt = CreateText(headerObj.transform, title, 20, FontStyle.Bold, Color.white);
+            var txt = CreateText(headerObj.transform, title, 5, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
