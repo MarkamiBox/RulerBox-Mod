@@ -1077,8 +1077,8 @@ namespace RulerBox
             public float LastUpdateWorldTime;
             public float TreasuryTimer;
             public List<TimedEffect> ActiveEffects = new List<TimedEffect>();
-
             public List<LeaderState> ActiveLeaders = new List<LeaderState>();
+            public HashSet<string> ActivePolicies = new HashSet<string>();
             
             public long Treasury;
             public long Income;

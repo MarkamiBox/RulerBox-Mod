@@ -482,12 +482,14 @@ namespace RulerBox
             scroll.content = cRT;
             CreateActionBtn("Laws", () => TopPanelUI.OpenLaws());
             CreateActionBtn("Leaders", () => {
-                Debug.Log("[RulerBox] Opening LeadersWindow...");
                 SetVisible(false); // Hide main diplomacy
                 LeadersWindow.SetVisible(true); // Open Leaders
-                LeadersWindow.Refresh(); // Force refresh to ensure content is there
             });
-            CreateActionBtn("Policies", null);
+            CreateActionBtn("Policies",  () => {
+                Debug.Log("[RulerBox] Opening LeadersWindow...");
+                SetVisible(false); // Hide main diplomacy
+                PoliciesWindow.SetVisible(true); // Open Leaders
+            });
             CreateActionBtn("Rankings", () => {
                 SetVisible(false); 
                 RankingsWindow.SetVisible(true);
