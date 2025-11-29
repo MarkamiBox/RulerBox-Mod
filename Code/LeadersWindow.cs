@@ -188,8 +188,8 @@ namespace RulerBox
             textStackLE.flexibleWidth = 1f;
             textStackLE.minWidth = 50f;
 
-            CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 8, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 7, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
@@ -198,7 +198,7 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
             
-            var header = CreateText(container.transform, "Recruit Leaders", 11, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 8, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
@@ -211,7 +211,7 @@ namespace RulerBox
         {
             var container = CreatePanelBase(parent, "ActivePanel", 0.9f); 
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 11, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 8, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();

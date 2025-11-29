@@ -493,7 +493,7 @@ namespace RulerBox
             });
             CreateActionBtn("Policies", null);
             CreateActionBtn("Ideologies", null);
-            CreateActionBtn("National Flags", null);
+            CreateActionBtn("Rankins", null);
         }
 
         // ================================================================================================
