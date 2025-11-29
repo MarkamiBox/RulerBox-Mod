@@ -164,7 +164,7 @@ namespace RulerBox
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 2;
-            h.padding = new RectOffset(10, 10, 2, 2); 
+            h.padding = new RectOffset(30, 30, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
@@ -279,7 +279,8 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.001f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 1; v.padding = new RectOffset(1, 1, 1, 1);
+            v.spacing = 1; 
+            v.padding = new RectOffset(1, 1, 1, 1);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
