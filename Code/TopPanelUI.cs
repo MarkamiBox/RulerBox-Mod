@@ -221,7 +221,6 @@ namespace RulerBox
             LawsWindow.SetVisible(false);
             LeadersWindow.SetVisible(false);
             RankingsWindow.SetVisible(false);
-            PoliciesWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {

@@ -48,6 +48,7 @@ namespace RulerBox
             // Explicitly verify LeadersWindow init
             LeadersWindow.Initialize(parent);
             RankingsWindow.Initialize(parent);
+            PoliciesWindow.Initialize(parent);
 
             if (root != null) return;
             
