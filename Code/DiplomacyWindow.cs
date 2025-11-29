@@ -46,12 +46,8 @@ namespace RulerBox
         public static void Initialize(Transform parent)
         {
             // Explicitly verify LeadersWindow init
-            Debug.Log("[RulerBox] DiplomacyWindow: Linking LeadersWindow...");
-            try {
-                LeadersWindow.Initialize(parent);
-            } catch(System.Exception e) {
-                Debug.LogError("[RulerBox] FAILED to link LeadersWindow: " + e.Message);
-            }
+            LeadersWindow.Initialize(parent);
+            RankingsWindow.Initialize(parent);
 
             if (root != null) return;
             
@@ -493,7 +489,10 @@ namespace RulerBox
             });
             CreateActionBtn("Policies", null);
             CreateActionBtn("Ideologies", null);
-            CreateActionBtn("Rankins", null);
+            CreateActionBtn("Rankings", () => {
+                SetVisible(false); 
+                RankingsWindow.SetVisible(true);
+            });
         }
 
         // ================================================================================================
