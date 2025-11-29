@@ -203,14 +203,15 @@ namespace RulerBox
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
                 
-                // Add padding so sprite fits inside the circle
-                unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
+                // Slightly larger inner rect to ensure visibility
+                unitRT.offsetMin = new Vector2(2, 2); 
+                unitRT.offsetMax = new Vector2(-2, -2); 
 
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 
-                // --- FIX: USE REFLECTION TO GET SPRITE (INTERNAL METHOD) ---
-                Sprite unitSprite = GetSpriteViaReflection(leader.UnitLink);
+                // --- FIX: NUCLEAR REFLECTION METHOD ---
+                Sprite unitSprite = GetSpriteSafe(leader.UnitLink);
                 
                 if (unitSprite != null)
                 {
@@ -219,7 +220,8 @@ namespace RulerBox
                 }
                 else
                 {
-                    uImg.color = Color.clear;
+                    // Fallback visual (dark grey circle) so we know the object is there
+                    uImg.color = new Color(1, 1, 1, 0.1f);
                 }
             }
 
@@ -256,51 +258,61 @@ namespace RulerBox
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
-        // --- FIXED HELPER METHOD ---
-        private static Sprite GetSpriteViaReflection(Actor actor)
+        // --- THE "NUCLEAR OPTION" SPRITE FINDER ---
+        private static Sprite GetSpriteSafe(Actor actor)
         {
             if (actor == null) return null;
-            
-            try 
-            {
-                // 1. Try to invoke "getSpriteToRender" (Internal method that returns the full character look)
-                // We use BindingFlags.NonPublic to access internal methods.
-                MethodInfo method = actor.GetType().GetMethod("getSpriteToRender", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                if (method != null)
-                {
-                    return (Sprite)method.Invoke(actor, null);
-                }
-            }
-            catch { }
+            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
 
-            try 
-            {
-                // 2. Fallback: Try calling public methods we saw in the source code if direct internal access fails
-                // calculateMainSprite is public in source, but might be hidden in reference assembly
-                MethodInfo calcMain = actor.GetType().GetMethod("calculateMainSprite", BindingFlags.Instance | BindingFlags.Public);
-                MethodInfo calcColor = actor.GetType().GetMethod("calculateColoredSprite", BindingFlags.Instance | BindingFlags.Public);
+            // STRATEGY 1: Try internal 'getSpriteToRender' (Most accurate, handles animation frames)
+            try {
+                MethodInfo m = actor.GetType().GetMethod("getSpriteToRender", flags);
+                if (m != null) return (Sprite)m.Invoke(actor, null);
+            } catch {}
 
-                if (calcMain != null && calcColor != null)
-                {
-                    Sprite main = (Sprite)calcMain.Invoke(actor, null);
-                    if (main != null)
-                    {
-                        return (Sprite)calcColor.Invoke(actor, new object[] { main, true });
+            // STRATEGY 2: Try accessing 'avatar' GameObject -> SpriteRenderer (Live view)
+            try {
+                FieldInfo fAvatar = actor.GetType().GetField("avatar", flags);
+                if (fAvatar != null) {
+                    GameObject go = (GameObject)fAvatar.GetValue(actor);
+                    if (go != null) {
+                        SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
+                        if (sr != null && sr.sprite != null) return sr.sprite;
                     }
                 }
-            }
-            catch { }
+            } catch {}
 
-            // 3. Final Fallback: Asset Icon
-            // This ensures we always show *something* even if everything else fails.
-            try 
-            {
-                if (actor.asset != null && !string.IsNullOrEmpty(actor.asset.icon))
-                {
-                    return Resources.Load<Sprite>("ui/Icons/" + actor.asset.icon);
+            // STRATEGY 3: Try accessing 'sprite_animation' (Sometimes exposed)
+            try {
+                FieldInfo fAnim = actor.GetType().GetField("sprite_animation", flags);
+                if (fAnim != null) {
+                    object animObj = fAnim.GetValue(actor);
+                    if (animObj != null) {
+                        // Attempt to read 'current_sprite' from SpriteAnimation
+                        FieldInfo fSprite = animObj.GetType().GetField("current_sprite", flags);
+                        if (fSprite != null) return (Sprite)fSprite.GetValue(animObj);
+                    }
                 }
-            }
-            catch { }
+            } catch {}
+
+            // STRATEGY 4: Final Fallback - Static Icon from Asset (Better than nothing)
+            try {
+                // Access 'asset' field via reflection to be safe
+                FieldInfo fAsset = actor.GetType().GetField("asset", flags);
+                if (fAsset != null) {
+                    object assetObj = fAsset.GetValue(actor);
+                    if (assetObj != null) {
+                        // Access 'icon' field on the asset
+                        FieldInfo fIcon = assetObj.GetType().GetField("icon", flags);
+                        if (fIcon != null) {
+                            string iconPath = (string)fIcon.GetValue(assetObj);
+                            if (!string.IsNullOrEmpty(iconPath)) {
+                                return Resources.Load<Sprite>("ui/Icons/" + iconPath);
+                            }
+                        }
+                    }
+                }
+            } catch {}
 
             return null;
         }
