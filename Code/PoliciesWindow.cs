@@ -24,7 +24,7 @@ namespace RulerBox
             public int Cost;
         }
 
-        // --- HARDCODED POLICIES FROM TEXT ---
+        // --- POLICIES FROM YOUR TEXT FILE ---
         public static readonly List<PolicyDef> Policies = new List<PolicyDef>
         {
             new PolicyDef { Id = "vassalage", Name = "Vassalage", Cost = 100, Description = "Allows the recruitment of vassals to manage distant lands, increasing tax efficiency but slightly raising autonomy." },
@@ -70,7 +70,7 @@ namespace RulerBox
                 h.childForceExpandWidth = true;
                 h.childForceExpandHeight = true;
 
-                // Create Left (Available) and Right (Active) panels
+                // Create Left (Available) and Right (Enacted) panels
                 CreateAvailablePanel(root.transform);
                 CreateActivePanel(root.transform);
 
@@ -103,7 +103,7 @@ namespace RulerBox
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
 
-            // Initialize list if null (backward compatibility)
+            // Ensure list exists
             if (d.ActivePolicies == null) d.ActivePolicies = new HashSet<string>();
 
             // --- REFRESH AVAILABLE LIST ---
@@ -120,12 +120,11 @@ namespace RulerBox
                     }
                 }
                 
-                // Update Header Count
                 int availableCount = Policies.Count - d.ActivePolicies.Count;
                 if(availableHeader != null) availableHeader.text = $"Available ({availableCount})";
             }
 
-            // --- REFRESH ACTIVE LIST ---
+            // --- REFRESH ENACTED LIST ---
             if (activeContent != null)
             {
                 foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
@@ -139,7 +138,6 @@ namespace RulerBox
                     }
                 }
                 
-                // Update Header Count
                 if(activeHeader != null) activeHeader.text = $"Enacted ({d.ActivePolicies.Count})";
             }
         }
@@ -157,7 +155,7 @@ namespace RulerBox
             var bg = btnObj.AddComponent<Image>();
             bg.sprite = windowInnerSprite;
             bg.type = Image.Type.Sliced;
-            // Greenish for active, Dark Blueish for available (Matches LeadersWindow style)
+            // Greenish for active, Dark Blueish for available
             bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
 
             var btn = btnObj.AddComponent<Button>();
@@ -192,7 +190,7 @@ namespace RulerBox
             // Cost or Status
             if (isActive)
             {
-                CreateText(textStack.transform, "Active", 8, FontStyle.Italic, new Color(0.6f, 0.9f, 0.6f));
+                CreateText(textStack.transform, "Enacted", 8, FontStyle.Italic, new Color(0.6f, 0.9f, 0.6f));
             }
             else
             {
@@ -211,13 +209,13 @@ namespace RulerBox
 
             if (isActive)
             {
-                // Repeal Policy
+                // Repeal
                 d.ActivePolicies.Remove(policy.Id);
                 WorldTip.showNow($"Repealed {policy.Name}", false, "top", 1.5f, "#FF5A5A");
             }
             else
             {
-                // Enact Policy
+                // Enact
                 if (d.Treasury >= policy.Cost)
                 {
                     d.Treasury -= policy.Cost;
@@ -240,6 +238,8 @@ namespace RulerBox
         {
             return $"<b><color=#FFD700>{p.Name}</color></b>\n\n{p.Description}\n\n<color=#888888>(Click to Toggle)</color>";
         }
+
+        // --- UI CREATION HELPERS (Reused structure) ---
 
         private static void CreateAvailablePanel(Transform parent)
         {
@@ -319,8 +319,10 @@ namespace RulerBox
             v.childControlHeight = true; 
             v.childForceExpandHeight = false;
             
+            // --- IMPORTANT: CONTENT RESIZING ---
             var csf = content.AddComponent<ContentSizeFitter>();
             csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            // Horizontal fit not needed for list items, they expand to width
             
             scroll.viewport = vpRT; scroll.content = cRT;
             return content.transform;
