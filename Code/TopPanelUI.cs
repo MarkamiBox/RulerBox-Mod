@@ -171,7 +171,8 @@ namespace RulerBox
             InvestmentsWindow.SetVisible(false);
             DiplomacyWindow.SetVisible(false);
             
-            EconomicLawsWindow.SetVisible(true);
+            EconomicLawsWindow.SetVisible(false);
+            RankingsWindow.SetVisible(false);
             showEconomicLaws = true;
             showInvestments = false;
             Refresh();
@@ -218,6 +219,7 @@ namespace RulerBox
             DiplomacyActionsWindow.SetVisible(false);
             LawsWindow.SetVisible(false);
             LeadersWindow.SetVisible(false);
+            RankingsWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {
