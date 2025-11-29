@@ -100,19 +100,19 @@ namespace RulerBox
             float yearsPassed = secondsPerYear > 0f ? deltaWorldSeconds / secondsPerYear : 0f;
             if (yearsPassed <= 0f) yearsPassed = 0.0001f;
 
-            // 0. Update Counts (Population, Cities, etc.)
+            // 0. Update Counts
             UpdateCounts(k, d);
 
             // 1. Base Tax & Reset Modifiers
             d.TaxRateLocal = Mathf.Clamp01(k.getTaxRateLocal());
             
-            // --- Reset Modifiers to Defaults ---
+            // Reset modifiers
             d.StabilityTargetModifier = 0f;
             d.WarExhaustionGainMultiplier = 1.0f;
             d.ManpowerMaxMultiplier = 1.0f;
             d.ManpowerRegenRate = 0.015f; 
             d.PopulationGrowthBonus = 0f;
-            d.CorruptionLevel = 0f; // Reset Corruption to 0 start
+            d.CorruptionLevel = 0f; 
             d.MilitaryUpkeepModifier = 1.0f;
             d.BuildingSpeedModifier = 1.0f;
             d.ResearchOutputModifier = 1.0f;
@@ -133,122 +133,98 @@ namespace RulerBox
             d.PlagueResistanceModifier = 0f;
             d.MilitaryAttackModifier = 0f; 
 
-            // 2. Apply Laws & Leaders (Modifiers)
+            // 2. Apply Laws & Leaders
             ApplyRiseOfNationsLaws(d);
             ApplyEconomicLaws_Modifiers(d);
             ApplyLeaderModifiers(d); 
 
             // --- Base Corruption Calculation ---
-            // Base: 0% for capital + 2.5% for each additional city
-            // This ensures large empires struggle more without Anti-Corruption laws.
+            // 2.5% corruption per city beyond the first
             if (d.Cities > 1)
             {
                 d.CorruptionLevel += (d.Cities - 1) * 0.025f;
             }
-            // Clamp Corruption (0% to 100%)
             d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
 
             // 3. Economy Calc (Income)
             double totalWealth = 0;
-            var units = k.getUnits();
-            if (units != null) {
-                foreach (var unit in units) {
+            // Use property directly
+            if (k.units != null) {
+                foreach (var unit in k.units) {
                     if (unit != null && unit.isAlive()) totalWealth += unit.money;
                 }
             }
             d.TaxBaseWealth = totalWealth;
             
-            // Fallback GDP if units have no money (e.g., fresh spawn)
             double baseTaxable = totalWealth;
-            if (baseTaxable <= 0) baseTaxable = k.getPopulationPeople() * d.PerCapitaGDP;
+            if (baseTaxable <= 0) baseTaxable = d.Population * d.PerCapitaGDP;
             d.TaxBaseFallbackGDP = baseTaxable;
 
-            // Calculate Raw Income
             double taxableBase = baseTaxable * d.TaxRateLocal;
             d.IncomeBeforeModifiers = SafeLong(taxableBase);
 
-            // Apply War Penalty
             float we01 = Mathf.Clamp01(d.WarExhaustion / 100f);
-            d.TaxPenaltyFromWar = we01 * d.MaxWeTaxPenaltyPct; // Max 40% penalty at 100 WE
+            d.TaxPenaltyFromWar = we01 * d.MaxWeTaxPenaltyPct;
             taxableBase *= (1.0 - d.TaxPenaltyFromWar / 100.0);
             d.IncomeAfterWarPenalty = SafeLong(taxableBase);
             
-            // Apply Stability Bonus/Penalty (Base 50 is neutral)
-            d.TaxModifierFromStability = ((d.Stability - 50f) / 50f) * d.MaxStabTaxBonusPct; 
+            d.TaxModifierFromStability = ((d.Stability - 50f) / 50f) * d.MaxStabTaxBonusPct;
             taxableBase *= (1.0 + d.TaxModifierFromStability / 100.0);
             d.IncomeAfterStability = SafeLong(taxableBase);
             
-            // Apply City Bonus (Urbanization)
             float cityBonus = Mathf.Clamp(d.Cities * d.CityWealthBonusPerCityPct, 0f, d.CityWealthBonusCapPct);
             d.TaxModifierFromCities = cityBonus;
             taxableBase *= (1.0 + cityBonus / 100.0);
             d.IncomeAfterCityBonus = SafeLong(taxableBase);
             
-            // Apply Industrial Modifiers
             float industryMod = (d.FactoryOutputModifier + d.ResourceOutputModifier) / 2f;
-            float econScale = ComputeEconomyScale(k.getPopulationPeople()) * industryMod;
+            float econScale = ComputeEconomyScale(d.Population) * industryMod;
             
-            // Trade Income
             long tradeIn = SafeLong(TradeManager.GetTradeIncome(k) * d.TradeIncomeModifier);
             d.TradeIncome = tradeIn;
             
-            // Final Income Calculation
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
             // 4. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
             long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
-            long demo = 0; // Placeholder for demographic costs (e.g. pensions) if implemented
+            long demo = 0; 
             
             d.ExpensesMilitary = military;
             d.ExpensesInfrastructure = infra;
             d.ExpensesDemography = demo;
             
             long baseExpenses = military + infra + demo;
-            
-            // War Overhead (Extra cost scaling with War Exhaustion)
             float warOverheadPct = we01 * d.MaxWarOverheadPct;
             long warOverhead = SafeLong(baseExpenses * (warOverheadPct / 100.0));
             d.ExpensesWarOverhead = warOverhead;
 
-            // Law Upkeep
             long econSpending = CalculateEconomicSpending(d);
             d.ExpensesLawUpkeep = econSpending;
             
-            // Trade Import Costs
             long tradeOut = TradeManager.GetTradeExpenses(k);
             d.TradeExpenses = tradeOut;
 
-            // Corruption Drain (Removes a % of total base expenses + overhead)
-            // This represents money "lost" to inefficiency/graft
             long corruptionCost = SafeLong((baseExpenses + warOverhead) * d.CorruptionLevel);
             d.ExpensesCorruption = corruptionCost;
 
-            // Final Expenses Calculation
             d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost + econSpending);
 
-            // 5. Update Treasury
-            // We update the actual gold amount every 5 seconds to prevent rapid flickering,
-            // but the rate (Balance) is displayed instantly.
+            // 5. Update Treasury (Every 5 seconds)
             d.TreasuryTimer += deltaWorldSeconds;
             if (d.TreasuryTimer >= 5f)
             {
-                // Balance is per year, so we add (Balance / 12) * (5 seconds / 60 seconds per year) approx?
-                // Actually, Income/Expenses are likely "Per Year" rates.
-                // If 1 Year = 60 Seconds:
-                // 5 seconds = 1/12th of a year.
                 long yearlyBalance = d.Income - d.Expenses;
-                d.Treasury += SafeLong(yearlyBalance / 12.0); 
+                d.Treasury += SafeLong(yearlyBalance / 12.0);
                 d.TreasuryTimer = 0f;
             }
             
-            // 6. Update Sub-systems
             UpdateResources(k, d);
             UpdateManpower(k, d, deltaWorldSeconds);
-            UpdateWarExhaustion(k, d, deltaWorldSeconds); // Calculates WEChange
+            UpdateWarExhaustion(k, d, deltaWorldSeconds); 
             
             if (!d.HasInitializedStability) { d.Stability = 50f; d.HasInitializedStability = true; }
-            UpdateStability(k, d, deltaWorldSeconds);     // Calculates StabilityChange
+            UpdateStability(k, d, deltaWorldSeconds);
         }
 
         private static void UpdateCounts(Kingdom k, Data d)
@@ -270,18 +246,14 @@ namespace RulerBox
                 d.Buildings = 0;
             }
             
-            // 2. Update Total Population Counts
-            d.Adults = k.countAdults();
-            d.Soldiers = k.countTotalWarriors();
-            
-            // Store previous population to calculate growth delta for tooltips
+            // 2. Population (General)
             d.PrevPopulation = d.Population;
             d.Population = k.getPopulationPeople();
-            
-            // Growth Rate (Visual modifier based on laws/policies)
             d.AvgGrowthRate = (d.PopulationGrowthBonus * 100f); 
 
-            // 3. Reset Demographic Counters
+            // 3. Reset Counters
+            d.Adults = 0;
+            d.Soldiers = 0;
             d.Children = 0;
             d.Babies = 0;
             d.Teens = 0;
@@ -295,41 +267,33 @@ namespace RulerBox
             d.Sick = 0;
             d.HappyUnits = 0;
 
-            // 4. Detailed Unit Iteration
-            // We iterate through all units to populate the specific stats needed for ChipTooltips.
-            var units = k.getUnits();
-            if (units != null)
+            // 4. Detailed Iteration (Using k.units property)
+            if (k.units != null)
             {
-                foreach(var a in units)
+                foreach(var a in k.units)
                 {
                     if (a == null || !a.isAlive()) continue;
 
-                    // --- Age Demographics ---
+                    // --- Age & Role ---
                     if (!a.isAdult())
                     {
-                        d.Children++; // Total children count
-                        
-                        if (a.isBaby()) 
-                        {
-                            d.Babies++;
-                        }
-                        else 
-                        {
-                            // Not a baby, but not an adult = Teen/Child
-                            d.Teens++;
-                        }
+                        d.Children++;
+                        if (a.isBaby()) d.Babies++;
+                        else d.Teens++;
                     }
                     else 
                     {
-                        // Adults & Elders (WorldBox usually considers >60 as getting old)
+                        d.Adults++;
                         if (a.getAge() >= 60) d.Elders++;
                         
-                        // "Unemployed": Adult civilians who are not soldiers, leaders, or kings
-                        // This helps player see available workforce vs administrative bloat/army
-                        if (!a.isWarrior() && !a.isCityLeader() && !a.isKing())
-                        {
-                            d.Unemployed++; 
-                        }
+                        // Check Professions
+                        bool isMilitary = a.isWarrior();
+                        bool isLeader = a.isCityLeader() || a.isKing();
+
+                        if (isMilitary) d.Soldiers++;
+                        
+                        // Unemployed: Adult, not military, not leader
+                        if (!isMilitary && !isLeader) d.Unemployed++; 
                     }
 
                     // --- Traits & Status ---
