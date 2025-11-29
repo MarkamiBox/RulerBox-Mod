@@ -36,7 +36,7 @@ namespace RulerBox
             // Background / blocker
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f); // Kept original color/alpha
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f);
 
             // 2. Main Layout Container
             var mainContainer = new GameObject("MainContainer");
@@ -63,7 +63,7 @@ namespace RulerBox
             scrollLE.flexibleHeight = 1f; // Fill remaining space
 
             var scrollBg = scrollObj.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0.3f); // Kept original color
+            scrollBg.color = new Color(0, 0, 0, 0.3f);
 
             var scrollRect = scrollObj.AddComponent<ScrollRect>();
             scrollRect.horizontal = true;
@@ -82,27 +82,28 @@ namespace RulerBox
             content.transform.SetParent(viewport.transform, false);
             scrollContent = content.AddComponent<RectTransform>();
             
-            // --- FIX: Content Anchors for Horizontal Scrolling ---
-            // Anchor Min (0,0) and Max (0,1) stretches it vertically but keeps it anchored to the left
+            // --- Content Anchors for Horizontal Scrolling ---
+            // Anchor Min (0,0) and Max (0,1) stretches it vertically to fill viewport height
             var cRT = scrollContent.GetComponent<RectTransform>();
             cRT.anchorMin = new Vector2(0, 0); 
             cRT.anchorMax = new Vector2(0, 1); 
             cRT.pivot = new Vector2(0, 1);
             cRT.sizeDelta = Vector2.zero; // Reset offsets
             
-            // Content Layout (Horizontal rows of vertical bars)
+            // Content Layout
             var hGroup = content.AddComponent<HorizontalLayoutGroup>();
             hGroup.childAlignment = TextAnchor.LowerLeft;
-            hGroup.spacing = 10;
-            hGroup.padding = new RectOffset(5, 5, 5, 5);
-            hGroup.childControlHeight = true; // Stretch children vertically to fill the scroll view height
+            hGroup.spacing = 5;
+            hGroup.padding = new RectOffset(1, 1, 1, 1);
+            // Crucial: ChildControlHeight true + ChildForceExpandHeight true makes all columns maximize their height
+            hGroup.childControlHeight = true; 
             hGroup.childControlWidth = false;
             hGroup.childForceExpandHeight = true;
             hGroup.childForceExpandWidth = false;
 
             var fitter = content.AddComponent<ContentSizeFitter>();
-            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize; // Grow width based on content
-            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained;   // Height matches viewport (controlled by anchors)
+            fitter.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fitter.verticalFit = ContentSizeFitter.FitMode.Unconstrained; // Height matches viewport via anchors
 
             scrollRect.viewport = vpRT;
             scrollRect.content = cRT;
@@ -158,6 +159,7 @@ namespace RulerBox
         private static void CreateRankingItem(RankingData data, int rank, float maxScore)
         {
             // Container for a single kingdom column
+            // It will be stretched vertically by the parent HorizontalLayoutGroup
             var col = new GameObject($"Rank_{rank}_{data.kingdom.data.name}");
             col.transform.SetParent(scrollContent, false);
             
@@ -167,26 +169,29 @@ namespace RulerBox
 
             var vGroup = col.AddComponent<VerticalLayoutGroup>();
             vGroup.spacing = 5;
-            vGroup.childControlHeight = false; // We control bar height manually
-            vGroup.childForceExpandHeight = false;
+            vGroup.childControlHeight = true; // Control children height
+            vGroup.childForceExpandHeight = false; // Don't force them all to expand equally
             vGroup.childAlignment = TextAnchor.LowerCenter;
 
-            // 1. Score Text (Top)
+            // 1. Score Text (Fixed height at top)
             var scoreTxt = CreateText(col.transform, FormatNumber(data.score), 10, FontStyle.Normal, Color.yellow);
             scoreTxt.alignment = TextAnchor.LowerCenter;
-            var scoreRT = scoreTxt.GetComponent<RectTransform>();
-            scoreRT.sizeDelta = new Vector2(100, 20);
+            var scoreLE = scoreTxt.gameObject.AddComponent<LayoutElement>();
+            scoreLE.preferredHeight = 20f;
+            scoreLE.minHeight = 20f;
+            scoreLE.flexibleHeight = 0f; // Fixed
 
-            // 2. Bar Graph (Middle)
-            // Normalized height based on max score.
-            // We want it to fill the available space, but since VerticalLayoutGroup is controlling positions,
-            // we give it a specific preferred height relative to the max score.
-            float fillAmount = (maxScore > 0) ? (data.score / maxScore) : 0;
-            // Assuming scroll view is roughly 300-400px high, we use 250 as max bar height baseline
-            float barHeight = Mathf.Max(10f, fillAmount * 250f); 
+            // 2. Bar Container (Flexible height - fills remaining space)
+            // This is the empty space the bar CAN fill.
+            var barContainer = new GameObject("BarContainer");
+            barContainer.transform.SetParent(col.transform, false);
+            var containerLE = barContainer.AddComponent<LayoutElement>();
+            containerLE.flexibleHeight = 1f; // Take all available space
+            containerLE.minHeight = 10f;     // Minimum size so it doesn't vanish
 
-            var barObj = new GameObject("Bar");
-            barObj.transform.SetParent(col.transform, false);
+            // 2b. The Bar Fill (Actual colored image)
+            var barObj = new GameObject("BarFill");
+            barObj.transform.SetParent(barContainer.transform, false);
             var barImg = barObj.AddComponent<Image>();
             
             // Determine Color
@@ -194,73 +199,87 @@ namespace RulerBox
             else if (Main.selectedKingdom != null && data.kingdom.isEnemy(Main.selectedKingdom)) barImg.color = BarColorEnemy;
             else barImg.color = BarColorNeutral;
 
+            // --- ANCHOR LOGIC ---
+            // We set the anchors so the bar fills a percentage of the parent container
+            float fillPercentage = (maxScore > 0) ? (data.score / maxScore) : 0f;
+            
             var barRT = barObj.GetComponent<RectTransform>();
-            barRT.sizeDelta = new Vector2(40, barHeight); // Width 40
+            barRT.anchorMin = new Vector2(0.2f, 0f); // 20% margin left/right
+            barRT.anchorMax = new Vector2(0.8f, fillPercentage); // Height based on score
+            barRT.offsetMin = Vector2.zero;
+            barRT.offsetMax = Vector2.zero;
 
-            // 3. Flag (Bottom)
+            // 3. Flag (Fixed height)
             var flagContainer = new GameObject("Flag");
             flagContainer.transform.SetParent(col.transform, false);
-            var flagRT = flagContainer.AddComponent<RectTransform>();
-            flagRT.sizeDelta = new Vector2(40, 40);
+            var flagLE = flagContainer.AddComponent<LayoutElement>();
+            flagLE.preferredHeight = 40f;
+            flagLE.minHeight = 40f;
+            flagLE.flexibleHeight = 0f;
 
             // Flag Background
             var flagBg = new GameObject("FlagBG").AddComponent<Image>();
             flagBg.transform.SetParent(flagContainer.transform, false);
             flagBg.sprite = data.kingdom.getElementBackground();
             flagBg.color = data.kingdom.kingdomColor.getColorMain32();
-            flagBg.rectTransform.sizeDelta = new Vector2(40, 40);
+            flagBg.rectTransform.anchorMin = new Vector2(0.3f, 0f);
+            flagBg.rectTransform.anchorMax = new Vector2(0.7f, 1f);
+            flagBg.rectTransform.offsetMin = Vector2.zero;
+            flagBg.rectTransform.offsetMax = Vector2.zero;
 
             // Flag Icon
             var flagIcon = new GameObject("FlagIcon").AddComponent<Image>();
             flagIcon.transform.SetParent(flagContainer.transform, false);
             flagIcon.sprite = data.kingdom.getElementIcon();
             flagIcon.color = data.kingdom.kingdomColor.getColorBanner();
-            flagIcon.rectTransform.sizeDelta = new Vector2(40, 40);
+            flagIcon.rectTransform.anchorMin = new Vector2(0.3f, 0f);
+            flagIcon.rectTransform.anchorMax = new Vector2(0.7f, 1f);
+            flagIcon.rectTransform.offsetMin = Vector2.zero;
+            flagIcon.rectTransform.offsetMax = Vector2.zero;
 
-            // 4. Rank & Name (Bottomest)
+            // 4. Rank & Name (Fixed height at bottom)
             string nameStr = $"#{rank}\n{data.kingdom.data.name}";
             var nameTxt = CreateText(col.transform, nameStr, 11, FontStyle.Bold, Color.white);
             nameTxt.alignment = TextAnchor.UpperCenter;
-            nameTxt.rectTransform.sizeDelta = new Vector2(100, 40);
+            var nameLE = nameTxt.gameObject.AddComponent<LayoutElement>();
+            nameLE.preferredHeight = 40f;
+            nameLE.minHeight = 40f;
+            nameLE.flexibleHeight = 0f;
         }
 
         private static float CalculatePowerScore(Kingdom k)
         {
-            // Get or Create data from KingdomMetricsSystem
+            // Use KingdomMetricsSystem for calculation
             var d = KingdomMetricsSystem.Get(k);
             
-            // Ensure data is fresh, even if this kingdom isn't the currently selected one
-            // We pass a small delta time just to trigger the calculation logic
+            // Force a quick recalculation to ensure stats like Income/Treasury are populated
+            // Passing 0.01f delta time just to trigger the calc logic without advancing timers too much
             KingdomMetricsSystem.RecalculateForKingdom(k, d);
 
             float score = 0f;
 
-            // 1. Economy (Income + Treasury) - GDP logic from Metrics
-            // Income is roughly DailyGDP. Treasury is accumulated wealth.
-            score += d.Income * 0.5f; 
-            score += d.Treasury * 0.01f; // Treasury can be huge, weight it lower
+            // 1. Economy (Weighted Income + Treasury)
+            // Income is per-minute roughly.
+            score += d.Income * 2.0f; 
+            // Treasury accumulates, so we weight it less to prevent old hoarders from dominating too hard
+            score += d.Treasury * 0.05f; 
 
-            // 2. Military Power (Army Strength + Manpower Potential)
-            // d.Soldiers is current count. d.ManpowerMax is potential.
-            score += d.Soldiers * 10.0f;
-            score += d.ManpowerMax * 2.0f;
+            // 2. Military (Soldiers + Manpower Potential)
+            score += d.Soldiers * 15.0f; // High weight for active army
+            score += d.ManpowerMax * 5.0f; // Potential army
 
             // 3. Population & Development
-            score += d.Population * 1.5f;
-            score += d.Cities * 50.0f; // Cities are valuable hubs
-            score += d.Buildings * 2.0f; // Infrastructure
+            score += d.Population * 2.0f;
+            score += d.Cities * 100.0f; // Cities are major power hubs
+            score += d.Buildings * 3.0f; // Infrastructure
 
-            // 4. Resources (Stockpiles)
-            // Sum of all resources in stockpile
-            long totalResources = 0;
+            // 4. Resources
+            long totalRes = 0;
             if (d.ResourceStockpiles != null)
             {
-                foreach(var val in d.ResourceStockpiles.Values)
-                {
-                    totalResources += val;
-                }
+                foreach(var kvp in d.ResourceStockpiles) totalRes += kvp.Value;
             }
-            score += totalResources * 0.1f;
+            score += totalRes * 0.2f;
 
             return score;
         }
