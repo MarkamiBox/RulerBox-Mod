@@ -292,7 +292,7 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.5f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.padding = new RectOffset(30, 30, 6, 6);
+            v.spacing = 4; v.padding = new RectOffset(1, 1, 1, 1);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
