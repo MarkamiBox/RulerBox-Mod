@@ -253,9 +253,6 @@ namespace RulerBox
             CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
             CreateText(textStack.transform, leader.Type, 10, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
-            string summary = FormatSummary(leader);
-            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
-
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
@@ -440,22 +437,6 @@ namespace RulerBox
                     corr += UnityEngine.Random.Range(0.05f, 0.15f) * (isMalus ? -1f : 1f); 
                     break; 
             }
-        }
-
-        private static string FormatSummary(LeaderState l)
-        {
-            string s = "";
-            string Col(float val, string txt) => val >= 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
-            // Corruption: Pos = Good (Green -%), Neg = Bad (Red +%)
-            string ColCorr(float val, string txt) => val >= 0 ? $"<color=#7CFC00>-{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
-
-            if (Mathf.Abs(l.StabilityBonus) > 0.1f) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
-            if (Mathf.Abs(l.PPGainBonus) > 0.01f) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
-            if (Mathf.Abs(l.AttackBonus) > 0.01f) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
-            if (Mathf.Abs(l.CorruptionReduction) > 0.01f) s += ColCorr(l.CorruptionReduction, $"Corr {Mathf.Abs(l.CorruptionReduction)*100:0}%") + " ";
-            
-            if (s == "") s = "Minor Effects";
-            return s;
         }
 
         private static string GetLeaderTooltip(LeaderState l)
