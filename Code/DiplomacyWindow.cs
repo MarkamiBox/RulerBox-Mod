@@ -488,7 +488,6 @@ namespace RulerBox
                 LeadersWindow.Refresh(); // Force refresh to ensure content is there
             });
             CreateActionBtn("Policies", null);
-            CreateActionBtn("Ideologies", null);
             CreateActionBtn("Rankings", () => {
                 SetVisible(false); 
                 RankingsWindow.SetVisible(true);
