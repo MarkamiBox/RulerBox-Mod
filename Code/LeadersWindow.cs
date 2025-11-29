@@ -49,7 +49,7 @@ namespace RulerBox
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
                 h.spacing = 8;
-                h.padding = new RectOffset(16, 16, 8, 8); // Balanced padding
+                h.padding = new RectOffset(1, 1, 1, 1);
                 h.childControlWidth = true;
                 h.childControlHeight = true;
                 h.childForceExpandWidth = true;
@@ -172,7 +172,7 @@ namespace RulerBox
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 4; // Space between avatar and text
-            h.padding = new RectOffset(4, 4, 2, 2); // Minimal padding inside button
+            h.padding = new RectOffset(10, 10, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
