@@ -102,8 +102,6 @@ namespace RulerBox
         {
             if (!IsVisible() || k == null) return;
             
-            // Debug.Log("[RulerBox] DiplomacyWindow Refreshing...");
-
             if (LeadersWindow.IsVisible()) LeadersWindow.Refresh();
 
             Color mainColor = Color.white;
