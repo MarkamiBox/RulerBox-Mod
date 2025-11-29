@@ -253,6 +253,7 @@ namespace RulerBox
 
         private static void UpdateCounts(Kingdom k, Data d)
         {
+            // 1. Buildings & Cities
             if (k.cities != null)
             {
                 d.Cities = k.cities.Count;
@@ -269,17 +270,81 @@ namespace RulerBox
                 d.Buildings = 0;
             }
             
+            // 2. Update Total Population Counts
             d.Adults = k.countAdults();
             d.Soldiers = k.countTotalWarriors();
+            
+            // Store previous population to calculate growth delta for tooltips
+            d.PrevPopulation = d.Population;
             d.Population = k.getPopulationPeople();
             
-            // Population Growth Calc
+            // Growth Rate (Visual modifier based on laws/policies)
             d.AvgGrowthRate = (d.PopulationGrowthBonus * 100f); 
-            
-            // Basic Demographic place holders if needed for tooltips
-            // d.Children = ...
-            // d.Unemployed = ... 
-            // These would be calculated here if we had detailed actor iteration
+
+            // 3. Reset Demographic Counters
+            d.Children = 0;
+            d.Babies = 0;
+            d.Teens = 0;
+            d.Elders = 0;
+            d.Veterans = 0;
+            d.Genius = 0;
+            d.Homeless = 0;
+            d.Unemployed = 0;
+            d.Hungry = 0;
+            d.Starving = 0;
+            d.Sick = 0;
+            d.HappyUnits = 0;
+
+            // 4. Detailed Unit Iteration
+            // We iterate through all units to populate the specific stats needed for ChipTooltips.
+            var units = k.getUnits();
+            if (units != null)
+            {
+                foreach(var a in units)
+                {
+                    if (a == null || !a.isAlive()) continue;
+
+                    // --- Age Demographics ---
+                    if (!a.isAdult())
+                    {
+                        d.Children++; // Total children count
+                        
+                        if (a.isBaby()) 
+                        {
+                            d.Babies++;
+                        }
+                        else 
+                        {
+                            // Not a baby, but not an adult = Teen/Child
+                            d.Teens++;
+                        }
+                    }
+                    else 
+                    {
+                        // Adults & Elders (WorldBox usually considers >60 as getting old)
+                        if (a.getAge() >= 60) d.Elders++;
+                        
+                        // "Unemployed": Adult civilians who are not soldiers, leaders, or kings
+                        // This helps player see available workforce vs administrative bloat/army
+                        if (!a.isWarrior() && !a.isCityLeader() && !a.isKing())
+                        {
+                            d.Unemployed++; 
+                        }
+                    }
+
+                    // --- Traits & Status ---
+                    if (a.hasTrait("genius")) d.Genius++;
+                    if (a.hasTrait("veteran")) d.Veterans++;
+                    
+                    if (a.isHappy()) d.HappyUnits++;
+                    if (a.isHungry()) d.Hungry++;
+                    if (a.isStarving()) d.Starving++;
+                    if (a.isSick()) d.Sick++;
+                    
+                    // --- Housing ---
+                    if (!a.hasHouse()) d.Homeless++;
+                }
+            }
         }
 
         private static void ApplyLeaderModifiers(Data d)
