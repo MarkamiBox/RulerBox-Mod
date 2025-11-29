@@ -2,7 +2,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace RulerBox
 {
@@ -10,8 +9,6 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
-        private static Sprite circleBgSprite; 
-        private static Sprite circleFrameSprite;
 
         private static Transform recruitmentContent;
         private static Transform activeContent;
@@ -39,8 +36,6 @@ namespace RulerBox
                 activeHeader = null;
 
                 windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-                circleBgSprite = Resources.Load<Sprite>("ui/elements/circle_bg"); 
-                circleFrameSprite = Resources.Load<Sprite>("ui/elements/circle_frame");
 
                 root = new GameObject("LeadersWindow");
                 root.transform.SetParent(parent, false);
@@ -172,73 +167,14 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 6;
+            h.spacing = 10;
             h.padding = new RectOffset(10, 10, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- AVATAR ROOT ---
-            var avatarRoot = new GameObject("AvatarRoot");
-            avatarRoot.transform.SetParent(btnObj.transform, false);
-            
-            var avLe = avatarRoot.AddComponent<LayoutElement>();
-            avLe.minWidth = 36f; avLe.preferredWidth = 36f;
-            avLe.minHeight = 36f; avLe.preferredHeight = 36f;
-            avLe.flexibleWidth = 0f;
-
-            // Layer 1: Background
-            var bgCircleObj = new GameObject("BgCircle");
-            bgCircleObj.transform.SetParent(avatarRoot.transform, false);
-            Stretch(bgCircleObj.AddComponent<RectTransform>());
-            var bgCircleImg = bgCircleObj.AddComponent<Image>();
-            bgCircleImg.sprite = circleBgSprite != null ? circleBgSprite : windowInnerSprite;
-            bgCircleImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); 
-
-            // Layer 2: Unit Sprite
-            if (leader.UnitLink != null)
-            {
-                var unitSpriteObj = new GameObject("UnitSprite");
-                unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
-                var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
-                
-                // Slightly larger inner rect to ensure visibility
-                unitRT.offsetMin = new Vector2(2, 2); 
-                unitRT.offsetMax = new Vector2(-2, -2); 
-
-                var uImg = unitSpriteObj.AddComponent<Image>();
-                uImg.preserveAspect = true;
-                
-                // --- FIX: NUCLEAR REFLECTION METHOD ---
-                Sprite unitSprite = GetSpriteSafe(leader.UnitLink);
-                
-                if (unitSprite != null)
-                {
-                    uImg.sprite = unitSprite;
-                    uImg.color = Color.white;
-                }
-                else
-                {
-                    // Fallback visual (dark grey circle) so we know the object is there
-                    uImg.color = new Color(1, 1, 1, 0.1f);
-                }
-            }
-
-            // Layer 3: Frame
-            var frameObj = new GameObject("FrameRing");
-            frameObj.transform.SetParent(avatarRoot.transform, false);
-            Stretch(frameObj.AddComponent<RectTransform>());
-            var frameImg = frameObj.AddComponent<Image>();
-            frameImg.sprite = circleFrameSprite != null ? circleFrameSprite : windowInnerSprite;
-            
-            if (leader.UnitLink != null && leader.UnitLink.kingdom != null) {
-                frameImg.color = leader.UnitLink.kingdom.getColor().getColorMain(); 
-            } else {
-                frameImg.color = Color.gray;
-            }
-
-            // --- TEXT INFO ---
+            // --- TEXT INFO ONLY (No Avatar) ---
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
@@ -256,71 +192,6 @@ namespace RulerBox
             CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
-        }
-
-        // --- THE "NUCLEAR OPTION" SPRITE FINDER ---
-        private static Sprite GetSpriteSafe(Actor actor)
-        {
-            if (actor == null) return null;
-            BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
-
-            // STRATEGY 1: Try internal 'getSpriteToRender' (Most accurate, handles animation frames)
-            try {
-                MethodInfo m = actor.GetType().GetMethod("getSpriteToRender", flags);
-                if (m != null) return (Sprite)m.Invoke(actor, null);
-            } catch {}
-
-            // STRATEGY 2: Try accessing 'avatar' GameObject -> SpriteRenderer (Live view)
-            try {
-                FieldInfo fAvatar = actor.GetType().GetField("avatar", flags);
-                if (fAvatar != null) {
-                    GameObject go = (GameObject)fAvatar.GetValue(actor);
-                    if (go != null) {
-                        SpriteRenderer sr = go.GetComponent<SpriteRenderer>();
-                        if (sr != null && sr.sprite != null) return sr.sprite;
-                    }
-                }
-            } catch {}
-
-            // STRATEGY 3: Try accessing 'sprite_animation' (Sometimes exposed)
-            try {
-                FieldInfo fAnim = actor.GetType().GetField("sprite_animation", flags);
-                if (fAnim != null) {
-                    object animObj = fAnim.GetValue(actor);
-                    if (animObj != null) {
-                        // Attempt to read 'current_sprite' from SpriteAnimation
-                        FieldInfo fSprite = animObj.GetType().GetField("current_sprite", flags);
-                        if (fSprite != null) return (Sprite)fSprite.GetValue(animObj);
-                    }
-                }
-            } catch {}
-
-            // STRATEGY 4: Final Fallback - Static Icon from Asset (Better than nothing)
-            try {
-                // Access 'asset' field via reflection to be safe
-                FieldInfo fAsset = actor.GetType().GetField("asset", flags);
-                if (fAsset != null) {
-                    object assetObj = fAsset.GetValue(actor);
-                    if (assetObj != null) {
-                        // Access 'icon' field on the asset
-                        FieldInfo fIcon = assetObj.GetType().GetField("icon", flags);
-                        if (fIcon != null) {
-                            string iconPath = (string)fIcon.GetValue(assetObj);
-                            if (!string.IsNullOrEmpty(iconPath)) {
-                                return Resources.Load<Sprite>("ui/Icons/" + iconPath);
-                            }
-                        }
-                    }
-                }
-            } catch {}
-
-            return null;
-        }
-
-        private static RectTransform Stretch(RectTransform rt) {
-            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
-            return rt;
         }
 
         private static void CreateRecruitPanel(Transform parent)
@@ -358,7 +229,7 @@ namespace RulerBox
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.5f); 
+            bg.color = new Color(0, 0, 0, 0.001f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
             v.spacing = 5; v.padding = new RectOffset(4, 4, 4, 4);
