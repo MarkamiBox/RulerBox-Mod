@@ -266,7 +266,8 @@ namespace RulerBox
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 30f; le.minHeight = 30f;
+            le.preferredHeight = 30f; 
+            le.minHeight = 30f;
 
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
