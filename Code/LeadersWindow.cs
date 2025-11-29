@@ -9,11 +9,8 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
-        
-        // Placeholders for avatar circle sprites. Replace these paths if you find the exact game assets.
-        // If not found, it will fall back to the windowInnerSprite (square frame).
-        private static Sprite circleBgSprite; // Solid circle for background
-        private static Sprite circleFrameSprite; // Hollow circle for the colored ring
+        private static Sprite circleBgSprite; 
+        private static Sprite circleFrameSprite;
 
         private static Transform recruitmentContent;
         private static Transform activeContent;
@@ -40,10 +37,7 @@ namespace RulerBox
                 activeContent = null;
                 activeHeader = null;
 
-                // Load resources
                 windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-                // Try to load standard circle sprites from game resources. 
-                // NOTE: You might need to adjust these paths to match actual game assets if these don't exist.
                 circleBgSprite = Resources.Load<Sprite>("ui/elements/circle_bg"); 
                 circleFrameSprite = Resources.Load<Sprite>("ui/elements/circle_frame");
 
@@ -54,8 +48,9 @@ namespace RulerBox
                 rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
                 var h = root.AddComponent<HorizontalLayoutGroup>();
-                h.spacing = 12; // Increased spacing between panels
-                h.padding = new RectOffset(10, 10, 10, 10);
+                h.spacing = 8;
+                // INCREASED PADDING: Helps prevent items from stretching too wide
+                h.padding = new RectOffset(20, 20, 10, 10); 
                 h.childControlWidth = true;
                 h.childControlHeight = true;
                 h.childForceExpandWidth = true;
@@ -165,9 +160,9 @@ namespace RulerBox
             btnObj.transform.SetParent(parent, false);
 
             var le = btnObj.AddComponent<LayoutElement>();
-            // Increased height for larger avatar and better spacing
-            le.minHeight = 64f; 
-            le.preferredHeight = 64f;
+            // --- COMPACT SIZE ---
+            le.minHeight = 42f; 
+            le.preferredHeight = 42f;
             le.flexibleWidth = 1f;
 
             var bg = btnObj.AddComponent<Image>();
@@ -180,86 +175,78 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 12; // More space between avatar and text
-            h.padding = new RectOffset(8, 8, 6, 6);
+            h.spacing = 6; 
+            h.padding = new RectOffset(6, 6, 4, 4);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
             h.childAlignment = TextAnchor.MiddleLeft;
 
-            // --- NEW LAYERED AVATAR SYSTEM ---
+            // --- AVATAR SYSTEM (Scaled Down) ---
             var avatarRoot = new GameObject("AvatarRoot");
             avatarRoot.transform.SetParent(btnObj.transform, false);
             var avLe = avatarRoot.AddComponent<LayoutElement>();
-            avLe.minWidth = 52f; avLe.preferredWidth = 52f;
-            avLe.minHeight = 52f; avLe.preferredHeight = 52f;
+            avLe.minWidth = 32f; avLe.preferredWidth = 32f;
+            avLe.minHeight = 32f; avLe.preferredHeight = 32f;
 
-            // Layer 1: Dark Inner Background Circle
+            // Layer 1: Background
             var bgCircleObj = new GameObject("BgCircle");
             bgCircleObj.transform.SetParent(avatarRoot.transform, false);
             Stretch(bgCircleObj.AddComponent<RectTransform>());
             var bgCircleImg = bgCircleObj.AddComponent<Image>();
-            // Use loaded circle sprite, fallback to sliced square if missing
             bgCircleImg.sprite = circleBgSprite != null ? circleBgSprite : windowInnerSprite;
-            bgCircleImg.type = circleBgSprite != null ? Image.Type.Simple : Image.Type.Sliced;
-            bgCircleImg.color = new Color(0.15f, 0.15f, 0.15f, 1f); // Dark gray
+            bgCircleImg.color = new Color(0.1f, 0.1f, 0.1f, 1f); 
 
-            // Layer 2: Unit Sprite centered inside
+            // Layer 2: Unit Sprite
             if (leader.UnitLink != null)
             {
                 var unitSpriteObj = new GameObject("UnitSprite");
                 unitSpriteObj.transform.SetParent(avatarRoot.transform, false);
                 var unitRT = Stretch(unitSpriteObj.AddComponent<RectTransform>());
-                // Add padding so unit is inside the frame borders
-                unitRT.offsetMin = new Vector2(4, 4); unitRT.offsetMax = new Vector2(-4, -4); 
+                unitRT.offsetMin = new Vector2(2, 2); unitRT.offsetMax = new Vector2(-2, -2); 
                 var uImg = unitSpriteObj.AddComponent<Image>();
                 uImg.preserveAspect = true;
                 try {
                     uImg.sprite = leader.UnitLink.getSpriteToRender();
-                    uImg.color = Color.white; // Base sprite color
+                    uImg.color = Color.white; 
                 } catch { uImg.color = Color.clear; }
             }
 
-            // Layer 3: Colored Frame Ring on top
+            // Layer 3: Frame
             var frameObj = new GameObject("FrameRing");
             frameObj.transform.SetParent(avatarRoot.transform, false);
             Stretch(frameObj.AddComponent<RectTransform>());
             var frameImg = frameObj.AddComponent<Image>();
-            // Use loaded frame sprite, fallback to sliced square
             frameImg.sprite = circleFrameSprite != null ? circleFrameSprite : windowInnerSprite;
-            frameImg.type = circleFrameSprite != null ? Image.Type.Simple : Image.Type.Sliced;
             
-            // Apply Kingdom Color to the frame
             if (leader.UnitLink != null && leader.UnitLink.kingdom != null) {
                 frameImg.color = leader.UnitLink.kingdom.getColor().getColorMain(); 
             } else {
                 frameImg.color = Color.gray;
             }
-            // ---------------------------------
 
-            // --- TEXT INFO ---
+            // --- TEXT INFO (Smaller Fonts) ---
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
             textVL.childAlignment = TextAnchor.MiddleLeft;
-            textVL.spacing = 2; // Spacing between lines
+            textVL.spacing = 0; 
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
 
             var textStackLE = textStack.AddComponent<LayoutElement>();
             textStackLE.flexibleWidth = 1f;
 
-            CreateText(textStack.transform, leader.Name, 11, FontStyle.Bold, Color.white);
-            CreateText(textStack.transform, leader.Type, 10, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
+            CreateText(textStack.transform, leader.Name, 10, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, leader.Type, 9, FontStyle.Italic, new Color(1f, 0.85f, 0.4f));
             
             string summary = FormatSummary(leader);
-            CreateText(textStack.transform, summary, 9, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
+            CreateText(textStack.transform, summary, 8, FontStyle.Normal, new Color(0.9f, 0.9f, 0.9f));
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLeaderTooltip(leader));
         }
 
-        // Helper to stretch RectTransform to fill parent
         private static RectTransform Stretch(RectTransform rt) {
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
@@ -268,28 +255,27 @@ namespace RulerBox
 
         private static void CreateRecruitPanel(Transform parent)
         {
-            // Increased flexibleWidth slightly
-            var container = CreatePanelBase(parent, "RecruitPanel", 1.1f); 
+            // Set panel width weight. Lower = narrower.
+            var container = CreatePanelBase(parent, "RecruitPanel", 1.0f); 
             
-            var header = CreateText(container.transform, "Recruit Leaders", 12, FontStyle.Bold, Color.white);
+            var header = CreateText(container.transform, "Recruit Leaders", 11, FontStyle.Bold, Color.white);
             header.alignment = TextAnchor.MiddleCenter;
             
             var le = header.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 32f; le.minHeight = 32f;
+            le.preferredHeight = 24f; le.minHeight = 24f;
 
             recruitmentContent = CreateScrollList(container.transform, "RecruitScroll");
         }
 
         private static void CreateActivePanel(Transform parent)
         {
-            // Increased flexibleWidth slightly
             var container = CreatePanelBase(parent, "ActivePanel", 0.9f); 
             
-            activeHeader = CreateText(container.transform, "0/3 Leaders", 12, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader = CreateText(container.transform, "0/3 Leaders", 11, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
             activeHeader.alignment = TextAnchor.MiddleCenter;
             
             var le = activeHeader.gameObject.AddComponent<LayoutElement>();
-            le.preferredHeight = 32f; le.minHeight = 32f;
+            le.preferredHeight = 24f; le.minHeight = 24f;
 
             activeContent = CreateScrollList(container.transform, "ActiveScroll");
         }
@@ -303,11 +289,10 @@ namespace RulerBox
             
             var bg = panel.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.5f); // Slightly darker panel
+            bg.color = new Color(0, 0, 0, 0.5f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            // Increased padding so items don't touch edges
-            v.spacing = 6; v.padding = new RectOffset(8, 8, 8, 8);
+            v.spacing = 4; v.padding = new RectOffset(6, 6, 6, 6);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
@@ -325,13 +310,12 @@ namespace RulerBox
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false;
             scroll.movementType = ScrollRect.MovementType.Clamped;
-            scroll.scrollSensitivity = 25f;
+            scroll.scrollSensitivity = 20f;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
             var vpRT = viewport.AddComponent<RectTransform>();
             vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
-            // Adjusted viewport padding
             vpRT.offsetMin = new Vector2(2, 2); vpRT.offsetMax = new Vector2(-2, -2);
             viewport.AddComponent<RectMask2D>();
 
@@ -342,8 +326,7 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            // Spacing between items in list
-            v.spacing = 6; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
+            v.spacing = 4; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             
             scroll.viewport = vpRT; scroll.content = cRT;
@@ -404,17 +387,14 @@ namespace RulerBox
             }
         }
 
-        // --- UPDATED: GENERATE MIXED STATS (Guarantees Good + Bad usually) ---
         private static LeaderState CreateRandomLeader(Actor unit)
         {
             string title = RandomTitles[UnityEngine.Random.Range(0, RandomTitles.Length)];
             
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
             
-            // 10% chance for a purely "good" leader
             bool mostlyGood = UnityEngine.Random.value < 0.10f;
-            
-            int traitCount = UnityEngine.Random.Range(2, 5); // 2 to 4 traits
+            int traitCount = UnityEngine.Random.Range(2, 5); 
             int badTraitsApplied = 0;
             int goodTraitsApplied = 0;
 
@@ -423,15 +403,11 @@ namespace RulerBox
                 bool isBad = false;
                 if (!mostlyGood)
                 {
-                    // Logic to ensure mix: 
-                    // If it's the last trait and we haven't had a bad one yet, force bad.
-                    // If it's the last trait and we haven't had a good one yet, force good.
                     if (i == traitCount - 1) {
                         if (badTraitsApplied == 0) isBad = true;
                         else if (goodTraitsApplied == 0) isBad = false;
                         else isBad = UnityEngine.Random.value > 0.5f;
                     } else {
-                         // Normal roll: 40% chance of bad trait
                          isBad = UnityEngine.Random.value < 0.4f;
                     }
                 }
@@ -452,10 +428,9 @@ namespace RulerBox
 
         private static void ApplyStat(ref float stab, ref float pp, ref float atk, ref float res, ref float tax, ref float corr, bool isMalus)
         {
-            float sign = isMalus ? -1f : 1f; // Negative multiplier for Malus
+            float sign = isMalus ? -1f : 1f; 
             int type = UnityEngine.Random.Range(0, 6);
 
-            // Adjusted ranges for slightly stronger traits given they are mixed
             switch(type)
             {
                 case 0: stab += UnityEngine.Random.Range(4f, 10f) * sign; break; 
@@ -463,11 +438,7 @@ namespace RulerBox
                 case 2: atk += UnityEngine.Random.Range(15f, 35f) * sign; break; 
                 case 3: res += UnityEngine.Random.Range(15f, 30f) * sign; break;  
                 case 4: tax += UnityEngine.Random.Range(15f, 25f) * sign; break;  
-                case 5: 
-                    // Corruption Logic: Positive 'corr' reduces corruption (Good).
-                    // If isMalus (Bad), use negative sign to increase corruption.
-                    corr += UnityEngine.Random.Range(0.08f, 0.2f) * (isMalus ? -1f : 1f); 
-                    break; 
+                case 5: corr += UnityEngine.Random.Range(0.08f, 0.2f) * (isMalus ? -1f : 1f); break; 
             }
         }
 
@@ -477,24 +448,19 @@ namespace RulerBox
             string Col(float val, string txt) => val >= 0 ? $"<color=#7CFC00>+{txt}</color>" : $"<color=#FF5A5A>{txt}</color>";
             string ColCorr(float val, string txt) => val >= 0 ? $"<color=#7CFC00>-{txt}</color>" : $"<color=#FF5A5A>+{txt}</color>";
 
-            // Only show significant values in summary
             if (Mathf.Abs(l.StabilityBonus) > 1f) s += Col(l.StabilityBonus, $"Stab {l.StabilityBonus:0.#}") + " ";
             if (Mathf.Abs(l.PPGainBonus) > 0.05f) s += Col(l.PPGainBonus, $"PP {l.PPGainBonus*100:0}%") + " ";
             if (Mathf.Abs(l.AttackBonus) > 0.05f) s += Col(l.AttackBonus, $"Atk {l.AttackBonus*100:0}%") + " ";
             if (Mathf.Abs(l.CorruptionReduction) > 0.05f) s += ColCorr(l.CorruptionReduction, $"Corr {Mathf.Abs(l.CorruptionReduction)*100:0}%") + " ";
             
-            if (s == "") s = "Check tooltip for details...";
+            if (s == "") s = "Check tooltip...";
             return s;
         }
 
         private static string GetLeaderTooltip(LeaderState l)
         {
             string s = $"<b><color=#FFD700>{l.Type}</color></b>\n";
-            if (l.UnitLink != null)
-            {
-                string status = l.UnitLink.isAlive() ? "<color=#7CFC00>Alive</color>" : "<color=#FF5A5A>Deceased</color>";
-                s += $"Unit: {l.UnitLink.getName()} ({status})\n";
-            }
+            if (l.UnitLink != null) s += $"Unit: {l.UnitLink.getName()}\n";
             else s += "(Abstract Leader)\n";
             s += "\n<b>Effects:</b>\n";
 
