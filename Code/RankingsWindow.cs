@@ -249,39 +249,79 @@ namespace RulerBox
 
         private static float CalculatePowerScore(Kingdom k)
         {
-            // Use KingdomMetricsSystem for calculation
             var d = KingdomMetricsSystem.Get(k);
+            KingdomMetricsSystem.RecalculateForKingdom(k, d); // Ensure fresh data
+
+            // --- 1. ECONOMY & RESOURCES ---
+            // Daily Income (GDP) is the most important economic factor.
+            float ecoScore = d.Income * 5.0f; 
             
-            // Force a quick recalculation to ensure stats like Income/Treasury are populated
-            // Passing 0.01f delta time just to trigger the calc logic without advancing timers too much
-            KingdomMetricsSystem.RecalculateForKingdom(k, d);
+            // Treasury (Buying Power). 1000 Gold ~ 50 points.
+            ecoScore += d.Treasury * 0.05f; 
+            
+            // Trade Income bonus (shows economic influence)
+            ecoScore += d.TradeIncome * 1.5f;
 
-            float score = 0f;
-
-            // 1. Economy (Weighted Income + Treasury)
-            // Income is per-minute roughly.
-            score += d.Income * 2.0f; 
-            // Treasury accumulates, so we weight it less to prevent old hoarders from dominating too hard
-            score += d.Treasury * 0.05f; 
-
-            // 2. Military (Soldiers + Manpower Potential)
-            score += d.Soldiers * 15.0f; // High weight for active army
-            score += d.ManpowerMax * 5.0f; // Potential army
-
-            // 3. Population & Development
-            score += d.Population * 2.0f;
-            score += d.Cities * 100.0f; // Cities are major power hubs
-            score += d.Buildings * 3.0f; // Infrastructure
-
-            // 4. Resources
-            long totalRes = 0;
+            // Resources: Basic wealth (Stockpiles). 100 resources ~ 20 points.
+            float resourceWealth = 0f;
             if (d.ResourceStockpiles != null)
             {
-                foreach(var kvp in d.ResourceStockpiles) totalRes += kvp.Value;
+                foreach(var kvp in d.ResourceStockpiles) resourceWealth += kvp.Value;
             }
-            score += totalRes * 0.2f;
+            ecoScore += resourceWealth * 0.2f;
 
-            return score;
+            // Corruption Penalty: Reduces effective economic power.
+            // 10% corruption = 90% efficiency.
+            float corruptionFactor = Mathf.Clamp01(1.0f - d.CorruptionLevel);
+            ecoScore *= corruptionFactor;
+
+            // --- 2. MILITARY STRENGTH ---
+            // Active Army Quality: Soldiers * Tech/Trait Modifiers
+            // MilitaryAttackModifier is 0 by default. +0.5 means 150% strength.
+            float qualityMod = 1.0f + d.MilitaryAttackModifier;
+            float activeArmyScore = (d.Soldiers * 10.0f) * qualityMod;
+
+            // Manpower Reserves (Resilience)
+            float reserveScore = d.ManpowerCurrent * 2.0f;
+
+            // General Leadership: King's Warfare stat boosts military rating
+            float leaderBonus = 0f;
+            if (k.king != null) leaderBonus += k.king.stats["warfare"] * 10f;
+
+            // War Exhaustion Penalty: Reduces military readiness. 
+            // 50 WE = 0.75x multiplier.
+            float wePenalty = 1.0f - (d.WarExhaustion / 200f); 
+            
+            float milScore = (activeArmyScore + reserveScore + leaderBonus) * wePenalty;
+
+            // --- 3. CIVIC & DEVELOPMENT ---
+            // Population Size
+            float popScore = d.Population * 1.0f;
+            
+            // Urbanization: Cities and Buildings
+            float urbanScore = (d.Cities * 50.0f) + (d.Buildings * 2.0f);
+            
+            // Technology / Knowledge
+            // We use ResearchOutputModifier as a proxy for technological advancement/speed
+            float techScore = d.ResearchOutputModifier * 300f; 
+            
+            // Soft Power (King's stats)
+            float diplomacyScore = 0f;
+            if(k.king != null)
+            {
+                diplomacyScore += k.king.stats["diplomacy"] * 5f;
+                diplomacyScore += k.king.stats["stewardship"] * 5f;
+                diplomacyScore += k.king.stats["intelligence"] * 5f;
+            }
+
+            // Stability Factor: Multiplies the efficiency of the entire civic society.
+            // 0 Stability = 0.5x multiplier (Anarchy). 100 Stability = 1.5x (Golden Age).
+            float stabilityFactor = 0.5f + (d.Stability / 100f);
+            
+            float civicScore = (popScore + urbanScore + techScore + diplomacyScore) * stabilityFactor;
+
+            // --- TOTAL ---
+            return ecoScore + milScore + civicScore;
         }
 
         private static void CreateHeader(Transform parent, string title)
