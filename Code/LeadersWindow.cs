@@ -176,8 +176,8 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 8;
-            h.padding = new RectOffset(6, 6, 4, 4);
+            h.spacing = 4;
+            h.padding = new RectOffset(3, 3, 4, 4);
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
@@ -188,8 +188,10 @@ namespace RulerBox
             avatarContainer.transform.SetParent(btnObj.transform, false);
             
             var avLe = avatarContainer.AddComponent<LayoutElement>();
-            avLe.minWidth = 46f; avLe.preferredWidth = 46f;
-            avLe.minHeight = 46f; avLe.preferredHeight = 46f;
+            avLe.minWidth = 46f; 
+            avLe.preferredWidth = 46f;
+            avLe.minHeight = 46f; 
+            avLe.preferredHeight = 46f;
 
             // 1. Background Circle (Kingdom Icon shape)
             var bgImg = avatarContainer.AddComponent<Image>();
