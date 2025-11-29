@@ -93,7 +93,7 @@ namespace RulerBox
             // Content Layout
             var hGroup = content.AddComponent<HorizontalLayoutGroup>();
             hGroup.childAlignment = TextAnchor.LowerLeft;
-            hGroup.spacing = 5;
+            hGroup.spacing = 2;
             hGroup.padding = new RectOffset(1, 1, 1, 1);
             // Crucial: ChildControlHeight true + ChildForceExpandHeight true makes all columns maximize their height
             hGroup.childControlHeight = true; 
@@ -168,7 +168,7 @@ namespace RulerBox
             le.minWidth = 100f;
 
             var vGroup = col.AddComponent<VerticalLayoutGroup>();
-            vGroup.spacing = 5;
+            vGroup.spacing = 2;
             vGroup.childControlHeight = true; // Control children height
             vGroup.childForceExpandHeight = false; // Don't force them all to expand equally
             vGroup.childAlignment = TextAnchor.LowerCenter;
@@ -292,7 +292,7 @@ namespace RulerBox
             le.preferredHeight = 10f;
             le.minHeight = 10f;
 
-            var txt = CreateText(headerObj.transform, title, 8, FontStyle.Bold, Color.white);
+            var txt = CreateText(headerObj.transform, title, 11, FontStyle.Bold, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
