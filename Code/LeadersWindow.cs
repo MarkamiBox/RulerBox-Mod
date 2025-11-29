@@ -171,7 +171,7 @@ namespace RulerBox
             btn.onClick.AddListener(() => OnLeaderClicked(leader, isActive));
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
-            h.spacing = 4; // Space between avatar and text
+            h.spacing = 6; // Space between avatar and text
             h.padding = new RectOffset(10, 10, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -291,7 +291,7 @@ namespace RulerBox
             bg.color = new Color(0, 0, 0, 0.5f); 
             
             var v = panel.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 4; v.padding = new RectOffset(4, 4, 4, 4);
+            v.spacing = 5; v.padding = new RectOffset(4, 4, 4, 4);
             v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
             return panel;
         }
