@@ -428,7 +428,7 @@ namespace RulerBox
                         Action = k => 
                         {
                             var d = GetData(k);
-                            d.Treasury += 3000;
+                            d.Treasury += 1500;
                             d.CorruptionLevel += 0.10f;
                         }
                     },
