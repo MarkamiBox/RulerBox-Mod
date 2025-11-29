@@ -61,6 +61,7 @@ namespace RulerBox
                 InitSubWindow("Diplomacy", () => DiplomacyWindow.Initialize(contentContainer.transform));
                 InitSubWindow("DiplomacyActions", () => DiplomacyActionsWindow.Initialize(contentContainer.transform));
                 InitSubWindow("Technology", () => TechnologyWindow.Initialize(contentContainer.transform));
+                InitSubWindow("Policies", () => PoliciesWindow.Initialize(contentContainer.transform));
                 
                 // --- FIX: Explicitly Initialize LeadersWindow ---
                 InitSubWindow("LeadersWindow", () => LeadersWindow.Initialize(contentContainer.transform));

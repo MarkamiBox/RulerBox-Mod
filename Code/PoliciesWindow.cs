@@ -1,303 +1,343 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System.Collections.Generic;
 using System.Linq;
 
-// --- DATA STRUCTURES ---
-
-/// <summary>
-/// Defines the static data for a policy loaded from text.
-/// </summary>
-public class PolicyDef
+namespace RulerBox
 {
-    public string Id; // Internal ID derived from name (e.g., "vassalage")
-    public string Name; // Display Name (e.g., "Vassalage")
-    public string Description; 
-    public int Cost;
-    // You would add a Sprite field here if you have specific icons for each
-    // public Sprite Icon; 
-}
-
-// --- POLICY MANAGER ---
-
-/// <summary>
-/// Manages loading policy data and tracking which policies are active.
-/// </summary>
-public static class PolicyManager
-{
-    // The raw text content from aaa.txt
-    private const string RawPolicyData = @"Vassalage
-Allows the recruitment of vassals to manage distant lands, increasing tax efficiency but slightly raising autonomy.
-100
-
-Mercenary Contracts
-Enables hiring mercenary companies for immediate military support at a high gold cost.
-250
-
-Royal Guard
-Establish an elite guard unit for the monarch, increasing stability and defense but at a high upkeep cost.
-500
-
-Feudal Obligations
-Standardizes military service requirements from lords, increasing manpower but slightly lowering stability.
-150
-
-Spy Network
-Develops a kingdom-wide spy network to uncover plots and increase diplomatic visibility.
-300
-
-Naval Dominance
-Focuses resources on building a powerful navy to control trade routes and coastal regions.
-400
-
-Fortification Effort
-Mandates the construction of defensive structures in border provinces, increasing defensiveness but costing gold.
-200
-
-Diplomatic Corps
-Establishes a permanent corps of diplomats to improve relations with neighboring kingdoms.
-150
-
-Legal Reform
-Standardizes laws across the kingdom, increasing stability and tax income but costing significant gold to implement.
-350
-
-Cultural Assimilation
-Promotes the dominant culture in newly conquered lands, speeding up integration but increasing unrest.
-250
-
-Religious Inquisition
-Enforces religious unity, increasing stability and piety but significantly raising unrest in diverse regions.
-400
-
-Trade Guilds
-Encourages the formation of trade guilds, boosting trade income and production but reducing royal control over the economy.
-200
-";
-
-    public static List<PolicyDef> AllPolicies = new List<PolicyDef>();
-    // HashSet for quick lookups of active policy IDs
-    public static HashSet<string> ActivePolicyIds = new HashSet<string>();
-
-    public static bool IsLoaded { get; private set; }
-
-    /// <summary>
-    /// Parses the raw text data into objects.
-    /// </summary>
-    public static void LoadPolicies()
+    public static class PoliciesWindow
     {
-        if (IsLoaded) return;
+        private static GameObject root;
+        private static Sprite windowInnerSprite;
 
-        AllPolicies.Clear();
-        // Split by newlines, removing empty entries to handle trailing lines
-        string[] lines = RawPolicyData.Split(new[] { "\r\n", "\r", "\n" }, System.StringSplitOptions.RemoveEmptyEntries);
-
-        // Iterate through lines in blocks of 3
-        for (int i = 0; i < lines.Length; i += 3)
-        {
-            // Ensure we have 3 lines to read
-            if (i + 2 >= lines.Length) break; 
-
-            PolicyDef def = new PolicyDef();
-            def.Name = lines[i].Trim();
-            // Create a simple ID by removing spaces and lowercasing
-            def.Id = def.Name.Replace(" ", "").ToLower(); 
-            def.Description = lines[i + 1].Trim();
-            
-            // TryParse handles potential non-number inputs safely
-            int.TryParse(lines[i + 2].Trim(), out def.Cost);
-
-            AllPolicies.Add(def);
-        }
-
-        IsLoaded = true;
-        Debug.Log($"[Policies] Loaded {AllPolicies.Count} policies.");
-    }
-
-    /// <summary>
-    /// Attempts to activate a policy. Returns true if successful (affordable).
-    /// </summary>
-    public static bool TryActivatePolicy(PolicyDef def, Kingdom kingdom)
-    {
-        if (ActivePolicyIds.Contains(def.Id))
-        {
-            Debug.Log($"[Policies] {def.Name} is already active.");
-            return false;
-        }
-
-        // Assuming you have access to the Kingdom's data object here
-        // Replace 'KingdomMetricsSystem.GetKingdomData(kingdom)' with your actual data access method
-        var data = KingdomMetricsSystem.GetKingdomData(kingdom); 
+        private static Transform availableContent;
+        private static Transform activeContent;
+        private static Text activeHeader;
+        private static Text availableHeader;
         
-        if (data.Treasury >= def.Cost)
+        // --- POLICY DATA STRUCTURE ---
+        public class PolicyDef
         {
-            // Deduct Cost
-            data.Treasury -= def.Cost;
-            
-            // Activate
-            ActivePolicyIds.Add(def.Id);
-            Debug.Log($"[Policies] Activated {def.Name} for {def.Cost} gold.");
-            
-            // TODO: Apply the actual game effects of the policy here
-            ApplyPolicyEffects(def, kingdom);
-            return true;
+            public string Id;
+            public string Name;
+            public string Description;
+            public int Cost;
         }
-        else
+
+        // --- HARDCODED POLICIES FROM TEXT ---
+        public static readonly List<PolicyDef> Policies = new List<PolicyDef>
         {
-            Debug.Log($"[Policies] Cannot afford {def.Name}. Treasury: {data.Treasury}, Cost: {def.Cost}");
-            return false;
-        }
-    }
+            new PolicyDef { Id = "vassalage", Name = "Vassalage", Cost = 100, Description = "Allows the recruitment of vassals to manage distant lands, increasing tax efficiency but slightly raising autonomy." },
+            new PolicyDef { Id = "mercenary_contracts", Name = "Mercenary Contracts", Cost = 250, Description = "Enables hiring mercenary companies for immediate military support at a high gold cost." },
+            new PolicyDef { Id = "royal_guard", Name = "Royal Guard", Cost = 500, Description = "Establish an elite guard unit for the monarch, increasing stability and defense but at a high upkeep cost." },
+            new PolicyDef { Id = "feudal_obligations", Name = "Feudal Obligations", Cost = 150, Description = "Standardizes military service requirements from lords, increasing manpower but slightly lowering stability." },
+            new PolicyDef { Id = "spy_network", Name = "Spy Network", Cost = 300, Description = "Develops a kingdom-wide spy network to uncover plots and increase diplomatic visibility." },
+            new PolicyDef { Id = "naval_dominance", Name = "Naval Dominance", Cost = 400, Description = "Focuses resources on building a powerful navy to control trade routes and coastal regions." },
+            new PolicyDef { Id = "fortification_effort", Name = "Fortification Effort", Cost = 200, Description = "Mandates the construction of defensive structures in border provinces, increasing defensiveness but costing gold." },
+            new PolicyDef { Id = "diplomatic_corps", Name = "Diplomatic Corps", Cost = 150, Description = "Establishes a permanent corps of diplomats to improve relations with neighboring kingdoms." },
+            new PolicyDef { Id = "legal_reform", Name = "Legal Reform", Cost = 350, Description = "Standardizes laws across the kingdom, increasing stability and tax income but costing significant gold to implement." },
+            new PolicyDef { Id = "cultural_assimilation", Name = "Cultural Assimilation", Cost = 250, Description = "Promotes the dominant culture in newly conquered lands, speeding up integration but increasing unrest." },
+            new PolicyDef { Id = "religious_inquisition", Name = "Religious Inquisition", Cost = 400, Description = "Enforces religious unity, increasing stability and piety but significantly raising unrest in diverse regions." },
+            new PolicyDef { Id = "trade_guilds", Name = "Trade Guilds", Cost = 200, Description = "Encourages the formation of trade guilds, boosting trade income and production but reducing royal control over the economy." }
+        };
 
-    private static void ApplyPolicyEffects(PolicyDef def, Kingdom kingdom)
-    {
-        // Add logic here to apply bonuses based on def.Id
-        // e.g., if (def.Id == "vassalage") { data.TaxEfficiency += 0.1f; }
-    }
-}
-
-// --- THE WINDOW UI ---
-
-public class PoliciesWindow : MonoBehaviour
-{
-    // Assign these in the inspector or find them dynamically
-    public Transform ContentGridContainer; // The GridLayoutGroup object holding the buttons
-    public GameObject PolicyItemPrefab; // The prefab matching the image design
-    
-    // Standard generic window setup
-    private static PoliciesWindow _instance;
-    public static PoliciesWindow Instance
-    {
-        get
+        public static void Initialize(Transform parent)
         {
-            if (_instance == null)
+            if (root != null) return;
+
+            try 
             {
-                _instance = FindObjectOfType<PoliciesWindow>(true);
+                availableContent = null;
+                activeContent = null;
+                activeHeader = null;
+                availableHeader = null;
+
+                windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+
+                // Root Object
+                root = new GameObject("PoliciesWindow");
+                root.transform.SetParent(parent, false);
+                var rt = root.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+
+                // Two Column Layout (Like LeadersWindow)
+                var h = root.AddComponent<HorizontalLayoutGroup>();
+                h.spacing = 2;
+                h.padding = new RectOffset(1, 1, 1, 1);
+                h.childControlWidth = true;
+                h.childControlHeight = true;
+                h.childForceExpandWidth = true;
+                h.childForceExpandHeight = true;
+
+                // Create Left (Available) and Right (Active) panels
+                CreateAvailablePanel(root.transform);
+                CreateActivePanel(root.transform);
+
+                root.SetActive(false);
             }
-            return _instance;
-        }
-    }
-
-    private void Awake()
-    {
-        _instance = this;
-        // Ensure data is loaded before the window first opens
-        PolicyManager.LoadPolicies();
-    }
-
-    private void OnEnable()
-    {
-        RefreshView();
-    }
-
-    public void RefreshView()
-    {
-        // 1. Clear existing items
-        foreach (Transform child in ContentGridContainer)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // 2. Get current kingdom (assuming the player's kingdom is focused)
-        Kingdom playerKingdom = GetPlayerKingdom();
-
-        // 3. Populate grid
-        foreach (PolicyDef def in PolicyManager.AllPolicies)
-        {
-            CreatePolicyItemButton(def, playerKingdom);
-        }
-    }
-
-    private void CreatePolicyItemButton(PolicyDef def, Kingdom kingdom)
-    {
-        GameObject go = Instantiate(PolicyItemPrefab, ContentGridContainer);
-
-        // --- Find UI Components within the Prefab ---
-        // Important: Adjust these path strings if your prefab hierarchy is different.
-        // Based on the image: Icon on left, Name top right, Cost bottom right.
-        
-        // The main button component
-        Button button = go.GetComponent<Button>(); 
-        // The background image of the button (to change color if active)
-        Image bgImage = go.GetComponent<Image>(); 
-
-        Text nameText = go.transform.Find("NameText").GetComponent<Text>();
-        // Assuming cost is in a container like "CostPanel" -> "CostText"
-        Text costText = go.transform.Find("CostPanel/CostText").GetComponent<Text>(); 
-        // The main policy icon
-        Image policyIcon = go.transform.Find("Icon").GetComponent<Image>(); 
-
-        // --- Set Data ---
-        nameText.text = def.Name;
-        costText.text = def.Cost.ToString();
-        
-        // Placeholder for icon setup.
-        // If you have specific sprites, load them here based on def.Id
-        // policyIcon.sprite = Resources.Load<Sprite>("Icons/Policies/" + def.Id); 
-
-        // --- Set State (Active/Inactive) ---
-        bool isActive = PolicyManager.ActivePolicyIds.Contains(def.Id);
-        bool canAfford = false;
-
-        if (kingdom != null)
-        {
-             // Replace with actual data access
-            var data = KingdomMetricsSystem.GetKingdomData(kingdom);
-            canAfford = data.Treasury >= def.Cost;
-        }
-
-        if (isActive)
-        {
-            // Visual cue for active policies (e.g., Green tint)
-            bgImage.color = new Color(0.7f, 1f, 0.7f); 
-            costText.text = "Active";
-            button.interactable = false; // Cannot buy again
-        }
-        else
-        {
-            // Normal color
-            bgImage.color = Color.white;
-            // If they can't afford it, grey out the button or text
-            costText.color = canAfford ? Color.yellow : Color.red; 
-            button.interactable = canAfford;
-        }
-
-        // --- Set Interactions ---
-
-        // Click Handler
-        button.onClick.RemoveAllListeners();
-        button.onClick.AddListener(() =>
-        {
-            if (!isActive && kingdom != null)
+            catch (System.Exception e)
             {
-                bool success = PolicyManager.TryActivatePolicy(def, kingdom);
-                if (success)
+                Debug.LogError("[RulerBox] PoliciesWindow Init Error: " + e.ToString());
+            }
+        }
+
+        public static void SetVisible(bool visible)
+        {
+            if (root != null)
+            {
+                root.SetActive(visible);
+                if (visible) Refresh();
+            }
+        }
+
+        public static bool IsVisible() => root != null && root.activeSelf;
+
+        public static void Refresh()
+        {
+            if (root == null || !root.activeSelf) return;
+
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+
+            var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            // Initialize list if null (backward compatibility)
+            if (d.ActivePolicies == null) d.ActivePolicies = new HashSet<string>();
+
+            // --- REFRESH AVAILABLE LIST ---
+            if (availableContent != null)
+            {
+                foreach (Transform t in availableContent) Object.Destroy(t.gameObject);
+                
+                foreach (var policy in Policies)
                 {
-                    // Refresh the whole window to update states and treasury views
-                    RefreshView(); 
-                    // Optionally play a sound
-                    // Sfx.Play("buy_sound");
+                    // If NOT active, show in available list
+                    if (!d.ActivePolicies.Contains(policy.Id))
+                    {
+                        CreatePolicyItem(availableContent, policy, false);
+                    }
+                }
+                
+                // Update Header Count
+                int availableCount = Policies.Count - d.ActivePolicies.Count;
+                if(availableHeader != null) availableHeader.text = $"Available ({availableCount})";
+            }
+
+            // --- REFRESH ACTIVE LIST ---
+            if (activeContent != null)
+            {
+                foreach (Transform t in activeContent) Object.Destroy(t.gameObject);
+                
+                foreach (var policyId in d.ActivePolicies)
+                {
+                    var policy = Policies.Find(p => p.Id == policyId);
+                    if (policy != null)
+                    {
+                        CreatePolicyItem(activeContent, policy, true);
+                    }
+                }
+                
+                // Update Header Count
+                if(activeHeader != null) activeHeader.text = $"Enacted ({d.ActivePolicies.Count})";
+            }
+        }
+
+        private static void CreatePolicyItem(Transform parent, PolicyDef policy, bool isActive)
+        {
+            var btnObj = new GameObject("PolicyItem");
+            btnObj.transform.SetParent(parent, false);
+
+            var le = btnObj.AddComponent<LayoutElement>();
+            le.minHeight = 44f; 
+            le.preferredHeight = 44f;
+            le.flexibleWidth = 1f;
+
+            var bg = btnObj.AddComponent<Image>();
+            bg.sprite = windowInnerSprite;
+            bg.type = Image.Type.Sliced;
+            // Greenish for active, Dark Blueish for available (Matches LeadersWindow style)
+            bg.color = isActive ? new Color(0.2f, 0.35f, 0.2f, 0.95f) : new Color(0.25f, 0.28f, 0.32f, 0.95f);
+
+            var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = bg;
+            btn.onClick.AddListener(() => OnPolicyClicked(policy, isActive));
+
+            var h = btnObj.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 2;
+            h.padding = new RectOffset(10, 10, 2, 2); 
+            h.childControlWidth = true;
+            h.childControlHeight = true;
+            h.childForceExpandWidth = false; 
+            h.childAlignment = TextAnchor.MiddleLeft;
+
+            // Text Stack
+            var textStack = new GameObject("InfoStack");
+            textStack.transform.SetParent(btnObj.transform, false);
+            
+            var textVL = textStack.AddComponent<VerticalLayoutGroup>();
+            textVL.childAlignment = TextAnchor.MiddleLeft;
+            textVL.spacing = 0;
+            textVL.childControlHeight = true; textVL.childControlWidth = true;
+            textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
+
+            var textStackLE = textStack.AddComponent<LayoutElement>();
+            textStackLE.flexibleWidth = 1f;
+            textStackLE.minWidth = 50f;
+
+            // Name
+            CreateText(textStack.transform, policy.Name, 9, FontStyle.Bold, Color.white);
+            
+            // Cost or Status
+            if (isActive)
+            {
+                CreateText(textStack.transform, "Active", 8, FontStyle.Italic, new Color(0.6f, 0.9f, 0.6f));
+            }
+            else
+            {
+                CreateText(textStack.transform, $"Cost: {policy.Cost}g", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
+            }
+
+            ChipTooltips.AttachSimpleTooltip(btnObj, () => GetPolicyTooltip(policy));
+        }
+
+        private static void OnPolicyClicked(PolicyDef policy, bool isActive)
+        {
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+            var d = KingdomMetricsSystem.Get(k);
+            if (d.ActivePolicies == null) d.ActivePolicies = new HashSet<string>();
+
+            if (isActive)
+            {
+                // Repeal Policy
+                d.ActivePolicies.Remove(policy.Id);
+                WorldTip.showNow($"Repealed {policy.Name}", false, "top", 1.5f, "#FF5A5A");
+            }
+            else
+            {
+                // Enact Policy
+                if (d.Treasury >= policy.Cost)
+                {
+                    d.Treasury -= policy.Cost;
+                    d.ActivePolicies.Add(policy.Id);
+                    WorldTip.showNow($"Enacted {policy.Name}!", false, "top", 1.5f, "#9EE07A");
+                }
+                else
+                {
+                    WorldTip.showNow($"Not enough gold ({d.Treasury}/{policy.Cost})", false, "top", 1.5f, "#FF5A5A");
+                    return; // Don't refresh if failed
                 }
             }
-        });
+            
+            KingdomMetricsSystem.RecalculateForKingdom(k, d);
+            Refresh();
+            TopPanelUI.Refresh(); // Update gold display
+        }
 
-        // Tooltip (Standard WorldBox/NCMS tooltip setup)
-        // Adjust based on the specific tooltip system your mod uses.
-        string tooltipContent = $"<b>{def.Name}</b>\n\n{def.Description}\n\n<color=yellow>Cost: {def.Cost} Gold</color>";
-        // Tooltip.Add(go, tooltipContent); // Placeholder call
-    }
+        private static string GetPolicyTooltip(PolicyDef p)
+        {
+            return $"<b><color=#FFD700>{p.Name}</color></b>\n\n{p.Description}\n\n<color=#888888>(Click to Toggle)</color>";
+        }
 
-    // Helper to get the player's kingdom focusing on. Adjust as needed for your mod.
-    private Kingdom GetPlayerKingdom()
-    {
-        // Example: if using standard NCMS utils or getting the kingdom the camera is over
-        // return Config.selectedKingdom;
-        return null; // Placeholder
-    }
+        private static void CreateAvailablePanel(Transform parent)
+        {
+            var container = CreatePanelBase(parent, "AvailablePanel"); 
+            
+            availableHeader = CreateText(container.transform, "Available", 9, FontStyle.Bold, Color.white);
+            availableHeader.alignment = TextAnchor.MiddleCenter;
+            
+            var le = availableHeader.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 24f; le.minHeight = 24f;
 
-    // Standard window toggle support
-    public void Toggle()
-    {
-        gameObject.SetActive(!gameObject.activeSelf);
+            availableContent = CreateScrollList(container.transform, "AvailableScroll");
+        }
+
+        private static void CreateActivePanel(Transform parent)
+        {
+            var container = CreatePanelBase(parent, "ActivePanel"); 
+            
+            activeHeader = CreateText(container.transform, "Enacted", 9, FontStyle.Bold, new Color(1f, 0.85f, 0.4f)); 
+            activeHeader.alignment = TextAnchor.MiddleCenter;
+            
+            var le = activeHeader.gameObject.AddComponent<LayoutElement>();
+            le.preferredHeight = 24f; le.minHeight = 24f;
+
+            activeContent = CreateScrollList(container.transform, "ActiveScroll");
+        }
+
+        private static GameObject CreatePanelBase(Transform parent, string name)
+        {
+            var panel = new GameObject(name);
+            panel.transform.SetParent(parent, false);
+            var le = panel.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f; le.flexibleHeight = 1f;
+            
+            var bg = panel.AddComponent<Image>();
+            if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
+            bg.color = new Color(0, 0, 0, 0.001f); 
+            
+            var v = panel.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 1; v.padding = new RectOffset(1, 1, 1, 1);
+            v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
+            return panel;
+        }
+
+        private static Transform CreateScrollList(Transform parent, string name)
+        {
+            var scrollObj = new GameObject(name);
+            scrollObj.transform.SetParent(parent, false);
+            var le = scrollObj.AddComponent<LayoutElement>();
+            le.flexibleHeight = 1f;
+            
+            var bg = scrollObj.AddComponent<Image>();
+            bg.color = new Color(0, 0, 0, 0.3f); 
+            
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.vertical = true; 
+            scroll.horizontal = false; 
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 20f;
+            
+            var viewport = new GameObject("Viewport");
+            viewport.transform.SetParent(scrollObj.transform, false);
+            var vpRT = viewport.AddComponent<RectTransform>();
+            vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
+            vpRT.offsetMin = new Vector2(2, 2); vpRT.offsetMax = new Vector2(-2, -2);
+            viewport.AddComponent<RectMask2D>();
+
+            var content = new GameObject("Content");
+            content.transform.SetParent(viewport.transform, false);
+            var cRT = content.AddComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
+            cRT.pivot = new Vector2(0.5f, 1);
+            
+            var v = content.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 2; 
+            v.childControlWidth = true; 
+            v.childControlHeight = true; 
+            v.childForceExpandHeight = false;
+            
+            var csf = content.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            
+            scroll.viewport = vpRT; scroll.content = cRT;
+            return content.transform;
+        }
+
+        private static Text CreateText(Transform parent, string txt, int size, FontStyle style, Color col)
+        {
+            var go = new GameObject("Text");
+            go.transform.SetParent(parent, false);
+            var t = go.AddComponent<Text>();
+            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
+            t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var shadow = go.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0,0,0,0.5f);
+            shadow.effectDistance = new Vector2(1, -1);
+            return t;
+        }
     }
 }
