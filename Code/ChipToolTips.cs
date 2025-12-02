@@ -57,7 +57,7 @@ namespace RulerBox
                 $"Available: {ColorGold(FormatBig(d.ManpowerCurrent))}\n" +
                 $"Capacity:  {FormatBig(d.ManpowerMax)}\n" +
                 $"Regeneration: {regenStr}\n\n" +
-                $"<color=#999999>Drafting costs 1 Manpower Point per soldier.\n" +
+                $"<color=#999999>Drafting costs 1 Manpower Point.\n" +
                 $"Dismissing refunds Manpower Point.</color>";
         }
 
