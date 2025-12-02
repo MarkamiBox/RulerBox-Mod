@@ -209,6 +209,7 @@ namespace RulerBox
             if (root == null) Initialize();
             root.SetActive(visible);
             if (visible) Refresh();
+            else TopPanelUI.SetVisible(false);
         }
         
         // refresh the displayed data
