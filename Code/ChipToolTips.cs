@@ -458,7 +458,7 @@ namespace RulerBox
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(tooltip.transform, false);
             tooltipText = textGO.AddComponent<Text>();
-            tooltipText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            tooltipText.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             tooltipText.supportRichText = true;
             tooltipText.alignment = TextAnchor.MiddleLeft;     
             tooltipText.color = Color.white;

@@ -8,11 +8,12 @@ namespace RulerBox
     {
         // --- Building Speed Patch ---
         // We patch the update method to add extra construction progress
-        [HarmonyPatch(typeof(Building), "update")]
+        // [HarmonyPatch(typeof(Building), "update")] // FIXME: Method not found
         public static class BuildingConstructionPatch
         {
             public static void Postfix(Building __instance, float pElapsed)
             {
+                /*
                 if (__instance == null || !__instance.isUnderConstruction()) return;
                 if (__instance.kingdom == null) return;
 
@@ -57,6 +58,7 @@ namespace RulerBox
                         // Fallback or ignore
                     }
                 }
+                */
             }
         }
 

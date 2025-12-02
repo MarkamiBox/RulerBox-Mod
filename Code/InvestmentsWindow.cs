@@ -50,7 +50,7 @@ namespace RulerBox
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(root.transform, false);
             var title = titleGO.AddComponent<Text>();
-            title.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            title.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             title.text = "Investments";
             title.alignment = TextAnchor.MiddleCenter;
             title.color = Color.white;

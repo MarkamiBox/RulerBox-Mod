@@ -355,7 +355,7 @@ namespace RulerBox
             var go = new GameObject("Text");
             go.transform.SetParent(parent, false);
             var t = go.AddComponent<Text>();
-            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
             t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
             var shadow = go.AddComponent<Shadow>();

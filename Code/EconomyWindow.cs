@@ -84,7 +84,7 @@ namespace RulerBox
             var incomeHeaderGO = new GameObject("IncomeHeader");
             incomeHeaderGO.transform.SetParent(incomeCol.transform, false);
             var incomeHeaderText = incomeHeaderGO.AddComponent<Text>();
-            incomeHeaderText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            incomeHeaderText.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             incomeHeaderText.text = "Income";
             incomeHeaderText.alignment = TextAnchor.UpperCenter;  
             incomeHeaderText.color = new Color(0.48f, 0.99f, 0f, 1f);

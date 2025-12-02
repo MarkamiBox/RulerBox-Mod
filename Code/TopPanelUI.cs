@@ -276,7 +276,7 @@ namespace RulerBox
             var txtGO = new GameObject("Text");
             txtGO.transform.SetParent(go.transform, false);
             var txt = txtGO.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = label;
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;

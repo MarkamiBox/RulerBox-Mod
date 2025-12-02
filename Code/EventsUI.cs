@@ -289,7 +289,7 @@ namespace RulerBox
             var textGO = new GameObject("Text");
             textGO.transform.SetParent(header.transform, false);
             popupText = textGO.AddComponent<Text>();
-            popupText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            popupText.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             popupText.supportRichText = true;
             popupText.alignment = TextAnchor.MiddleLeft;
             popupText.color = Color.white;
