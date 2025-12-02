@@ -196,7 +196,7 @@ namespace RulerBox
             long tradeIn = SafeLong(TradeManager.GetTradeIncome(k) * d.TradeIncomeModifier);
             d.TradeIncome = tradeIn;
             
-            d.Income = (SafeLong(taxableBase * econScale) + tradeIn) * 10;
+            d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
             // 4. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
