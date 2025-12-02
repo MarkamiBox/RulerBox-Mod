@@ -1225,10 +1225,10 @@ namespace RulerBox
             public string Law_StateDoctrine = "Classical";
             
             // Metrics
-            public float TaxRateLocal = 0.05f;
+            public float TaxRateLocal = 0.10f;
             public double TaxBaseWealth;
             public double TaxBaseFallbackGDP;
-            public long PerCapitaGDP = 3;
+            public long PerCapitaGDP = 6;
             public long IncomeBeforeModifiers;
             public float TaxPenaltyFromWar;
             public float MaxWeTaxPenaltyPct = 40f;
@@ -1241,11 +1241,11 @@ namespace RulerBox
             public long IncomeAfterStability;
             public long IncomeAfterCityBonus;
             public int Soldiers;
-            public long MilitaryCostPerSoldier = 12;
+            public long MilitaryCostPerSoldier = 8;
             public int Cities;
-            public long CostPerCity = 10;
+            public long CostPerCity = 5;
             public int Buildings;
-            public long CostPerBuilding = 2;
+            public long CostPerBuilding = 1;
             public long ExpensesMilitary;
             public long ExpensesInfrastructure;
             public long ExpensesDemography;
