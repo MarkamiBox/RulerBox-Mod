@@ -371,7 +371,7 @@ namespace RulerBox
                     EventsSystem.IsPlayerInitiated = true;
                     try {
                         // (Existing war start logic...)
-                        var warAsset = AssetManager.war_types_library.get("whisper_of_war");
+                        var warAsset = AssetManager.war_types_library.get("spite");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
                             EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
