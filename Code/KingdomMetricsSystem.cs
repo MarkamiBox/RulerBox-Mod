@@ -1253,7 +1253,7 @@ namespace RulerBox
             public long IncomeAfterStability;
             public long IncomeAfterCityBonus;
             public int Soldiers;
-            public long MilitaryCostPerSoldier = 8;
+            public long MilitaryCostPerSoldier = 3;
             public int Cities;
             public long CostPerCity = 5;
             public int Buildings;
