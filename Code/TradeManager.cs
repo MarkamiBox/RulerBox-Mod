@@ -131,8 +131,15 @@ namespace RulerBox
             // 1. Check Money
             if (buyerData.Treasury < c.CostPerTick)
             {
-                // User Request: Boost money for trades
-                // If they can't afford it, we artificially boost their treasury to cover the cost + buffer.
+                // User Request: "Some trades should still fail... even after a while"
+                // 20% chance to fail due to insolvency
+                if (UnityEngine.Random.value < 0.20f)
+                {
+                    CancelContract(c, $"{buyer.data.name} is insolvent and cannot pay.");
+                    return;
+                }
+
+                // Otherwise, boost them (Bailout/Loan)
                 buyerData.Treasury += (c.CostPerTick + 5000);
             }
 
@@ -165,8 +172,15 @@ namespace RulerBox
 
             if (buyerData.Treasury < cost)
             {
-                // User Request: "make that the kingdom with i'm trading have way more money so he can accept my trades"
-                // If they can't afford it, we artificially boost their treasury to cover the cost + buffer.
+                // User Request: "Some trades should still fail"
+                // 20% chance to fail
+                if (UnityEngine.Random.value < 0.20f)
+                {
+                    WorldTip.showNow("Trade Failed: Buyer denied credit.", false, "top", 2f, "#FF5A5A");
+                    return false;
+                }
+
+                // Otherwise, boost them
                 buyerData.Treasury += (cost + 10000); 
             }
 
