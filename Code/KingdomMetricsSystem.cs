@@ -592,13 +592,13 @@ namespace RulerBox
             // Costs calculated as % of Income
             long inc = d.Income; 
 
-            total += GetCost(d.MilitarySpending, inc, 0.05f, 0.075f, 0.10f, 0.125f);
-            total += GetCost(d.SecuritySpending, inc, 0.01f, 0.02f, 0.03f, 0.04f);
-            total += GetCost(d.GovernmentSpending, inc, 0.01f, 0.02f, 0.03f, 0.04f);
-            total += GetCost(d.WelfareSpending, inc, 0.01f, 0.02f, 0.03f, 0.04f);
-            total += GetCost(d.EducationSpending, inc, 0.01f, 0.02f, 0.03f, 0.04f);
-            total += GetCost(d.ResearchSpending, inc, 0.02f, 0.03f, 0.04f, 0.05f);
-            total += GetCost(d.AntiCorruption, inc, 0.02f, 0.03f, 0.04f, 0.05f);
+            total += GetCost(d.MilitarySpending, inc, 0.10f, 0.15f, 0.20f, 0.25f);
+            total += GetCost(d.SecuritySpending, inc, 0.02f, 0.04f, 0.06f, 0.08f);
+            total += GetCost(d.GovernmentSpending, inc, 0.02f, 0.04f, 0.06f, 0.08f);
+            total += GetCost(d.WelfareSpending, inc, 0.02f, 0.04f, 0.06f, 0.08f);
+            total += GetCost(d.EducationSpending, inc, 0.02f, 0.04f, 0.06f, 0.08f);
+            total += GetCost(d.ResearchSpending, inc, 0.03f, 0.06f, 0.09f, 0.12f);
+            total += GetCost(d.AntiCorruption, inc, 0.03f, 0.06f, 0.09f, 0.12f);
             
             return total;
         }
