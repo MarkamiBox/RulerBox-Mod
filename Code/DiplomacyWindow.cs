@@ -66,7 +66,7 @@ namespace RulerBox
             
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0f, 0f, 0f, 0.5f); 
+            bg.color = new Color(0f, 0f, 0f, 0.2f); 
             
             var rootV = root.AddComponent<VerticalLayoutGroup>();
             rootV.childAlignment = TextAnchor.UpperCenter;
