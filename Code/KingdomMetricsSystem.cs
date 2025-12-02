@@ -1375,6 +1375,21 @@ namespace RulerBox
                     case "national_monument":
                         d.StabilityTargetModifier += 5f;
                         break;
+                    case "event_corruption_small":
+                        d.CorruptionLevel += 0.05f;
+                        break;
+                    case "event_corruption_medium":
+                        d.CorruptionLevel += 0.10f;
+                        break;
+                    case "event_corruption_large":
+                        d.CorruptionLevel += 0.15f;
+                        break;
+                    case "event_corruption_reduction_small":
+                        d.CorruptionLevel -= 0.05f;
+                        break;
+                    case "event_corruption_reduction_medium":
+                        d.CorruptionLevel -= 0.10f;
+                        break;
                 }
             }
         }
