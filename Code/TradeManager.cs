@@ -131,8 +131,9 @@ namespace RulerBox
             // 1. Check Money
             if (buyerData.Treasury < c.CostPerTick)
             {
-                CancelContract(c, $"{buyer.data.name} cannot afford the payment.");
-                return;
+                // User Request: Boost money for trades
+                // If they can't afford it, we artificially boost their treasury to cover the cost + buffer.
+                buyerData.Treasury += (c.CostPerTick + 5000);
             }
 
             // 2. Check Resource
@@ -164,8 +165,9 @@ namespace RulerBox
 
             if (buyerData.Treasury < cost)
             {
-                WorldTip.showNow("Trade Failed: Buyer cannot afford it.", false, "top", 2f, "#FF5A5A");
-                return false;
+                // User Request: "make that the kingdom with i'm trading have way more money so he can accept my trades"
+                // If they can't afford it, we artificially boost their treasury to cover the cost + buffer.
+                buyerData.Treasury += (cost + 10000); 
             }
 
             int available = GetKingdomResourceCount(source, resource);
