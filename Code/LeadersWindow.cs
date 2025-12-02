@@ -351,26 +351,31 @@ namespace RulerBox
             
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
             
-            bool mostlyGood = UnityEngine.Random.value < 0.10f;
-            int traitCount = UnityEngine.Random.Range(2, 5); 
-            int badTraitsApplied = 0;
-            int goodTraitsApplied = 0;
+            // 1. Apply Stats based on Unit Traits (if unit exists)
+            if (unit != null && unit.data != null && unit.data.traits != null)
+            {
+                var t = unit.data.traits;
+                if (t.Contains("greedy")) { tax += 0.15f; corr -= 0.15f; } // Greedy: +Tax, +Corruption (negative reduction)
+                if (t.Contains("honest")) { corr += 0.20f; } // Honest: -Corruption
+                if (t.Contains("genius")) { res += 0.30f; pp += 0.10f; }
+                if (t.Contains("stupid")) { res -= 0.15f; pp -= 0.10f; }
+                if (t.Contains("strong")) { atk += 0.10f; }
+                if (t.Contains("weak")) { atk -= 0.10f; }
+                if (t.Contains("tough")) { stab += 5f; }
+                if (t.Contains("paranoid")) { stab -= 5f; pp += 0.20f; } // Paranoid: Unstable but controlling
+                if (t.Contains("pacifist")) { atk -= 0.20f; stab += 5f; }
+                if (t.Contains("bloodlust")) { atk += 0.20f; stab -= 5f; }
+                if (t.Contains("ambitious")) { pp += 0.25f; corr -= 0.05f; }
+                if (t.Contains("content")) { pp -= 0.10f; stab += 5f; }
+            }
+
+            // 2. Add Random Variance (smaller than before if unit exists)
+            int traitCount = UnityEngine.Random.Range(1, 3); 
+            bool mostlyGood = UnityEngine.Random.value < 0.5f;
 
             for(int i=0; i < traitCount; i++)
             {
-                bool isBad = false;
-                if (!mostlyGood)
-                {
-                    if (i == traitCount - 1) {
-                        if (badTraitsApplied == 0) isBad = true;
-                        else if (goodTraitsApplied == 0) isBad = false;
-                        else isBad = UnityEngine.Random.value > 0.5f;
-                    } else {
-                         isBad = UnityEngine.Random.value < 0.4f;
-                    }
-                }
-
-                if (isBad) badTraitsApplied++; else goodTraitsApplied++;
+                bool isBad = UnityEngine.Random.value < 0.3f;
                 ApplyStat(ref stab, ref pp, ref atk, ref res, ref tax, ref corr, isMalus: isBad);
             }
 
@@ -391,12 +396,12 @@ namespace RulerBox
 
             switch(type)
             {
-                case 0: stab += UnityEngine.Random.Range(4f, 10f) * sign; break; 
-                case 1: pp += UnityEngine.Random.Range(15f, 30f) * sign; break;   
-                case 2: atk += UnityEngine.Random.Range(15f, 35f) * sign; break; 
-                case 3: res += UnityEngine.Random.Range(15f, 30f) * sign; break;  
-                case 4: tax += UnityEngine.Random.Range(15f, 25f) * sign; break;  
-                case 5: corr += UnityEngine.Random.Range(0.08f, 0.2f) * (isMalus ? -1f : 1f); break; 
+                case 0: stab += UnityEngine.Random.Range(2f, 5f) * sign; break; 
+                case 1: pp += UnityEngine.Random.Range(5f, 15f) * sign; break;   
+                case 2: atk += UnityEngine.Random.Range(5f, 15f) * sign; break; 
+                case 3: res += UnityEngine.Random.Range(5f, 15f) * sign; break;  
+                case 4: tax += UnityEngine.Random.Range(5f, 10f) * sign; break;  
+                case 5: corr += UnityEngine.Random.Range(0.05f, 0.10f) * (isMalus ? -1f : 1f); break; 
             }
         }
 

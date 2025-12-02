@@ -362,7 +362,7 @@ namespace RulerBox
                 ? (d.TaxModifierFromStability > 0 ? ColorGreen($"+{d.TaxModifierFromStability:0.##}%") : ColorRed($"{d.TaxModifierFromStability:0.##}%"))
                 : ColorGold("0%");
             string corr = d.CorruptionLevel > 0 
-                ? ColorRed($"-{d.CorruptionLevel * 40f:0.#} pp/yr")
+                ? ColorRed($"-{d.CorruptionLevel * 50f:0.#} pp/yr")
                 : ColorGold("0");
             
             float targetStab = 50f + d.StabilityTargetModifier;
