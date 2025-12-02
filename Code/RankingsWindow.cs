@@ -36,7 +36,7 @@ namespace RulerBox
             // Background / blocker
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.1f, 0.1f, 0.1f, 0.5f);
+            bg.color = new Color(0.1f, 0.1f, 0.1f, 0f);
 
             // 2. Main Layout Container
             var mainContainer = new GameObject("MainContainer");
