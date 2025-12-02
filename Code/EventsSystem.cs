@@ -100,6 +100,9 @@ namespace RulerBox
             {
                 TriggerRandomEvent();
             }
+
+            // --- Plague Check ---
+            CheckPlague(dt);
         }
         
         // =====================================================================
@@ -514,6 +517,60 @@ namespace RulerBox
         // Store EventDef for random events by their assigned event ID
         private static Dictionary<int, EventsList.EventDef> randomEventPerId 
             = new Dictionary<int, EventsList.EventDef>();
+
+        private static void CheckPlague(float dt)
+        {
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+            var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            // Only trigger if Risk is high (> 60%)
+            if (d.PlagueRisk > 60f)
+            {
+                // Chance increases with risk
+                // Base chance: 0.01% per tick at 60% risk
+                // Max chance: 0.05% per tick at 100% risk
+                float chance = 0.0001f + ((d.PlagueRisk - 60f) * 0.00001f);
+                
+                if (UnityEngine.Random.value < chance)
+                {
+                    TriggerPlagueOutbreak(k, d);
+                }
+            }
+        }
+
+        private static void TriggerPlagueOutbreak(Kingdom k, KingdomMetricsSystem.Data d)
+        {
+            int infectedCount = 0;
+            int deathCount = 0;
+            
+            if (k.units != null)
+            {
+                // Infect 30% of population, Kill 5%
+                foreach(var a in k.units)
+                {
+                    if (a == null || !a.isAlive()) continue;
+                    
+                    if (UnityEngine.Random.value < 0.30f)
+                    {
+                        a.addTrait("plague");
+                        infectedCount++;
+                    }
+                    
+                    if (UnityEngine.Random.value < 0.05f)
+                    {
+                        a.kill();
+                        deathCount++;
+                    }
+                }
+            }
+
+            // Show Popup
+            string msg = $"PLAGUE OUTBREAK!\n\nRisk Level: {d.PlagueRisk:F1}%\nInfected: {infectedCount}\nDead: {deathCount}\n\nIncrease Welfare to reduce risk!";
+            EventsUI.ShowPopup(msg, EventButtonType.Random, k, () => {}, null, null);
+            WorldTip.showNow("Plague Outbreak!", true, "top", 5f, "#FF0000");
+        }
     }
 
     // =====================================================================

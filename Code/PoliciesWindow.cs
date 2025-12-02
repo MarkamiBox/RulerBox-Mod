@@ -46,7 +46,7 @@ namespace RulerBox
 
             new PolicyDef { Id = "central_authority", Name = "Strengthen Central Authority", Cost = 500, Upkeep = 5, 
                 Description = "Hasten integration of newly conquered lands by taking a more aggressive stance.",
-                EffectsDescription = "Unrest Reduction: +33%\nIntegration Speed: +25%" },
+                EffectsDescription = "Unrest Reduction: +33%" },
 
             new PolicyDef { Id = "prosperity_act", Name = "The Prosperity Act", Cost = 200, Upkeep = 2, 
                 Description = "As long as we are united, our nation will be better off than ever.",

@@ -226,6 +226,20 @@ namespace RulerBox
             
             if (!d.HasInitializedStability) { d.Stability = 50f; d.HasInitializedStability = true; }
             UpdateStability(k, d, deltaWorldSeconds);
+
+            // --- 6. Plague Risk Calculation ---
+            float risk = 10f;
+            risk += d.Cities * 2f;
+            risk += (d.Population / 10f);
+            risk -= (d.PlagueResistanceModifier * 100f); 
+            d.PlagueRisk = Mathf.Clamp(risk, 0f, 100f);
+
+            // --- 7. Research Progress ---
+            if (k.getCulture() != null)
+            {
+                float knowledgeGain = 0.1f * d.ResearchOutputModifier * deltaWorldSeconds;
+                k.getCulture().data.knowledge_progress += knowledgeGain;
+            }
         }
 
         private static void UpdateCounts(Kingdom k, Data d)
@@ -281,6 +295,15 @@ namespace RulerBox
                         d.Children++;
                         if (a.isBaby()) d.Babies++;
                         else d.Teens++;
+
+                        // --- Education System: Genius Generation ---
+                        if (d.GeniusChanceModifier > 0f && !a.hasTrait("genius"))
+                        {
+                            if (UnityEngine.Random.value < (d.GeniusChanceModifier / 240f))
+                            {
+                                a.addTrait("genius");
+                            }
+                        }
                     }
                     else 
                     {
@@ -371,7 +394,7 @@ namespace RulerBox
                     break;
                 case "Maximum": 
                     d.TaxRateLocal *= 1.75f; 
-                    d.StabilityTargetModifier -= 40f;
+                    d.StabilityTargetModifier -= 50f;
                     d.WarExhaustionGainMultiplier += 0.10f;
                     break;
             }
@@ -405,6 +428,7 @@ namespace RulerBox
                     d.ManpowerRegenRate = 0.100f; // 10.0%
                     d.StabilityTargetModifier += 15.0f;
                     d.WarExhaustionGainMultiplier += 0.40f;
+                    d.CorruptionLevel += 0.15f;
                     break;
             }
 
@@ -607,6 +631,7 @@ namespace RulerBox
                     d.ManpowerRegenRate *= 2.5f;
                     d.TaxRateLocal *= 0.35f; 
                     d.BuildingSpeedModifier *= 0.50f; 
+                    d.StabilityTargetModifier -= 10f; 
                     break;
             }
 
@@ -941,7 +966,7 @@ namespace RulerBox
                 {
                     case "welfare_act":
                         d.StabilityTargetModifier += 5f;
-                        d.TaxRateLocal *= 0.95f;
+                        d.TaxRateLocal *= 0.90f;
                         break;
                     case "public_service":
                         d.FactoryOutputModifier *= 1.2f;
@@ -963,9 +988,9 @@ namespace RulerBox
                         d.BuildingSpeedModifier *= 1.05f;
                         break;
                     case "war_fund":
-                        d.TaxRateLocal *= 1.4f;
+                        d.TaxRateLocal *= 1.5f;
                         d.MilitaryUpkeepModifier *= 0.75f;
-                        d.StabilityTargetModifier -= 10f;
+                        d.StabilityTargetModifier -= 20f;
                         d.UnrestReductionModifier *= 0.85f;
                         d.WarExhaustionGainMultiplier += 0.01f; 
                         break;
@@ -990,8 +1015,8 @@ namespace RulerBox
                         d.TaxRateLocal *= 1.15f;
                         d.FactoryOutputModifier *= 1.4f;
                         d.ResourceOutputModifier *= 1.5f;
-                        d.PopulationGrowthBonus -= 0.02f;
-                        d.CorruptionLevel -= 0.05f;
+                        d.PopulationGrowthBonus -= 0.05f;
+                        d.CorruptionLevel -= 0.10f;
                         break;
                 }
             }
@@ -1125,6 +1150,13 @@ namespace RulerBox
             // e.g. 50 WE = -5 Stability target
             target -= (d.WarExhaustion * 0.1f);
 
+            // Apply Unrest Reduction Modifier
+            // Higher Unrest Reduction = Higher Stability (Less Revolt)
+            if (d.UnrestReductionModifier != 1.0f)
+            {
+                target += (d.UnrestReductionModifier - 1.0f) * 20f;
+            }
+
             // 2. Calculate Drift
             float oldStab = d.Stability;
             
@@ -1196,7 +1228,7 @@ namespace RulerBox
             public float TaxRateLocal = 0.05f;
             public double TaxBaseWealth;
             public double TaxBaseFallbackGDP;
-            public long PerCapitaGDP = 15;
+            public long PerCapitaGDP = 3;
             public long IncomeBeforeModifiers;
             public float TaxPenaltyFromWar;
             public float MaxWeTaxPenaltyPct = 40f;
@@ -1209,9 +1241,9 @@ namespace RulerBox
             public long IncomeAfterStability;
             public long IncomeAfterCityBonus;
             public int Soldiers;
-            public long MilitaryCostPerSoldier = 10;
+            public long MilitaryCostPerSoldier = 12;
             public int Cities;
-            public long CostPerCity = 5;
+            public long CostPerCity = 10;
             public int Buildings;
             public long CostPerBuilding = 2;
             public long ExpensesMilitary;
@@ -1233,7 +1265,7 @@ namespace RulerBox
             public float StabilityTargetModifier;
             public float WarExhaustionGainMultiplier = 1.0f;
             public float ManpowerMaxMultiplier = 1.0f;
-            public float ManpowerRegenRate = 0.015f;
+            public float ManpowerRegenRate = 0.005f;
             public float PopulationGrowthBonus;
             public float MilitaryUpkeepModifier = 1.0f;
             public float BuildingSpeedModifier = 1.0f;
@@ -1254,6 +1286,7 @@ namespace RulerBox
             public float GeniusChanceModifier = 0f;
             public float PlagueResistanceModifier = 0f;
             public float MilitaryAttackModifier = 0f; 
+            public float PlagueRisk; // New Metric 
 
             // Misc
             public Dictionary<string, int> ResourceStockpiles = new Dictionary<string, int>();
@@ -1284,12 +1317,5 @@ namespace RulerBox
                 __result = (int)(__result * d.ManpowerMaxMultiplier);
             }
         }
-    }
-    
-    [HarmonyPatch(typeof(Building), "getConstructionProgress")]
-    public static class Patch_Building_Construction
-    {
-        // Note: Ideally this would patch updateBuild, but for visualization we might adjust progress speed logic elsewhere. 
-        // This is a placeholder to indicate where building speed logic connects.
     }
 }

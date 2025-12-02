@@ -211,15 +211,15 @@ namespace RulerBox
             float basePrice = 1f;
             switch(resourceId)
             {
-                case "wood": case "stone": basePrice = 1f; break;
-                case "wheat": case "berries": basePrice = 2f; break;
-                case "bread": case "meat": case "fish": basePrice = 3f; break;
-                case "gold": case "mithril": case "adamantine": basePrice = 8f; break;
-                default: basePrice = 4f; break;
+                case "wood": case "stone": basePrice = 3f; break;
+                case "wheat": case "berries": basePrice = 5f; break;
+                case "bread": case "meat": case "fish": basePrice = 8f; break;
+                case "gold": case "mithril": case "adamantine": basePrice = 25f; break;
+                default: basePrice = 10f; break;
             }
 
             // Scarcity Multiplier: The less there is, the higher the price.
-            float scarcity = 1f + (5000f / (totalWorld + 500f)); 
+            float scarcity = 1f + (10000f / (totalWorld + 200f)); 
             
             float finalPricePerUnit = basePrice * scarcity;
             return Mathf.CeilToInt(finalPricePerUnit * amount);

@@ -483,7 +483,7 @@ namespace RulerBox
                     else if(level=="Classical") desc = "Aligned Leaders +50%\nBase XP -5";
                     else if(level=="Stratocracy") desc = "Manpower +20%";
                     else if(level=="Clerical") desc = "Pop Growth +0.5%\nWE Gain -0.0025";
-                    else if(level=="Falangism") desc = "Build Speed +10%\nUnrest Red. +15%\nJustification +10%";
+                    else if(level=="Falangism") desc = "Build Speed +10%\nUnrest Red. +15%";
                     break;
             }
             return $"<b>{level}</b>\n{desc}";

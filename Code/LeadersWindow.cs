@@ -300,6 +300,17 @@ namespace RulerBox
                     WorldTip.showNow("Cabinet is full (3/3)", false, "top", 1.5f, "#FF5A5A");
                     return;
                 }
+                // Recruitment Cost Logic
+                float ppMod = Mathf.Max(0.1f, d.PoliticalPowerGainModifier);
+                long cost = (long)(500 / ppMod);
+                
+                if (d.Treasury < cost)
+                {
+                     WorldTip.showNow($"Need {cost} Gold to recruit!", true, "top", 1.5f, "#FF5A5A");
+                     return;
+                }
+                d.Treasury -= cost;
+
                 d.ActiveLeaders.Add(leader);
                 KingdomMetricsSystem.RecalculateForKingdom(k, d);
                 Refresh();

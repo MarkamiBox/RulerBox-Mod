@@ -119,8 +119,11 @@ namespace RulerBox
                 var d = KingdomMetricsSystem.Get(city.kingdom);
                 if (d != null && d.Treasury > 0)
                 {
-                    long tax = (long)(d.Treasury * def.TreasuryPctCost);
-                    if (tax > d.Treasury) return false;
+                    long baseTax = (long)(d.Treasury * def.TreasuryPctCost);
+                    float corruptionFactor = Mathf.Min(d.CorruptionLevel, 0.5f);
+                    long totalTax = (long)(baseTax * (1f + corruptionFactor));
+                    
+                    if (totalTax > d.Treasury) return false;
                 }
             }
             return true;
@@ -157,10 +160,13 @@ namespace RulerBox
                 var d = KingdomMetricsSystem.Get(city.kingdom);
                 if (d != null && d.Treasury > 0)
                 {
-                    long tax = (long)(d.Treasury * def.TreasuryPctCost);
-                    if (tax > 0)
+                    long baseTax = (long)(d.Treasury * def.TreasuryPctCost);
+                    float corruptionFactor = Mathf.Min(d.CorruptionLevel, 0.5f);
+                    long totalTax = (long)(baseTax * (1f + corruptionFactor));
+                    
+                    if (totalTax > 0)
                     {
-                        d.Treasury -= tax;
+                        d.Treasury -= totalTax;
                         // WorldTip.showNow($"Investment Cost: -{tax} Gold", ...);
                     }
                 }
