@@ -233,6 +233,13 @@ namespace RulerBox
             Refresh();
         }
 
+        public static void SetVisibility(bool visible)
+        {
+            if (root == null) Initialize();
+            root.SetActive(visible);
+            if (visible) Refresh();
+        }
+
         public static void Refresh()
         {
             if (root == null || !root.activeSelf) return;
