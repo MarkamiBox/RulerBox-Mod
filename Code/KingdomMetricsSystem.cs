@@ -7,11 +7,20 @@ namespace RulerBox
 {
     public class TimedEffect
     {
+        public string Id;
         public float TimeRemaining;
         public float StabilityPerSecond;
 
+        public TimedEffect(string id, float duration, float stabilityPerSecond)
+        {
+            Id = id;
+            TimeRemaining = duration;
+            StabilityPerSecond = stabilityPerSecond;
+        }
+
         public TimedEffect(float duration, float stabilityPerSecond)
         {
+            Id = "";
             TimeRemaining = duration;
             StabilityPerSecond = stabilityPerSecond;
         }
@@ -1302,7 +1311,6 @@ namespace RulerBox
             public float EconBalanceIndex, EconTreasuryPerCapita, EconIncomePerCapita, EconExpensesPerCapita, EconWarOverheadShare;
             public long PrevPopulation, PopSamplePop = -1;
             public float PopSampleYears, WEChange, WarEffectOnManpowerPct, WarEffectOnStabilityPerYear, StabilityChange, WarPressureIndex, InternalTensionIndex, PublicOrderIndex;
-        }
         }
 
         private static void ApplyActiveEffects(Data d)
