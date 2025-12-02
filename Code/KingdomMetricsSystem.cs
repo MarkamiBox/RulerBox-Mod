@@ -7,20 +7,22 @@ namespace RulerBox
 {
     public class TimedEffect
     {
-        public string Id;
+        public string Id; // Added this field
         public float TimeRemaining;
         public float StabilityPerSecond;
 
-        public TimedEffect(string id, float duration, float stabilityPerSecond)
+        // Constructor for 2 arguments (Legacy support)
+        public TimedEffect(float duration, float stabilityPerSecond)
         {
-            Id = id;
+            this.Id = "";
             TimeRemaining = duration;
             StabilityPerSecond = stabilityPerSecond;
         }
 
-        public TimedEffect(float duration, float stabilityPerSecond)
+        // Constructor for 3 arguments (Fixes CS1729)
+        public TimedEffect(string id, float duration, float stabilityPerSecond)
         {
-            Id = "";
+            Id = id;
             TimeRemaining = duration;
             StabilityPerSecond = stabilityPerSecond;
         }
