@@ -17,7 +17,7 @@ namespace RulerBox
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
             var t = root.AddComponent<Text>();
-            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             t.text = "Technology Window\n(Work In Progress)";
             t.alignment = TextAnchor.MiddleCenter;
 
