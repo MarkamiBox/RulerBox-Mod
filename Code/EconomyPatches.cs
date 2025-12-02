@@ -87,7 +87,7 @@ namespace RulerBox
                     // Try to produce a baby
                     // produceUnit() is the standard method.
                     // FIXME: produceUnit method not found, using spawnNewUnit
-                    World.world.units.spawnNewUnit(__instance.race, __instance.getTile(), true, true, 0f);
+                    World.world.units.spawnNewUnit(__instance.getSpecies(), __instance.getTile(), true, true, 0f);
                 }
             }
         }

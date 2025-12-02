@@ -560,7 +560,7 @@ namespace RulerBox
                     
                     if (UnityEngine.Random.value < 0.05f)
                     {
-                        a.kill();
+                        ((BaseSimObject)a).kill();
                         deathCount++;
                     }
                 }
