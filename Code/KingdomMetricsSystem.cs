@@ -230,6 +230,21 @@ namespace RulerBox
             // --- 6. Plague Risk Calculation ---
             float risk = 10f;
             risk += d.Cities * 2f;
+            risk += (d.Population / 10f);
+            risk -= (d.PlagueResistanceModifier * 100f); 
+            d.PlagueRisk = Mathf.Clamp(risk, 0f, 100f);
+
+            // --- 7. Research Progress ---
+            if (k.getCulture() != null)
+            {
+                float knowledgeGain = 0.1f * d.ResearchOutputModifier * deltaWorldSeconds;
+                k.getCulture().data.knowledge_progress += knowledgeGain;
+            }
+        }
+
+        public static void UpdateCounts(Kingdom k, Data d)
+        {
+            // 1. Buildings & Cities
             if (k.cities != null)
             {
                 d.Cities = k.cities.Count;
