@@ -6,10 +6,7 @@ namespace RulerBox
 {
     public static class EventsList
     {
-        //========================================================================================
-        // TO FIX AFTER EVERYTHING IS DONE
-        //========================================================================================
-
+        
         // Helper to get KingdomMetricsSystem data
         private static KingdomMetricsSystem.Data GetData(Kingdom k)
         {
