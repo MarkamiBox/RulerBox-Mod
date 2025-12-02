@@ -398,20 +398,20 @@ namespace RulerBox
             {
                 // Default structure
                 if (lvl == "none") pct = 0f;
-                else if (lvl == "low") pct = 0.01f;
-                else if (lvl == "medium") pct = 0.02f;
-                else if (lvl == "high") pct = 0.03f;
-                else if (lvl == "maximum") pct = 0.04f;
+                else if (lvl == "low") pct = 0.02f;
+                else if (lvl == "medium") pct = 0.04f;
+                else if (lvl == "high") pct = 0.06f;
+                else if (lvl == "maximum") pct = 0.08f;
                 
                 // Specific overrides
                 if (id == "military_spending") 
-                    pct = lvl switch { "none"=>0f, "low"=>0.05f, "medium"=>0.075f, "high"=>0.10f, "maximum"=>0.125f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.10f, "medium"=>0.15f, "high"=>0.20f, "maximum"=>0.25f, _=>0f };
                 else if (id == "security_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.01f, "medium"=>0.02f, "high"=>0.03f, "maximum"=>0.04f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.02f, "medium"=>0.04f, "high"=>0.06f, "maximum"=>0.08f, _=>0f };
                 else if (id == "anti_corruption")
-                    pct = lvl switch { "none"=>0f, "low"=>0.02f, "medium"=>0.03f, "high"=>0.04f, "maximum"=>0.05f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.03f, "medium"=>0.06f, "high"=>0.09f, "maximum"=>0.12f, _=>0f };
                 else if (id == "research_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.02f, "medium"=>0.03f, "high"=>0.04f, "maximum"=>0.05f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.03f, "medium"=>0.06f, "high"=>0.09f, "maximum"=>0.12f, _=>0f };
             }
 
             // Cost String
