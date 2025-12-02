@@ -408,7 +408,7 @@ namespace RulerBox
                     pct = lvl switch { "none"=>0f, "low"=>0.35f, "medium"=>0.40f, "high"=>0.45f, "maximum"=>0.50f, _=>0f };
                 else if (id == "security_spending")
                     pct = lvl switch { "none"=>0f, "low"=>0.1125f, "medium"=>0.125f, "high"=>0.1375f, "maximum"=>0.15f, _=>0f };
-                else if (id == "anti_corruption"
+                else if (id == "anti_corruption")
                     pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
                 else if (id == "research_spending")
                     pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
