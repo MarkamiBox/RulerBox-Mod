@@ -468,6 +468,344 @@ namespace RulerBox
                     }
                 }
             });
+            // ==========================================
+            // NEW EVENTS (User Requested)
+            // ==========================================
+
+            // 13. Monopoly Formation
+            Definitions.Add(new EventDef
+            {
+                Id = "econ_monopoly",
+                Title = "Monopoly Formation",
+                Text = "A powerful corporation has monopolized a key industry, driving up prices but increasing efficiency.",
+                Trigger = k => GetData(k).CorruptionLevel > 0.15f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Allow it",
+                        Tooltip = "<color=#7CFC00>Gain 2,000 Gold</color>\n<color=#FF5A5A>Corruption +10%</color>\n<color=#FF5A5A>Stability -5</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury += 2000;
+                            d.CorruptionLevel += 0.10f;
+                            d.Stability -= 5f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Break it up",
+                        Tooltip = "<color=#FF5A5A>Cost 1,000 Gold</color>\n<color=#7CFC00>Stability +5</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 1000;
+                            d.Stability += 5f;
+                        }
+                    }
+                }
+            });
+
+            // 14. National Monument
+            Definitions.Add(new EventDef
+            {
+                Id = "cult_monument",
+                Title = "National Monument",
+                Text = "Architects propose a grand monument to celebrate our nation's glory.",
+                Trigger = k => GetData(k).Treasury > 5000 && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Build it!",
+                        Tooltip = "<color=#FF5A5A>Cost 3,000 Gold</color>\n<color=#7CFC00>Stability +10 (Permanent Bonus)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 3000;
+                            d.ActiveEffects.Add(new TimedEffect("national_monument", 99999f, 0f)); // Permanent modifier
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Too expensive",
+                        Tooltip = "No effect.",
+                        Action = k => { }
+                    }
+                }
+            });
+
+            // 15. Military Parade
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_parade",
+                Title = "Military Parade",
+                Text = "Generals suggest a military parade to boost morale and show strength.",
+                Trigger = k => GetData(k).Soldiers > 100 && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Authorize Parade",
+                        Tooltip = "<color=#FF5A5A>Cost 500 Gold</color>\n<color=#7CFC00>Stability +5</color>\n<color=#7CFC00>War Exhaustion -2</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 500;
+                            d.Stability += 5f;
+                            d.WarExhaustion = Mathf.Max(0, d.WarExhaustion - 2f);
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Unnecessary",
+                        Tooltip = "No effect.",
+                        Action = k => { }
+                    }
+                }
+            });
+
+            // 16. Anti-War Protests
+            Definitions.Add(new EventDef
+            {
+                Id = "unrest_antiwar",
+                Title = "Anti-War Protests",
+                Text = "Citizens are protesting against the ongoing conflict.",
+                Trigger = k => GetData(k).WarExhaustion > 15f && UnityEngine.Random.value < 0.05f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Suppress Protests",
+                        Tooltip = "<color=#FF5A5A>Stability -5</color>\n<color=#FF5A5A>War Exhaustion +1</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability -= 5f;
+                            d.WarExhaustion += 1f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Listen to them",
+                        Tooltip = "<color=#FF5A5A>Stability -2</color>\n<color=#7CFC00>War Exhaustion -1</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability -= 2f;
+                            d.WarExhaustion = Mathf.Max(0, d.WarExhaustion - 1f);
+                        }
+                    }
+                }
+            });
+
+            // 17. Deserters
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_deserters",
+                Title = "Mass Desertions",
+                Text = "Reports indicate that soldiers are deserting their posts in large numbers.",
+                Trigger = k => GetData(k).WarExhaustion > 30f && UnityEngine.Random.value < 0.04f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Disgraceful!",
+                        Tooltip = "<color=#FF5A5A>Lose 10% Manpower</color>\n<color=#FF5A5A>Manpower Cap -20% (120s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.ManpowerCurrent = (long)(d.ManpowerCurrent * 0.9f);
+                            d.ActiveEffects.Add(new TimedEffect("chronic_desertions", 120f, -0.1f));
+                        }
+                    }
+                }
+            });
+
+            // 18. Skills Shortage
+            Definitions.Add(new EventDef
+            {
+                Id = "econ_shortage",
+                Title = "Skills Shortage",
+                Text = "The war has drained the workforce of skilled labor, impacting industry and research.",
+                Trigger = k => GetData(k).WarExhaustion > 40f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "A tragedy",
+                        Tooltip = "<color=#FF5A5A>Factory Output -20% (180s)</color>\n<color=#FF5A5A>Research -20% (180s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.ActiveEffects.Add(new TimedEffect("skills_shortage", 180f, 0f));
+                        }
+                    }
+                }
+            });
+
+            // 19. Blackmail Threat
+            Definitions.Add(new EventDef
+            {
+                Id = "cor_blackmail",
+                Title = "Blackmail Threat",
+                Text = "A high-ranking official is being blackmailed by a criminal organization.",
+                Trigger = k => GetData(k).CorruptionLevel > 0.2f && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Pay them off",
+                        Tooltip = "<color=#FF5A5A>Cost 1,500 Gold</color>\n<color=#FF5A5A>Corruption +5%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 1500;
+                            d.CorruptionLevel += 0.05f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Refuse",
+                        Tooltip = "<color=#FF5A5A>Stability -10</color>\n<color=#FF5A5A>Scandal exposed</color>",
+                        Action = k => GetData(k).Stability -= 10f
+                    }
+                }
+            });
+
+            // 20. Substandard Weapons
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_bad_weapons",
+                Title = "Substandard Weapons",
+                Text = "It has been revealed that a military supplier provided defective equipment.",
+                Trigger = k => GetData(k).CorruptionLevel > 0.25f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Investigate",
+                        Tooltip = "<color=#FF5A5A>Cost 500 Gold</color>\n<color=#7CFC00>Corruption -5%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 500;
+                            d.CorruptionLevel = Mathf.Max(0, d.CorruptionLevel - 0.05f);
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Ignore it",
+                        Tooltip = "<color=#FF5A5A>Army Attack -15% (120s)</color>\n<color=#FF5A5A>Stability -5</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability -= 5f;
+                            d.ActiveEffects.Add(new TimedEffect("substandard_weapons", 120f, 0f));
+                        }
+                    }
+                }
+            });
+
+            // 21. Exclusive Military Contracts
+            Definitions.Add(new EventDef
+            {
+                Id = "cor_contracts",
+                Title = "Exclusive Contracts",
+                Text = "Defense contractors offer a large bribe for exclusive rights.",
+                Trigger = k => UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Accept Bribe",
+                        Tooltip = "<color=#7CFC00>Gain 5,000 Gold</color>\n<color=#FF5A5A>Corruption +15%</color>\n<color=#FF5A5A>Upkeep -10% (120s)</color>\n<color=#7CFC00>Factory Output +5% (120s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury += 5000;
+                            d.CorruptionLevel += 0.15f;
+                            d.ActiveEffects.Add(new TimedEffect("powerful_mic", 120f, 0f));
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Reject",
+                        Tooltip = "No effect.",
+                        Action = k => { }
+                    }
+                }
+            });
+
+            // 22. Power Station Sabotaged
+            Definitions.Add(new EventDef
+            {
+                Id = "ins_sabotage",
+                Title = "Power Station Sabotaged",
+                Text = "Insurgents have sabotaged a major power station, crippling industry.",
+                Trigger = k => GetData(k).Stability < 30f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Repair it",
+                        Tooltip = "<color=#FF5A5A>Cost 1,000 Gold</color>",
+                        Action = k => GetData(k).Treasury -= 1000
+                    },
+                    new EventOption
+                    {
+                        Text = "Leave it",
+                        Tooltip = "<color=#FF5A5A>Factory Output -40% (120s)</color>",
+                        Action = k => GetData(k).ActiveEffects.Add(new TimedEffect("rolling_blackouts", 120f, -0.1f))
+                    }
+                }
+            });
+
+            // 23. Key Insurgent Leader Killed
+            Definitions.Add(new EventDef
+            {
+                Id = "ins_leader_killed",
+                Title = "Insurgent Leader Killed",
+                Text = "Special forces have eliminated a key insurgent leader.",
+                Trigger = k => GetData(k).Stability < 40f && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Excellent news!",
+                        Tooltip = "<color=#7CFC00>Stability +10</color>\n<color=#7CFC00>War Exhaustion -2</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability += 10f;
+                            d.WarExhaustion = Mathf.Max(0, d.WarExhaustion - 2f);
+                        }
+                    }
+                }
+            });
+
+            // 24. Popular War Support
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_war_support",
+                Title = "Popular War Support",
+                Text = "The population is rallying behind the war effort!",
+                Trigger = k => GetData(k).WarExhaustion > 10f && GetData(k).Stability > 60f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Mobilize them!",
+                        Tooltip = "<color=#7CFC00>Manpower Cap +20% (120s)</color>\n<color=#7CFC00>WE Gain -20% (120s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.ActiveEffects.Add(new TimedEffect("popular_war_support", 120f, 0.1f));
+                        }
+                    }
+                }
+            });
         }
         
         // Method to get a random valid event for a kingdom

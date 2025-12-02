@@ -105,7 +105,7 @@ namespace RulerBox
             
             // Vertical Layout for content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentVL.childAlignment = TextAnchor.UpperLeft;
+            contentVL.childAlignment = TextAnchor.UpperCenter;
             contentVL.spacing = 4;
             contentVL.padding = new RectOffset(2, 2, 2, 2);
             contentVL.childControlWidth = true;
@@ -202,7 +202,7 @@ namespace RulerBox
             
             // Vertical Layout for row
             var v = rowGO.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.UpperLeft;
+            v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 2;
             v.childControlWidth = true;
             v.childControlHeight = true;
@@ -231,7 +231,7 @@ namespace RulerBox
             
             // Horizontal Layout for buttons
             var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 2;
             h.childControlWidth = true;
             h.childControlHeight = true;
