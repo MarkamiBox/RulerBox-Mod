@@ -1,25 +1,4 @@
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using HarmonyLib;
-
-namespace RulerBox
-{
-    public class TimedEffect
-    {
-        public float TimeRemaining;
-        public float StabilityPerSecond;
-
-        public TimedEffect(float duration, float stabilityPerSecond)
-        {
-            TimeRemaining = duration;
-            StabilityPerSecond = stabilityPerSecond;
-        }
-    }
-
-    public class LeaderState
-    {
-        public string Id;
         public string Name;
         public string Type; // e.g., "Head of Government"
         public int Level;   // 1, 2, 3...
@@ -138,6 +117,7 @@ namespace RulerBox
             ApplyEconomicLaws_Modifiers(d);
             ApplyLeaderModifiers(d); 
             ApplyActivePolicies(d);
+            ApplyActiveEffects(d);
 
             // --- Base Corruption Calculation ---
             // 2.5% corruption per city beyond the first
@@ -1301,6 +1281,71 @@ namespace RulerBox
             public float EconBalanceIndex, EconTreasuryPerCapita, EconIncomePerCapita, EconExpensesPerCapita, EconWarOverheadShare;
             public long PrevPopulation, PopSamplePop = -1;
             public float PopSampleYears, WEChange, WarEffectOnManpowerPct, WarEffectOnStabilityPerYear, StabilityChange, WarPressureIndex, InternalTensionIndex, PublicOrderIndex;
+        }
+        }
+
+        private static void ApplyActiveEffects(Data d)
+        {
+            if (d.ActiveEffects == null) return;
+            foreach (var eff in d.ActiveEffects)
+            {
+                if (string.IsNullOrEmpty(eff.Id)) continue;
+                
+                switch (eff.Id)
+                {
+                    case "econ_boom":
+                        d.TaxRateLocal *= 1.1f;
+                        break;
+                    case "hyperinflation":
+                        d.TaxRateLocal *= 0.5f;
+                        d.FactoryOutputModifier *= 0.5f;
+                        break;
+                    case "depression":
+                        d.TaxRateLocal *= 0.7f;
+                        d.FactoryOutputModifier *= 0.7f;
+                        break;
+                    case "skills_shortage":
+                        d.FactoryOutputModifier *= 0.8f;
+                        d.ResearchOutputModifier *= 0.8f;
+                        break;
+                    case "chronic_desertions":
+                        d.ManpowerMaxMultiplier *= 0.8f;
+                        break;
+                    case "widespread_mutinies":
+                        d.MilitaryUpkeepModifier *= 1.5f;
+                        d.MilitaryAttackModifier -= 0.2f;
+                        break;
+                    case "military_reorg":
+                        d.MilitaryUpkeepModifier *= 1.1f;
+                        d.MilitaryAttackModifier += 0.1f;
+                        break;
+                    case "insurgency":
+                        d.TaxRateLocal *= 0.8f;
+                        d.StabilityTargetModifier -= 10f;
+                        break;
+                    case "rolling_blackouts":
+                        d.FactoryOutputModifier *= 0.6f;
+                        break;
+                    case "substandard_weapons":
+                        d.MilitaryAttackModifier -= 0.15f;
+                        break;
+                    case "powerful_mic":
+                        d.MilitaryUpkeepModifier *= 0.9f;
+                        d.FactoryOutputModifier *= 1.05f;
+                        break;
+                    case "loyalist_academies":
+                        d.LeaderXPModifier -= 10f;
+                        d.StabilityTargetModifier += 5f;
+                        break;
+                    case "popular_war_support":
+                        d.ManpowerMaxMultiplier *= 1.2f;
+                        d.WarExhaustionGainMultiplier *= 0.8f;
+                        break;
+                    case "national_monument":
+                        d.StabilityTargetModifier += 5f;
+                        break;
+                }
+            }
         }
     }
 
