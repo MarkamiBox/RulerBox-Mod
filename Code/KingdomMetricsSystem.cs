@@ -196,7 +196,8 @@ namespace RulerBox
             long tradeIn = SafeLong(TradeManager.GetTradeIncome(k) * d.TradeIncomeModifier);
             d.TradeIncome = tradeIn;
             
-            d.Income = SafeLong(taxableBase * econScale) + tradeIn;
+            // 10x Income Boost
+            d.Income = (SafeLong(taxableBase * econScale) + tradeIn) * 10;
 
             // 4. Expenses Calc
             long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
@@ -277,7 +278,7 @@ namespace RulerBox
             d.PrevPopulation = d.Population;
             d.Population = k.getPopulationPeople();
             d.AvgGrowthRate = (d.PopulationGrowthBonus * 100f); 
-
+        
             // 3. Reset Counters
             d.Adults = 0;
             d.Soldiers = 0;
@@ -592,13 +593,14 @@ namespace RulerBox
             // Costs calculated as % of Income
             long inc = d.Income; 
 
-            total += GetCost(d.MilitarySpending, inc, 0.35f, 0.40f, 0.45f, 0.50f);
-            total += GetCost(d.SecuritySpending, inc, 0.1125f, 0.125f, 0.1375f, 0.15f);
-            total += GetCost(d.GovernmentSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
-            total += GetCost(d.WelfareSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
-            total += GetCost(d.EducationSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
-            total += GetCost(d.ResearchSpending, inc, 0.15f, 0.20f, 0.25f, 0.30f);
-            total += GetCost(d.AntiCorruption, inc, 0.15f, 0.20f, 0.25f, 0.30f);
+            // Reduced costs by 10x
+            total += GetCost(d.MilitarySpending, inc, 0.035f, 0.040f, 0.045f, 0.050f);
+            total += GetCost(d.SecuritySpending, inc, 0.01125f, 0.0125f, 0.01375f, 0.015f);
+            total += GetCost(d.GovernmentSpending, inc, 0.005f, 0.010f, 0.015f, 0.020f);
+            total += GetCost(d.WelfareSpending, inc, 0.005f, 0.010f, 0.015f, 0.020f);
+            total += GetCost(d.EducationSpending, inc, 0.005f, 0.010f, 0.015f, 0.020f);
+            total += GetCost(d.ResearchSpending, inc, 0.015f, 0.020f, 0.025f, 0.030f);
+            total += GetCost(d.AntiCorruption, inc, 0.015f, 0.020f, 0.025f, 0.030f);
             
             return total;
         }
