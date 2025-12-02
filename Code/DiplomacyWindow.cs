@@ -689,7 +689,7 @@ namespace RulerBox
             var go = new GameObject("Text", typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var txt = go.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = content;
             txt.fontSize = size;
             txt.fontStyle = style;

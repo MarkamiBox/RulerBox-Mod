@@ -91,29 +91,6 @@ namespace RulerBox
             
             bool extended = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
             var treasury = Money(d.Treasury, whenPositive: "gold", zeroGold: true);
-            var income   = Money(d.Income);
-            var expenses = Money(-Math.Abs(d.Expenses));
-            var balance  = Money(d.Balance, whenPositive: "gold", zeroGold: true);
-            
-            if (!extended)
-            {
-                // Compact view
-                string tradeStr = "";
-                if (d.TradeIncome > 0 || d.TradeExpenses > 0)
-                {
-                    tradeStr = $"\nTrade: {ColorGreen("+" + FormatBig(d.TradeIncome))} / {ColorRed("-" + FormatBig(d.TradeExpenses))}";
-                }
-                return
-                    $"Treasury: {treasury}\n\n" +
-                    $"Income:   {income}\n" +
-                    $"Expenses: {expenses}\n" +
-                    tradeStr + "\n" +
-                    $"Balance:  {balance}\n\n" +
-                    $"<color=#999999>Hold <b>Shift</b> for detailed breakdown</color>";
-            }
-            
-            // ---- Extended breakdown ----
-            string taxRateStr   = ColorGold($"{d.TaxRateLocal * 100f:0.##}%");
             string warPenStr    = d.TaxPenaltyFromWar != 0 ? ColorRed($"-{d.TaxPenaltyFromWar:0.##}%") : ColorGold("0%");
             string stabModStr   = d.TaxModifierFromStability != 0 ? (d.TaxModifierFromStability > 0 ? ColorGreen($"+{d.TaxModifierFromStability:0.##}%") : ColorRed($"{d.TaxModifierFromStability:0.##}%")) : ColorGold("0%");
             string cityModStr   = d.TaxModifierFromCities != 0 ? ColorGold($"+{d.TaxModifierFromCities:0.##}%") : ColorGold("0%");

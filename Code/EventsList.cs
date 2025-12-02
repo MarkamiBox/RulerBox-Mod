@@ -68,22 +68,6 @@ namespace RulerBox
                             d.Treasury += 5000;
                             d.Stability += 5f;
                             // Add a temporary stability boost effect
-                            d.ActiveEffects.Add(new TimedEffect(60f, 0.5f)); // +0.5 stab/sec for 60s
-                        }
-                    }
-                }
-            });
-            // 2. Hyperinflation (Crisis)
-            Definitions.Add(new EventDef
-            {
-                Id = "econ_hyperinflation",
-                Title = "Hyperinflation",
-                Text = "Due to recent monetary decisions and spiraling debt, the value of our currency is plummeting! Our economy is crippling.",
-                Trigger = k => 
-                {
-                    var d = GetData(k);
-                    // Trigger if deep in debt
-                    return d.Treasury < -2000 && UnityEngine.Random.value < 0.05f;
                 },
                 Options = new List<EventOption>
                 {
