@@ -238,7 +238,7 @@ namespace RulerBox
             if (k.getCulture() != null)
             {
                 float knowledgeGain = 0.1f * d.ResearchOutputModifier * deltaWorldSeconds;
-                k.getCulture().data.knowledge_progress += knowledgeGain;
+                //k.getCulture().data.knowledge_progress += knowledgeGain;
             }
         }
 
