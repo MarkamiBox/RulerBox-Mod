@@ -65,7 +65,7 @@ namespace RulerBox
                             d.Treasury += 5000;
                             d.Stability += 5f;
                             // Add a temporary stability boost effect
-                            d.ActiveEffects.Add(new TimedEffect(60f, 0.5f)); // +0.5 stab/sec for 60s
+                            d.ActiveEffects.Add(new TimedEffect("econ_boom", 60f, 0.5f)); // +0.5 stab/sec for 60s
                         }
                     }
                 }
@@ -95,7 +95,7 @@ namespace RulerBox
                             d.Treasury -= (long)(debt * 2f); 
                             //d.Treasury = -5000; // Reset to a flat debt
                             d.Stability -= 20f;
-                            d.ActiveEffects.Add(new TimedEffect(120f, -0.2f)); // Negative drift
+                            d.ActiveEffects.Add(new TimedEffect("econ_hyperinflation", 120f, -0.2f)); // Negative drift
                         }
                     },
                     new EventOption
@@ -106,7 +106,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 10000;
-                            d.CorruptionLevel += 0.10f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
                             d.Stability -= 5f;
                         }
                     }
@@ -133,7 +133,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury = 0;
-                            d.ActiveEffects.Add(new TimedEffect(120f, -0.5f)); // Economic Depression effect
+                            d.ActiveEffects.Add(new TimedEffect("econ_imf", 120f, -0.5f)); // Economic Depression effect
                         }
                     },
                     new EventOption
@@ -183,7 +183,7 @@ namespace RulerBox
                             var d = GetData(k);
                             d.Stability -= 10f;
                             d.TaxRateLocal *= 0.8f;
-                            d.ActiveEffects.Add(new TimedEffect(60f, -0.2f));
+                            d.ActiveEffects.Add(new TimedEffect("unrest_strikers", 60f, -0.2f));
                         }
                     },
                     new EventOption
@@ -222,7 +222,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Stability += 5f;
-                            d.CorruptionLevel = Mathf.Max(0, d.CorruptionLevel - 0.1f);
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_reduction_medium", 300f, 0f));
                         }
                     },
                     new EventOption
@@ -332,7 +332,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Stability -= 5f;
-                            d.ActiveEffects.Add(new TimedEffect(300f, -0.1f)); // Long term drain
+                            d.ActiveEffects.Add(new TimedEffect("insurgency_start", 300f, -0.1f)); // Long term drain
                         }
                     }
                 }
@@ -397,7 +397,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 500;
-                            d.CorruptionLevel += 0.05f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_small", 300f, 0f));
                         }
                     },
                     new EventOption
@@ -426,7 +426,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 1500;
-                            d.CorruptionLevel += 0.10f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
                         }
                     },
                     new EventOption
@@ -486,7 +486,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 2000;
-                            d.CorruptionLevel += 0.10f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
                             d.Stability -= 5f;
                         }
                     },
@@ -659,7 +659,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 1500;
-                            d.CorruptionLevel += 0.05f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_small", 300f, 0f));
                         }
                     },
                     new EventOption
@@ -688,7 +688,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 500;
-                            d.CorruptionLevel = Mathf.Max(0, d.CorruptionLevel - 0.05f);
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_reduction_small", 300f, 0f));
                         }
                     },
                     new EventOption
@@ -722,7 +722,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 5000;
-                            d.CorruptionLevel += 0.15f;
+                            d.ActiveEffects.Add(new TimedEffect("event_corruption_large", 300f, 0f));
                             d.ActiveEffects.Add(new TimedEffect("powerful_mic", 120f, 0f));
                         }
                     },
@@ -798,30 +798,19 @@ namespace RulerBox
                         Action = k => 
                         {
                             var d = GetData(k);
-                            d.ActiveEffects.Add(new TimedEffect("popular_war_support", 120f, 0.1f));
+                            d.ManpowerMaxMultiplier *= 1.2f;
+                            d.WarExhaustionGainMultiplier *= 0.8f;
+                            d.ActiveEffects.Add(new TimedEffect("popular_war_support", 120f, 0f));
                         }
+                    },
+                    new EventOption
+                    {
+                        Text = "Ignore",
+                        Tooltip = "No effect.",
+                        Action = k => { }
                     }
                 }
             });
-        }
-        
-        // Method to get a random valid event for a kingdom
-        public static EventDef GetRandomEvent(Kingdom k)
-        {
-            var valid = new List<EventDef>();
-            foreach (var def in Definitions)
-            {
-                if (def.Trigger != null && def.Trigger(k))
-                {
-                    valid.Add(def);
-                }
-            }
-
-            if (valid.Count > 0)
-            {
-                return valid[UnityEngine.Random.Range(0, valid.Count)];
-            }
-            return null;
         }
     }
 }
