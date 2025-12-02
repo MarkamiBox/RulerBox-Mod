@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
-using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace RulerBox
 {
@@ -8,518 +9,384 @@ namespace RulerBox
     {
         private static GameObject root;
         private static Sprite windowInnerSprite;
+        private static Transform content;
+        private static Text treasuryText;
+        private static Text incomeText;
         
-        // ================== ECONOMIC LAWS WINDOW ==================
+        private static Kingdom lastKingdom;
+        private static float updateTimer = 0f;
+
         public static void Initialize(Transform parent)
         {
             if (root != null) return;
-            windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
-            
-            // Root container
-            root = new GameObject("EconomicLawsRoot");
-            root.transform.SetParent(parent, false);
-            
-            // Full stretch
-            var rt = root.AddComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            
-            // Vertical layout
-            var v = root.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.UpperCenter;
-            v.spacing = 6;
-            v.padding = new RectOffset(4, 4, 4, 4);
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = true;
-            v.childForceExpandHeight = false;
-            
-            // Title text top center
-            var titleGO = new GameObject("Title");
-            titleGO.transform.SetParent(root.transform, false);
-            var title = titleGO.AddComponent<Text>();
-            title.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
-            title.text = "Economic Laws";
-            title.alignment = TextAnchor.MiddleCenter;
-            title.color = Color.white;
-            title.resizeTextForBestFit = true;
-            title.resizeTextMinSize = 8;
-            title.resizeTextMaxSize = 12;
-            var titleLE = titleGO.AddComponent<LayoutElement>();
-            titleLE.preferredHeight = 20f;
-            
-            // Scroll container
-            var scrollGO = new GameObject("LawsScroll");
-            scrollGO.transform.SetParent(root.transform, false);
-            
-            // Scroll Rect
-            var scrollLE = scrollGO.AddComponent<LayoutElement>();
-            scrollLE.preferredHeight = 140f;
-            scrollLE.flexibleHeight = 1f;
-            
-            // Background
-            var bgImg = scrollGO.AddComponent<Image>();
-            if (windowInnerSprite != null)
+            Debug.Log("[RulerBox] EconomicLawsWindow: Initializing UI...");
+
+            try 
             {
-                bgImg.sprite = windowInnerSprite;
-                bgImg.type = Image.Type.Sliced;
-                bgImg.color = Color.white;
+                content = null;
+                treasuryText = null;
+                incomeText = null;
+
+                windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
+
+                root = new GameObject("EconomicLawsWindow");
+                root.transform.SetParent(parent, false);
+                var rt = root.AddComponent<RectTransform>();
+                rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+                rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
+
+                var h = root.AddComponent<HorizontalLayoutGroup>();
+                h.spacing = 2;
+                h.padding = new RectOffset(1, 1, 1, 1);
+                h.childControlWidth = true;
+                h.childControlHeight = true;
+                h.childForceExpandWidth = true;
+                h.childForceExpandHeight = true;
+
+                CreateMainPanel(root.transform);
+
+                root.SetActive(false);
+                Debug.Log("[RulerBox] EconomicLawsWindow: Initialization Complete.");
             }
-            /*else
-            {                                                       To Remove: Darken bg even without sprite
-                //bgImg.color = new Color(0f, 0f, 0f, 0.35f);
-            }*/
-            
-            // ScrollRect
-            var scrollRect = scrollGO.AddComponent<ScrollRect>();
-            scrollRect.horizontal = false;
-            scrollRect.vertical = true;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            
-            // Viewport
-            var viewportGO = new GameObject("Viewport");
-            viewportGO.transform.SetParent(scrollGO.transform, false);
-            var viewportRT = viewportGO.AddComponent<RectTransform>();
-            viewportRT.anchorMin = new Vector2(0f, 0f);
-            viewportRT.anchorMax = new Vector2(1f, 1f);
-            viewportRT.offsetMin = new Vector2(2f, 4.5f);
-            viewportRT.offsetMax = new Vector2(-2f, -4f);
-            var viewportImg = viewportGO.AddComponent<Image>();
-            viewportImg.color = new Color(0f, 0f, 0f, 0.01f);
-            
-            // Mask
-            var mask = viewportGO.AddComponent<Mask>();
-            mask.showMaskGraphic = false;
-            
-            // Content inside scroll
-            var contentGO = new GameObject("Content");
-            contentGO.transform.SetParent(viewportGO.transform, false);
-            var contentRT = contentGO.AddComponent<RectTransform>();
-            contentRT.anchorMin = new Vector2(0f, 1f);
-            contentRT.anchorMax = new Vector2(1f, 1f);
-            contentRT.pivot     = new Vector2(0.5f, 1f);
-            contentRT.anchoredPosition = Vector2.zero;
-            contentRT.sizeDelta = new Vector2(0f, 0f);
-            
-            // Vertical Layout for content
-            var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentVL.childAlignment = TextAnchor.UpperCenter;
-            contentVL.spacing = 4;
-            contentVL.padding = new RectOffset(2, 2, 2, 2);
-            contentVL.childControlWidth = true;
-            contentVL.childControlHeight = true;
-            contentVL.childForceExpandWidth = true;
-            contentVL.childForceExpandHeight = false;
-            
-            // Content Size Fitter
-            var fitter = contentGO.AddComponent<ContentSizeFitter>();
-            fitter.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
-            fitter.horizontalFit = ContentSizeFitter.FitMode.Unconstrained;
-            
-            // Assign to ScrollRect
-            scrollRect.viewport = viewportRT;
-            scrollRect.content  = contentRT;
-            
-            // Add all laws
-            AddLawRow(contentRT, "taxation", "Taxation Laws",
-                "Minimum", "Low", "Normal", "High", "Maximum");
-            AddLawRow(contentRT, "military_spending",   "Military Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "security_spending",   "Security Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "government_spending", "Government Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "welfare_spending", "Healthcare Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "education_spending",  "Education Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "research_spending",   "Research Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            AddLawRow(contentRT, "anti_corruption",     "Anti Corruption Spending",
-                "None", "Low", "Medium", "High", "Maximum");
-            
-            // Bottom
-            var bottomRow = new GameObject("BottomRow");
-            bottomRow.transform.SetParent(root.transform, false);
-            var bottomHL = bottomRow.AddComponent<HorizontalLayoutGroup>();
-            bottomHL.childAlignment = TextAnchor.MiddleCenter;
-            bottomHL.spacing = 0;
-            bottomHL.childControlWidth = false;
-            bottomHL.childControlHeight = true;
-            bottomHL.childForceExpandWidth = false;
-            bottomHL.childForceExpandHeight = false;
-            
-            // Layout Element
-            var bottomLE = bottomRow.AddComponent<LayoutElement>();
-            bottomLE.preferredHeight = 26f;
-            
-            // Back Button
-            BuildBackButton(bottomRow.transform, "Back", () => TopPanelUI.ReturnToEconomyMain());
-            root.SetActive(false);
+            catch (System.Exception e)
+            {
+                Debug.LogError("[RulerBox] EconomicLawsWindow Init CRASHED: " + e.ToString());
+                if (root != null) Object.Destroy(root);
+                root = null;
+            }
         }
 
-        // Show or hide the window
+        private static void TrySelfInitialize()
+        {
+            if (root != null) return;
+            try
+            {
+                GameObject hub = GameObject.Find("RulerBox_MainHub");
+                if (hub != null)
+                {
+                    Transform container = hub.transform.Find("ContentContainer");
+                    if (container != null) Initialize(container);
+                }
+            }
+            catch { }
+        }
+
         public static void SetVisible(bool visible)
         {
-            if (root != null) root.SetActive(visible);
-        }
-        
-        // Check if window is visible
-        public static bool IsVisible()
-        {
-            return root != null && root.activeSelf;
-        }
-        
-        // Refresh the displayed laws based on kingdom data
-        public static void Refresh(Kingdom k)
-        {
-            if (!IsVisible() || k == null) return;
-            
-            var d = KingdomMetricsSystem.Get(k);
-            if (d == null) return;
-            
-            // Update highlights
-            Transform content = root.transform.Find("LawsScroll/Viewport/Content");
-            if (content != null) {
-                UpdateRowHighlight(content, "TaxationLawsRow", d.TaxationLevel);
-                UpdateRowHighlight(content, "MilitarySpendingRow", d.MilitarySpending);
-                UpdateRowHighlight(content, "SecuritySpendingRow", d.SecuritySpending);
-                UpdateRowHighlight(content, "GovernmentSpendingRow", d.GovernmentSpending);
-                UpdateRowHighlight(content, "HealthcareSpendingRow", d.WelfareSpending);
-                UpdateRowHighlight(content, "EducationSpendingRow", d.EducationSpending);
-                UpdateRowHighlight(content, "ResearchSpendingRow", d.ResearchSpending);
-                UpdateRowHighlight(content, "AntiCorruptionSpendingRow", d.AntiCorruption);
-            }
-        }
-
-        // Add a law row with buttons for each level
-        private static void AddLawRow(Transform parent, string lawId, string displayName, params string[] levels)
-        {
-            var rowGO = new GameObject(displayName.Replace(" ", "") + "Row");
-            rowGO.transform.SetParent(parent, false);
-            
-            // Vertical Layout for row
-            var v = rowGO.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.UpperCenter;
-            v.spacing = 2;
-            v.childControlWidth = true;
-            v.childControlHeight = true;
-            v.childForceExpandWidth = false;
-            v.childForceExpandHeight = false;
-            
-            // Layout Element for row
-            var rowLE = rowGO.AddComponent<LayoutElement>();
-            rowLE.preferredHeight = 30f;
-            
-            // Law label
-            var labelGO = new GameObject("Label");
-            labelGO.transform.SetParent(rowGO.transform, false);
-            var label = labelGO.AddComponent<Text>();
-            label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            label.text = displayName;
-            label.alignment = TextAnchor.MiddleCenter;
-            label.color = Color.white;
-            label.resizeTextForBestFit = true;
-            label.resizeTextMinSize = 7;
-            label.resizeTextMaxSize = 10;
-            
-            // Buttons row
-            var buttonsRow = new GameObject("ButtonsRow");
-            buttonsRow.transform.SetParent(rowGO.transform, false);
-            
-            // Horizontal Layout for buttons
-            var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleCenter;
-            h.spacing = 2;
-            h.childControlWidth = true;
-            h.childControlHeight = true;
-            h.childForceExpandWidth = true;
-            h.childForceExpandHeight = false;
-            h.padding = new RectOffset(2, 2, 0, 0);
-            var buttonsLE = buttonsRow.AddComponent<LayoutElement>();
-            buttonsLE.preferredHeight = 18f;
-            
-            // Create buttons for each level
-            foreach (var level in levels)
+            if (root == null) TrySelfInitialize();
+            if (root != null)
             {
-                CreateLawButton(buttonsRow.transform, lawId, level);
+                root.SetActive(visible);
+                if (visible) Refresh();
             }
         }
 
-        // Create a button for a specific law level
-        private static void CreateLawButton(Transform parent, string lawId, string level)
+        public static bool IsVisible() => root != null && root.activeSelf;
+
+        public static void Update()
         {
-            var go = new GameObject(level.Replace(" ", "") + "Btn");
-            go.transform.SetParent(parent, false);
-            
-            // Background Image
-            var img = go.AddComponent<Image>();
-            img.sprite = windowInnerSprite;
-            img.type = Image.Type.Sliced;
-            img.color = new Color(0.2f, 0.2f, 0.25f, 1f);
-            
-            // Layout Element
-            var le = go.AddComponent<LayoutElement>();
-            le.preferredHeight = 16f;
-            le.flexibleWidth = 1f;
-            
-            // Button
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() =>
+            if (root == null || !root.activeSelf) return;
+            updateTimer += Time.deltaTime;
+            if (updateTimer > 1f)
+            {
+                updateTimer = 0f;
+                RefreshHeader();
+            }
+        }
+
+        public static void Refresh()
+        {
+            if (root == null || content == null) return;
+            if (!root.activeSelf) return;
+
+            try
             {
                 var k = Main.selectedKingdom;
                 if (k == null) return;
+
                 var d = KingdomMetricsSystem.Get(k);
                 if (d == null) return;
-                SetActiveLaw(d, lawId, level);
-                TopPanelUI.Refresh(); 
-                EconomicLawsWindow.Refresh(k);
-                WorldTip.showNow($"Set {lawId} -> {level}", false, "top", 1f, "#9EE07A");
-            });
-            
-            // Text
-            var txtGO = new GameObject("Text");
-            txtGO.transform.SetParent(go.transform, false);
-            var txt = txtGO.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.text = level;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.resizeTextForBestFit = true;
-            txt.resizeTextMinSize = 6;
-            txt.resizeTextMaxSize = 8;
-            
-            // Stretch Text
-            var rt = txt.GetComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-            
-            // Attach Tooltip
-            ChipTooltips.AttachSimpleTooltip(go, () => GetLawTooltip(lawId, level));
-        }
 
-        // Build a back button at the bottom
-        private static void BuildBackButton(Transform parent, string label, Action onClick)
-        {
-            var go = new GameObject(label.Replace(" ", "") + "Button");
-            go.transform.SetParent(parent, false);
-            
-            // Background Image
-            var img = go.AddComponent<Image>();
-            img.sprite = windowInnerSprite;
-            img.type = Image.Type.Sliced;
-            img.color = Color.white;
-            
-            // Layout Element
-            var le = go.AddComponent<LayoutElement>();
-            le.preferredWidth = 90;
-            le.preferredHeight = 20;
-            
-            // Button
-            var btn = go.AddComponent<Button>();
-            btn.targetGraphic = img;
-            btn.onClick.AddListener(() => onClick?.Invoke());
-            
-            // Text
-            var txtGO = new GameObject("Text");
-            txtGO.transform.SetParent(go.transform, false);
-            var txt = txtGO.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
-            txt.text = label;
-            txt.alignment = TextAnchor.MiddleCenter;
-            txt.color = Color.white;
-            txt.resizeTextForBestFit = true;
-            txt.resizeTextMinSize = 6;
-            txt.resizeTextMaxSize = 8;
-            
-            // Stretch Text
-            var rt = txt.GetComponent<RectTransform>();
-            rt.anchorMin = Vector2.zero;
-            rt.anchorMax = Vector2.one;
-            rt.offsetMin = Vector2.zero;
-            rt.offsetMax = Vector2.zero;
-        }
+                RefreshHeader();
 
-        // Set the active law level in kingdom data
-        private static void SetActiveLaw(KingdomMetricsSystem.Data d, string lawId, string lvl)
-        {
-            switch (lawId)
-            {
-                case "taxation": d.TaxationLevel = lvl; break;
-                case "military_spending": d.MilitarySpending = lvl; break;
-                case "security_spending": d.SecuritySpending = lvl; break;
-                case "government_spending": d.GovernmentSpending = lvl; break;
-                case "welfare_spending": d.WelfareSpending = lvl; break;
-                case "education_spending": d.EducationSpending = lvl; break;
-                case "research_spending": d.ResearchSpending = lvl; break;
-                case "anti_corruption": d.AntiCorruption = lvl; break;
-            }
-        }
-
-        // Update the highlight of buttons in a law row
-        private static void UpdateRowHighlight(Transform content, string rowName, string activeLevel) 
-        {    
-            var row = content.Find(rowName);
-            if (row != null) {
-                var btns = row.Find("ButtonsRow");
-                if (btns != null) {
-                    foreach (Transform child in btns)
+                if (lastKingdom != k)
+                {
+                    RebuildList(d);
+                    lastKingdom = k;
+                }
+                else
+                {
+                    // Refresh existing items (update active state)
+                    foreach(Transform child in content)
                     {
-                        var img = child.GetComponent<Image>();
-                        if (img != null)
+                        var btn = child.GetComponent<Button>();
+                        if (btn != null)
                         {
-                            img.color = child.name.StartsWith(activeLevel.Replace(" ", ""), StringComparison.OrdinalIgnoreCase)
-                                ? new Color(0.6f, 0.9f, 0.4f, 1f) 
-                                : new Color(0.2f, 0.2f, 0.25f, 1f);
+                            // Find which law this button represents
+                            // This is a bit hacky, ideally we store a reference
+                            // For now, we just rebuild if kingdom changes.
+                            // To support dynamic updates without rebuild, we'd need a map.
+                            // Let's just rebuild for simplicity if needed, or rely on clicks updating.
                         }
                     }
+                    // Force rebuild to ensure correct states
+                    RebuildList(d);
                 }
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogWarning("[RulerBox] EconomicLawsWindow Refresh Error: " + e.Message);
             }
         }
 
-        // Generate tooltip text for a law level
-        private static string GetLawTooltip(string lawId, string level)
+        private static void RefreshHeader()
         {
             var k = Main.selectedKingdom;
-            if (k == null) return "";
-            
+            if (k == null) return;
             var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            if (treasuryText != null) treasuryText.text = $"Treasury: {d.Treasury}g";
+            if (incomeText != null) 
+            {
+                string col = d.Income >= 0 ? "#7CFC00" : "#FF5A5A";
+                incomeText.text = $"Income: <color={col}>{d.Income}g/yr</color>";
+            }
+        }
+
+        private static void RebuildList(KingdomData d)
+        {
+            foreach (Transform t in content) Object.Destroy(t.gameObject);
+
+            CreateLawItem("Taxation", "taxation", d.TaxationLevel, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Military Spending", "military_spending", d.MilitarySpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Security Spending", "security_spending", d.SecuritySpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Government Spending", "government_spending", d.GovernmentSpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Welfare Spending", "welfare_spending", d.WelfareSpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Education Spending", "education_spending", d.EducationSpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Research Spending", "research_spending", d.ResearchSpending, new[] { "none", "low", "medium", "high", "maximum" });
+            CreateLawItem("Anti-Corruption", "anti_corruption", d.AntiCorruption, new[] { "none", "low", "medium", "high", "maximum" });
+        }
+
+        private static void CreateLawItem(string title, string id, string currentLevel, string[] options)
+        {
+            var item = new GameObject("LawItem");
+            item.transform.SetParent(content, false);
+            var le = item.AddComponent<LayoutElement>();
+            le.minHeight = 60f; le.preferredHeight = 60f; le.flexibleWidth = 1f;
+
+            var bg = item.AddComponent<Image>();
+            bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced;
+            bg.color = new Color(0.2f, 0.2f, 0.25f, 0.8f);
+
+            var v = item.AddComponent<VerticalLayoutGroup>();
+            v.padding = new RectOffset(5, 5, 5, 5); v.spacing = 2;
+            v.childControlWidth = true; v.childControlHeight = true;
+
+            // Title
+            CreateText(item.transform, title, 10, FontStyle.Bold, Color.white).alignment = TextAnchor.MiddleCenter;
+
+            // Options Row
+            var row = new GameObject("Options");
+            row.transform.SetParent(item.transform, false);
+            var h = row.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 2; h.childControlWidth = true; h.childControlHeight = true; h.childForceExpandWidth = true;
+
+            foreach (var opt in options)
+            {
+                CreateOptionButton(row.transform, id, opt, currentLevel == opt);
+            }
+        }
+
+        private static void CreateOptionButton(Transform parent, string id, string level, bool isActive)
+        {
+            var btnObj = new GameObject(level);
+            btnObj.transform.SetParent(parent, false);
+            
+            var img = btnObj.AddComponent<Image>();
+            img.sprite = windowInnerSprite; img.type = Image.Type.Sliced;
+            img.color = isActive ? new Color(0.2f, 0.6f, 0.2f) : new Color(0.3f, 0.3f, 0.35f);
+
+            var btn = btnObj.AddComponent<Button>();
+            btn.targetGraphic = img;
+            btn.onClick.AddListener(() => OnLawClicked(id, level));
+
+            var t = CreateText(btnObj.transform, level.ToUpper(), 7, FontStyle.Normal, Color.white);
+            t.alignment = TextAnchor.MiddleCenter;
+
+            ChipTooltips.AttachSimpleTooltip(btnObj, () => GetLawTooltip(id, level));
+        }
+
+        private static void OnLawClicked(string id, string level)
+        {
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+            var d = KingdomMetricsSystem.Get(k);
+            
+            // Update Data
+            switch(id)
+            {
+                case "taxation": d.TaxationLevel = level; break;
+                case "military_spending": d.MilitarySpending = level; break;
+                case "security_spending": d.SecuritySpending = level; break;
+                case "government_spending": d.GovernmentSpending = level; break;
+                case "welfare_spending": d.WelfareSpending = level; break;
+                case "education_spending": d.EducationSpending = level; break;
+                case "research_spending": d.ResearchSpending = level; break;
+                case "anti_corruption": d.AntiCorruption = level; break;
+            }
+
+            KingdomMetricsSystem.RecalculateForKingdom(k, d);
+            Refresh(); // Rebuild UI to show active state
+        }
+
+        private static string GetLawTooltip(string id, string lvl)
+        {
             float pct = 0f;
-            string lvl = level.ToLowerInvariant();
-            string id  = lawId.ToLowerInvariant();
             
             // 1) Calculate Cost Percentage
             if (id != "taxation") 
             {
-                // Default structure (Reduced by 10x)
+                // Default structure (Balanced)
                 if (lvl == "none") pct = 0f;
-                else if (lvl == "low") pct = 0.005f;
-                else if (lvl == "medium") pct = 0.010f;
-                else if (lvl == "high") pct = 0.015f;
-                else if (lvl == "maximum") pct = 0.020f;
+                else if (lvl == "low") pct = 0.02f;
+                else if (lvl == "medium") pct = 0.04f;
+                else if (lvl == "high") pct = 0.06f;
+                else if (lvl == "maximum") pct = 0.08f;
                 
-                // Specific overrides (Reduced by 10x)
+                // Specific overrides (Balanced)
                 if (id == "military_spending") 
-                    pct = lvl switch { "none"=>0f, "low"=>0.035f, "medium"=>0.040f, "high"=>0.045f, "maximum"=>0.050f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.08f, "medium"=>0.12f, "high"=>0.16f, "maximum"=>0.20f, _=>0f };
                 else if (id == "security_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.01125f, "medium"=>0.0125f, "high"=>0.01375f, "maximum"=>0.015f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.03f, "medium"=>0.05f, "high"=>0.07f, "maximum"=>0.09f, _=>0f };
                 else if (id == "anti_corruption")
-                    pct = lvl switch { "none"=>0f, "low"=>0.015f, "medium"=>0.020f, "high"=>0.025f, "maximum"=>0.030f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.04f, "medium"=>0.06f, "high"=>0.08f, "maximum"=>0.10f, _=>0f };
                 else if (id == "research_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.015f, "medium"=>0.020f, "high"=>0.025f, "maximum"=>0.030f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.04f, "medium"=>0.06f, "high"=>0.08f, "maximum"=>0.10f, _=>0f };
             }
 
-            // Cost String
-            long costVal = (long)(d.Income * pct);
-            string costStr;
+            string costStr = (pct > 0) ? $"\nCost: <color=#FF5A5A>{pct*100:0.#}% Income</color>" : "";
+            
+            // 2) Descriptions
+            string desc = "";
             if (id == "taxation")
             {
-                 costStr = "Effect on Income";
+                if (lvl == "none") desc = "No taxes. High stability, no income.";
+                else if (lvl == "low") desc = "Low taxes. Good stability.";
+                else if (lvl == "medium") desc = "Standard taxes.";
+                else if (lvl == "high") desc = "High taxes. -10 Stability.";
+                else if (lvl == "maximum") desc = "Maximum taxes. -25 Stability.";
             }
-            else
+            else if (id == "military_spending")
             {
-                 if (pct <= 0f) costStr = "No Upkeep Cost";
-                 else costStr = $"Cost: ${costVal} ({pct*100:0.##}% of Income)";
+                if (lvl == "none") desc = "No army funding.";
+                else desc = "Increases army attack and max manpower.";
             }
-            string effects = "Effects:\n";
+            else if (id == "security_spending")
+            {
+                if (lvl == "none") desc = "No security.";
+                else desc = "Reduces corruption and rebellion chance.";
+            }
+            else if (id == "government_spending")
+            {
+                if (lvl == "none") desc = "Minimal government.";
+                else desc = "Increases max cities and political power.";
+            }
+            else if (id == "welfare_spending")
+            {
+                if (lvl == "none") desc = "No welfare.";
+                else desc = "Increases population growth and stability.";
+            }
+            else if (id == "education_spending")
+            {
+                if (lvl == "none") desc = "No education.";
+                else desc = "Increases tech speed and leader quality.";
+            }
+            else if (id == "research_spending")
+            {
+                if (lvl == "none") desc = "No research grants.";
+                else desc = "Greatly boosts research speed.";
+            }
+            else if (id == "anti_corruption")
+            {
+                if (lvl == "none") desc = "Corruption runs rampant.";
+                else desc = "Directly reduces corruption.";
+            }
+
+            return $"<b>{lvl.ToUpper()}</b>\n{desc}{costStr}";
+        }
+
+        private static void CreateMainPanel(Transform parent)
+        {
+            var container = new GameObject("Container");
+            container.transform.SetParent(parent, false);
+            var le = container.AddComponent<LayoutElement>();
+            le.flexibleWidth = 1f; le.flexibleHeight = 1f;
             
-            // Effects Strings
-            switch(id) 
-            {
-                case "taxation":
-                    effects += lvl switch {
-                        "minimum" => "Income: -60%\nStability: +20.0\nWE Gain: -10%",
-                        "low"     => "Income: -30%\nStability: +10.0\nWE Gain: -5%",
-                        "normal"  => "Income: Normal\nStability: -5.0\nWE Gain: Normal",
-                        "high"    => "Income: +30%\nStability: -10.0\nWE Gain: +3%",
-                        "maximum" => "Income: +75%\nStability: -20.0\nWE Gain: +10%",
-                        _ => ""
-                    };
-                    break;
+            var v = container.AddComponent<VerticalLayoutGroup>();
+            v.spacing = 4; v.padding = new RectOffset(4, 4, 4, 4);
+            v.childControlWidth = true; v.childControlHeight = true;
 
-                case "military_spending":
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)\nManpower Recovery: Very Slow (1.5%/m)",
-                        "low"     => "Manpower: x1.4\nRecovery: Slow (3.0%/m)\nStability: +7.5\nWE Gain: +20%",
-                        "medium"  => "Manpower: x1.6\nRecovery: Moderate (5.0%/m)\nStability: +10.0\nWE Gain: +30%",
-                        "high"    => "Manpower: x1.8\nRecovery: Fast (7.5%/m)\nStability: +12.5\nWE Gain: +35%",
-                        "maximum" => "Manpower: x2.0\nRecovery: Very Fast (10.0%/m)\nStability: +15.0\nWE Gain: +40%",
-                        _ => ""
-                    };
-                    break;
+            // Header Stats
+            var stats = new GameObject("Stats");
+            stats.transform.SetParent(container.transform, false);
+            var h = stats.AddComponent<HorizontalLayoutGroup>();
+            h.spacing = 10; h.childAlignment = TextAnchor.MiddleCenter;
+            h.childControlWidth = true; h.childControlHeight = true;
+            
+            var sle = stats.AddComponent<LayoutElement>();
+            sle.preferredHeight = 30f; sle.minHeight = 30f;
 
-                case "security_spending":
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)",
-                        "low"     => "Soldiers/City: +10\nStability: -15.0\nWE Gain: +1.5%\nCorruption: +4%",
-                        "medium"  => "Soldiers/City: +15\nStability: -10.0\nWE Gain: +1%\nCorruption: +6%",
-                        "high"    => "Soldiers/City: +20\nStability: -5.0\nWE Gain: +0.5%\nCorruption: +8%",
-                        "maximum" => "Soldiers/City: +25\nStability: Normal\nWE Gain: +10%\nCorruption: +10%",
-                        _ => ""
-                    };
-                    break;
+            treasuryText = CreateText(stats.transform, "Treasury: 0g", 12, FontStyle.Bold, new Color(1f, 0.85f, 0.4f));
+            incomeText = CreateText(stats.transform, "Income: 0g/yr", 12, FontStyle.Bold, Color.white);
+            treasuryText.alignment = TextAnchor.MiddleCenter;
+            incomeText.alignment = TextAnchor.MiddleCenter;
 
-                case "anti_corruption":
-                    effects += lvl switch {
-                        "none"    => "Base (No active measures)",
-                        "low"     => "Corruption: -20%\nStability: +12.0",
-                        "medium"  => "Corruption: -30%\nStability: +18.0",
-                        "high"    => "Corruption: -40%\nStability: +24.0",
-                        "maximum" => "Corruption: -50%\nStability: +30.0",
-                        _ => ""
-                    };
-                    break;
+            // Scroll View
+            var scrollObj = new GameObject("Scroll");
+            scrollObj.transform.SetParent(container.transform, false);
+            var sle2 = scrollObj.AddComponent<LayoutElement>();
+            sle2.flexibleHeight = 1f;
 
-                case "government_spending":
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)",
-                        "low"     => "City Efficiency: -5%\nStability: -4.0",
-                        "medium"  => "City Efficiency: Normal\nCorruption: -10%",
-                        "high"    => "City Efficiency: +10%\nStability: +10.0\nCorruption: -20%",
-                        "maximum" => "City Efficiency: +20%\nStability: +20.0\nCorruption: -30%",
-                        _ => ""
-                    };
-                    break;
+            var scroll = scrollObj.AddComponent<ScrollRect>();
+            scroll.vertical = true; scroll.horizontal = false;
+            scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 20f;
 
-                case "education_spending":
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)",
-                        "low"     => "Genius Chance: +2%\nStability: Normal\nWE Gain: -2%",
-                        "medium"  => "Genius Chance: +5%\nStability: +10.0\nWE Gain: -4%",
-                        "high"    => "Genius Chance: +8%\nStability: +20.0\nWE Gain: -7%",
-                        "maximum" => "Genius Chance: +10%\nStability: +30.0\nWE Gain: -10%",
-                        _ => ""
-                    };
-                    break;
+            var viewport = new GameObject("Viewport");
+            viewport.transform.SetParent(scrollObj.transform, false);
+            var vpRT = viewport.AddComponent<RectTransform>();
+            vpRT.anchorMin = Vector2.zero; vpRT.anchorMax = Vector2.one;
+            viewport.AddComponent<RectMask2D>();
 
-                case "welfare_spending": 
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)",
-                        "low"     => "Plague Resist: 20%\nStability: -5.0",
-                        "medium"  => "Plague Resist: 40%\nStability: Normal\nWE Gain: -3%",
-                        "high"    => "Plague Resist: 60%\nStability: +5.0\nWE Gain: -6%",
-                        "maximum" => "Plague Resist: 80%\nStability: +10.0\nWE Gain: -10%",
-                        _ => ""
-                    };
-                    break;
+            var contentObj = new GameObject("Content");
+            contentObj.transform.SetParent(viewport.transform, false);
+            var cRT = contentObj.AddComponent<RectTransform>();
+            cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1);
+            cRT.pivot = new Vector2(0.5f, 1);
 
-                case "research_spending":
-                    effects += lvl switch {
-                        "none"    => "Base (No active spending)",
-                        "low"     => "Tech Speed: x2.5\nStability: -5.0",
-                        "medium"  => "Tech Speed: x4.0\nStability: Normal\nWE Gain: -4%",
-                        "high"    => "Tech Speed: x5.0\nStability: +5.0\nWE Gain: -8%",
-                        "maximum" => "Tech Speed: x6.0\nStability: +10.0\nWE Gain: -12%",
-                        _ => ""
-                    };
-                    break;
-            }
-            return $"<b>{level} {lawId.Replace("_", " ").ToUpper()}</b>\n{costStr}\n\n{effects}";
+            var cv = contentObj.AddComponent<VerticalLayoutGroup>();
+            cv.spacing = 2; cv.childControlWidth = true; cv.childControlHeight = true; cv.childForceExpandHeight = false;
+            
+            var csf = contentObj.AddComponent<ContentSizeFitter>();
+            csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            scroll.viewport = vpRT; scroll.content = cRT;
+            content = contentObj.transform;
+        }
+
+        private static Text CreateText(Transform parent, string txt, int size, FontStyle style, Color col)
+        {
+            var go = new GameObject("Text");
+            go.transform.SetParent(parent, false);
+            var t = go.AddComponent<Text>();
+            t.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.text = txt; t.fontSize = size; t.fontStyle = style; t.color = col;
+            t.alignment = TextAnchor.MiddleLeft; t.horizontalOverflow = HorizontalWrapMode.Wrap;
+            var shadow = go.AddComponent<Shadow>();
+            shadow.effectColor = new Color(0,0,0,0.5f);
+            shadow.effectDistance = new Vector2(1, -1);
+            return t;
         }
     }
 }
