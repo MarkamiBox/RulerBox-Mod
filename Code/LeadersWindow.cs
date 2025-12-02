@@ -352,9 +352,10 @@ namespace RulerBox
             float stab = 0, pp = 0, atk = 0, res = 0, tax = 0, corr = 0;
             
             // 1. Apply Stats based on Unit Traits (if unit exists)
-            if (unit != null && unit.data != null && unit.data.traits != null)
+            // FIX: Use saved_traits instead of traits (obsolete)
+            if (unit != null && unit.data != null && unit.data.saved_traits != null)
             {
-                var t = unit.data.traits;
+                var t = unit.data.saved_traits;
                 if (t.Contains("greedy")) { tax += 0.15f; corr -= 0.15f; } // Greedy: +Tax, +Corruption (negative reduction)
                 if (t.Contains("honest")) { corr += 0.20f; } // Honest: -Corruption
                 if (t.Contains("genius")) { res += 0.30f; pp += 0.10f; }
