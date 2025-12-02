@@ -396,22 +396,22 @@ namespace RulerBox
             // 1) Calculate Cost Percentage
             if (id != "taxation") 
             {
-                // Default structure
+                // Default structure (Reduced by 10x)
                 if (lvl == "none") pct = 0f;
-                else if (lvl == "low") pct = 0.05f;
-                else if (lvl == "medium") pct = 0.10f;
-                else if (lvl == "high") pct = 0.15f;
-                else if (lvl == "maximum") pct = 0.20f;
+                else if (lvl == "low") pct = 0.005f;
+                else if (lvl == "medium") pct = 0.010f;
+                else if (lvl == "high") pct = 0.015f;
+                else if (lvl == "maximum") pct = 0.020f;
                 
-                // Specific overrides
+                // Specific overrides (Reduced by 10x)
                 if (id == "military_spending") 
-                    pct = lvl switch { "none"=>0f, "low"=>0.35f, "medium"=>0.40f, "high"=>0.45f, "maximum"=>0.50f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.035f, "medium"=>0.040f, "high"=>0.045f, "maximum"=>0.050f, _=>0f };
                 else if (id == "security_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.1125f, "medium"=>0.125f, "high"=>0.1375f, "maximum"=>0.15f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.01125f, "medium"=>0.0125f, "high"=>0.01375f, "maximum"=>0.015f, _=>0f };
                 else if (id == "anti_corruption")
-                    pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.015f, "medium"=>0.020f, "high"=>0.025f, "maximum"=>0.030f, _=>0f };
                 else if (id == "research_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.015f, "medium"=>0.020f, "high"=>0.025f, "maximum"=>0.030f, _=>0f };
             }
 
             // Cost String
