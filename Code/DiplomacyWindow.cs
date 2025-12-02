@@ -220,7 +220,7 @@ namespace RulerBox
             // Background
             var bg = container.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0, 0, 0, 0.4f);
+            bg.color = new Color(0, 0, 0, 0.5f);
             
             // Layout
             var v = container.AddComponent<VerticalLayoutGroup>();
@@ -238,8 +238,8 @@ namespace RulerBox
             le.flexibleHeight = 0;
             
             // Allies and Wars Rows
-            alliesContent = CreateSingleRelationRow(container.transform, "AlliesRow", new Color(0, 0.2f, 0, 0.3f));
-            warsContent = CreateSingleRelationRow(container.transform, "WarsRow", new Color(0.2f, 0, 0, 0.3f));
+            alliesContent = CreateSingleRelationRow(container.transform, "AlliesRow", new Color(0, 0.2f, 0, 0.5f));
+            warsContent = CreateSingleRelationRow(container.transform, "WarsRow", new Color(0.2f, 0, 0, 0.5f));
         }
 
         // Create a single horizontal scroll row for relations
@@ -303,7 +303,7 @@ namespace RulerBox
             // Background as requested
             var bg = container.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.3f);
+            bg.color = new Color(0.15f, 0.15f, 0.15f, 0.5f);
             
             // Layout
             var h = container.AddComponent<HorizontalLayoutGroup>();
@@ -355,7 +355,7 @@ namespace RulerBox
             if (windowInnerSprite != null) { 
                 sBg.sprite = windowInnerSprite; sBg.type = Image.Type.Sliced; 
             }
-            sBg.color = new Color(0.2f, 0.2f, 0.2f, 0.3f);
+            sBg.color = new Color(0.2f, 0.2f, 0.2f, 0.5f);
             
             searchInput = searchObj.AddComponent<InputField>();
             var phText = CreateText(searchObj.transform, "Search...", 9, FontStyle.Italic, new Color(1,1,1,0.5f));
@@ -375,7 +375,7 @@ namespace RulerBox
             if (windowInnerSprite != null) { 
                 lBg.sprite = windowInnerSprite; lBg.type = Image.Type.Sliced; 
             }
-            lBg.color = new Color(0, 0, 0, 0.2f);
+            lBg.color = new Color(0, 0, 0, 0.5f);
             
             // ScrollRect
             var scroll = listObj.AddComponent<ScrollRect>();

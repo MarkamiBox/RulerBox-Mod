@@ -92,7 +92,7 @@ namespace RulerBox
             
             // Vertical Layout for content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentVL.childAlignment = TextAnchor.UpperLeft;
+            contentVL.childAlignment = TextAnchor.UpperCenter;
             contentVL.spacing = 4;
             contentVL.padding = new RectOffset(50, 50, 4, 4); // Increased padding to fix stretching
             contentVL.childControlWidth = true;
@@ -202,7 +202,7 @@ namespace RulerBox
             var txt = go.AddComponent<Text>();
             txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = text;
-            txt.alignment = TextAnchor.MiddleLeft;
+            txt.alignment = TextAnchor.MiddleCenter;
             txt.color = new Color(1f, 0.8f, 0.2f);
             txt.fontStyle = FontStyle.Bold;
             txt.fontSize = 10;
@@ -215,7 +215,7 @@ namespace RulerBox
             rowGO.transform.SetParent(parent, false);
             
             var v = rowGO.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.UpperLeft;
+            v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 2;
             v.childControlWidth = true;
             v.childControlHeight = true;
@@ -230,7 +230,7 @@ namespace RulerBox
             var label = labelGO.AddComponent<Text>();
             label.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             label.text = displayName;
-            label.alignment = TextAnchor.MiddleLeft;
+            label.alignment = TextAnchor.MiddleCenter;
             label.color = Color.white;
             label.fontSize = 7;
             labelGO.AddComponent<LayoutElement>().preferredHeight = 12f;
@@ -239,7 +239,7 @@ namespace RulerBox
             var buttonsRow = new GameObject("ButtonsRow");
             buttonsRow.transform.SetParent(rowGO.transform, false);
             var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 1;
             h.childControlWidth = true;
             h.childControlHeight = true;
