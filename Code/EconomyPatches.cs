@@ -49,7 +49,8 @@ namespace RulerBox
                         // We can't call it directly if we don't link against the assembly, 
                         // but we are in the mod project so we should have references.
                         // I'll assume 'construct' is available.
-                        __instance.construct(pElapsed * bonus);
+                        // FIXME: construct method not found
+                        // __instance.construct();pElapsed * bonus);
                     }
                     catch 
                     {
@@ -85,7 +86,8 @@ namespace RulerBox
                 {
                     // Try to produce a baby
                     // produceUnit() is the standard method.
-                    __instance.produceUnit();
+                    // FIXME: produceUnit method not found, using spawnNewUnit
+                    World.world.units.spawnNewUnit(__instance.race, __instance.getTile(), true, true, 0f);
                 }
             }
         }

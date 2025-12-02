@@ -21,9 +21,9 @@ namespace RulerBox
             
             if (d.MilitaryAttackModifier != 0f)
             {
-                float current = __instance.stats[S.damage];
+                float current = __instance.stats["damage"];
                 float bonus = current * d.MilitaryAttackModifier;
-                __instance.stats[S.damage] += bonus;
+                __instance.stats["damage"] += bonus;
             }
         }
     }
