@@ -401,12 +401,12 @@ namespace RulerBox
                     break;
                 case "High": 
                     d.TaxRateLocal *= 1.30f; 
-                    d.StabilityTargetModifier -= 15f;
+                    d.StabilityTargetModifier -= 10f;
                     d.WarExhaustionGainMultiplier += 0.03f;
                     break;
                 case "Maximum": 
                     d.TaxRateLocal *= 1.75f; 
-                    d.StabilityTargetModifier -= 50f;
+                    d.StabilityTargetModifier -= 20f;
                     d.WarExhaustionGainMultiplier += 0.10f;
                     break;
             }
