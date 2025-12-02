@@ -1,4 +1,25 @@
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using HarmonyLib;
+
+namespace RulerBox
+{
+    public class TimedEffect
+    {
+        public float TimeRemaining;
+        public float StabilityPerSecond;
+
+        public TimedEffect(float duration, float stabilityPerSecond)
+        {
+            TimeRemaining = duration;
+            StabilityPerSecond = stabilityPerSecond;
+        }
+    }
+
+    public class LeaderState
+    {
+        public string Id;
         public string Name;
         public string Type; // e.g., "Head of Government"
         public int Level;   // 1, 2, 3...
