@@ -1262,137 +1262,72 @@ namespace RulerBox
             public long ExpensesInfrastructure;
             public long ExpensesDemography;
             public long ExpensesWarOverhead;
-            public float MaxWarOverheadPct = 25f;
-            public long ExpensesLawUpkeep;
-            public float CorruptionLevel;
-            public int Adults;
-            public long ManpowerCurrent;
-            public long ManpowerMax;
-            public float ManpowerAccumulator;
-            public float WarExhaustion;
-            public float Stability;
-            public bool HasInitializedStability;
-            
-            // Expanded Modifiers List
-            public float StabilityTargetModifier;
-            public float WarExhaustionGainMultiplier = 1.0f;
-            public float ManpowerMaxMultiplier = 1.0f;
-            public float ManpowerRegenRate = 0.005f;
-            public float PopulationGrowthBonus;
-            public float MilitaryUpkeepModifier = 1.0f;
-            public float BuildingSpeedModifier = 1.0f;
-            public float FactoryOutputModifier = 1.0f;
-            public float ResourceOutputModifier = 1.0f;
-            public float ResearchOutputModifier = 1.0f;
-            public float TradeIncomeModifier = 1.0f;
-            public float IntegrationSpeedModifier = 1.0f;
-            public float PoliticalPowerGainModifier = 1.0f;
-            public float IdeologyPowerModifier = 1.0f;
-            public float UnrestReductionModifier = 1.0f;
-            public float CityResistanceModifier = 1.0f;
-            public float RebelSuppressionModifier = 1.0f;
-            public float InvestmentCostModifier = 1.0f;
-            public float InvestmentAvailabilityModifier = 1.0f;
-            public float LeaderXPModifier = 0f;
-            public float JustificationTimeModifier = 1.0f;
-            public float GeniusChanceModifier = 0f;
-            public float PlagueResistanceModifier = 0f;
-            public float MilitaryAttackModifier = 0f; 
-            public float PlagueRisk; // New Metric 
 
-            // Misc
-            public Dictionary<string, int> ResourceStockpiles = new Dictionary<string, int>();
-            public Dictionary<string, int> ResourceRates = new Dictionary<string, int>();
-            public float AvgGrowthRate;
+            // Economy Indicators
+            public float EconBalanceIndex;
+            public float EconTreasuryPerCapita;
+            public float EconIncomePerCapita;
+            public float EconExpensesPerCapita;
+            public float EconWarOverheadShare;
+
+            // Population
             public long Population;
-            
-            // Legacy placeholders
-            public int Babies, Teens, Elders, Veterans, Genius;
-            public long Children, Homeless, Hungry, Starving, Sick, HappyUnits, Unemployed;
-            public float UnemploymentRate, HomelessRate, HungerRate, StarvationRate, SicknessRate, HappinessRate, ChildrenShare, ElderShare;
-            public float EconBalanceIndex, EconTreasuryPerCapita, EconIncomePerCapita, EconExpensesPerCapita, EconWarOverheadShare;
-            public long PrevPopulation, PopSamplePop = -1;
-            public float PopSampleYears, WEChange, WarEffectOnManpowerPct, WarEffectOnStabilityPerYear, StabilityChange, WarPressureIndex, InternalTensionIndex, PublicOrderIndex;
-        }
+            public long PrevPopulation;
+            public long PopSamplePop = -1;
+            public float PopSampleYears = 0f;
+            public float AvgGrowthRate = 0f;
+            public long Children; public long Adults; public int Babies; public int Teens; public int Elders; public int Veterans; public int Genius;
+            public long Homeless; public long Hungry; public long Starving; public long Sick; public long HappyUnits; public long Unemployed;
+            public float UnemploymentRate; public float HomelessRate; public float HungerRate; public float StarvationRate; public float SicknessRate; public float HappinessRate; public float ChildrenShare; public float ElderShare;
 
-        private static void ApplyActiveEffects(Data d)
-        {
-            if (d.ActiveEffects == null) return;
-            foreach (var eff in d.ActiveEffects)
-            {
-                if (string.IsNullOrEmpty(eff.Id)) continue;
-                
-                switch (eff.Id)
-                {
-                    case "econ_boom":
-                        d.TaxRateLocal *= 1.1f;
-                        break;
-                    case "hyperinflation":
-                        d.TaxRateLocal *= 0.5f;
-                        d.FactoryOutputModifier *= 0.5f;
-                        break;
-                    case "depression":
-                        d.TaxRateLocal *= 0.7f;
-                        d.FactoryOutputModifier *= 0.7f;
-                        break;
-                    case "skills_shortage":
-                        d.FactoryOutputModifier *= 0.8f;
-                        d.ResearchOutputModifier *= 0.8f;
-                        break;
-                    case "chronic_desertions":
-                        d.ManpowerMaxMultiplier *= 0.8f;
-                        break;
-                    case "widespread_mutinies":
-                        d.MilitaryUpkeepModifier *= 1.5f;
-                        d.MilitaryAttackModifier -= 0.2f;
-                        break;
-                    case "military_reorg":
-                        d.MilitaryUpkeepModifier *= 1.1f;
-                        d.MilitaryAttackModifier += 0.1f;
-                        break;
-                    case "insurgency":
-                        d.TaxRateLocal *= 0.8f;
-                        d.StabilityTargetModifier -= 10f;
-                        break;
-                    case "rolling_blackouts":
-                        d.FactoryOutputModifier *= 0.6f;
-                        break;
-                    case "substandard_weapons":
-                        d.MilitaryAttackModifier -= 0.15f;
-                        break;
-                    case "powerful_mic":
-                        d.MilitaryUpkeepModifier *= 0.9f;
-                        d.FactoryOutputModifier *= 1.05f;
-                        break;
-                    case "loyalist_academies":
-                        d.LeaderXPModifier -= 10f;
-                        d.StabilityTargetModifier += 5f;
-                        break;
-                    case "popular_war_support":
-                        d.ManpowerMaxMultiplier *= 1.2f;
-                        d.WarExhaustionGainMultiplier *= 0.8f;
-                        break;
-                    case "national_monument":
-                        d.StabilityTargetModifier += 5f;
-                        break;
-                    case "event_corruption_small":
-                        d.CorruptionLevel += 0.05f;
-                        break;
-                    case "event_corruption_medium":
-                        d.CorruptionLevel += 0.10f;
-                        break;
-                    case "event_corruption_large":
-                        d.CorruptionLevel += 0.15f;
-                        break;
-                    case "event_corruption_reduction_small":
-                        d.CorruptionLevel -= 0.05f;
-                        break;
-                    case "event_corruption_reduction_medium":
-                        d.CorruptionLevel -= 0.10f;
-                        break;
-                }
-            }
+            // Army
+            public int Soldiers; public int Cities; public int Buildings;
+            public long ManpowerCurrent; public long ManpowerMax; public long ManpowerMaxIncrease;
+            public float ManpowerCurrentRatio; public float MobilizationRate; public float MilitaryBurdenRate;
+            public bool AllowChildSoldiers; public bool AllowElderSoldiers; public bool AllowVeteranDraft;
+
+            // State
+            public float WarExhaustion; public float WEChange; public float WarEffectOnManpowerPct; public float WarEffectOnStabilityPerYear;
+            public float Stability; public float StabilityChange; public bool HasInitializedStability;
+            public float CorruptionLevel;
+            public float WarPressureIndex; public float InternalTensionIndex; public float PublicOrderIndex;
+
+            // High Stakes Modifiers
+            public float ManpowerMaxMultiplier = 1.0f;
+            public float PopulationGrowthBonus = 0f;
+            public float GeniusTraitChanceBoost = 0f;
+            public float PlagueResistance = 0f;
+            public float WarExhaustionGainMultiplier = 1.0f;
+            public float StabilityTargetModifier = 0f;
+            public int FlatManpowerPerCity = 0;
+            public float TechSpeedMultiplier = 1.0f;
+            
+            public float ManpowerRegenRate = 0.015f; // Default base (fraction of max per minute)
+            public float ManpowerAccumulator = 0f;    // Accumulates fractional updates
         }
     }
 
+    // ================= MANPOWER GAMEPLAY PATCH =================
+    // This patch injects a bonus to the city's max_warriors stat based on the Military Spending law.
+    [HarmonyPatch(typeof(City), "getMaxWarriors")]
+    public static class Patch_City_GetMaxWarriors
+    {
+        public static void Postfix(City __instance, ref int __result)
+        {
+            if (__instance == null || __instance.kingdom == null) return;
+
+            // Get Mod Data
+            var d = KingdomMetricsSystem.Get(__instance.kingdom);
+            if (d == null) return;
+
+            // If we have a multiplier > 1 or flat bonus, apply it
+            if (d.ManpowerMaxMultiplier > 1.0f || d.FlatManpowerPerCity > 0)
+            {
+                // Apply multipliers to the result calculated by the game
+                float val = (float)__result;
+                val = (val * d.ManpowerMaxMultiplier) + d.FlatManpowerPerCity;
+                __result = (int)val;
+            }
+        }
+    }
 }
