@@ -10,6 +10,7 @@ namespace RulerBox
         public string Id; 
         public float TimeRemaining;
         public float StabilityPerSecond;
+        public float StabilityModifier; // New: Affects target stability
 
         // Constructor for 2 arguments (Legacy support)
         public TimedEffect(float duration, float stabilityPerSecond)
@@ -17,6 +18,7 @@ namespace RulerBox
             this.Id = "";
             TimeRemaining = duration;
             StabilityPerSecond = stabilityPerSecond;
+            StabilityModifier = 0f;
         }
 
         // Constructor for 3 arguments 
@@ -25,6 +27,16 @@ namespace RulerBox
             Id = id;
             TimeRemaining = duration;
             StabilityPerSecond = stabilityPerSecond;
+            StabilityModifier = 0f;
+        }
+
+        // Constructor for 4 arguments
+        public TimedEffect(string id, float duration, float stabilityPerSecond, float stabilityModifier)
+        {
+            Id = id;
+            TimeRemaining = duration;
+            StabilityPerSecond = stabilityPerSecond;
+            StabilityModifier = stabilityModifier;
         }
     }
 
@@ -251,7 +263,7 @@ namespace RulerBox
             }
 
             // Check for bankruptcy/low income and reset laws
-            if (d.Balance <= 0)
+            /*if (d.Balance <= 0)
             {
                 if (d.MilitarySpending != "None") d.MilitarySpending = "None";
                 if (d.SecuritySpending != "None") d.SecuritySpending = "None";
@@ -261,7 +273,7 @@ namespace RulerBox
                 if (d.ResearchSpending != "None") d.ResearchSpending = "None";
                 if (d.AntiCorruption != "None") d.AntiCorruption = "None";
                 EconomicLawsWindow.Refresh(k);
-            }
+            }*/
             
             UpdateResources(k, d);
             UpdateManpower(k, d, deltaWorldSeconds);
@@ -1213,6 +1225,15 @@ namespace RulerBox
                 target += (d.UnrestReductionModifier - 1.0f) * 20f;
             }
 
+            // Apply Active Effects Modifiers
+            if (d.ActiveEffects != null)
+            {
+                foreach (var eff in d.ActiveEffects)
+                {
+                    target += eff.StabilityModifier;
+                }
+            }
+
             // 2. Calculate Drift
             float oldStab = d.Stability;
             
@@ -1334,7 +1355,6 @@ namespace RulerBox
             public float WarExhaustion; public float WEChange; public float WarEffectOnManpowerPct; public float WarEffectOnStabilityPerYear;
             public float Stability; public float StabilityChange; public bool HasInitializedStability;
             public float CorruptionLevel;
-            public float WarPressureIndex; public float InternalTensionIndex; public float PublicOrderIndex;
 
             // High Stakes Modifiers
             public float ManpowerMaxMultiplier = 1.0f;
@@ -1344,7 +1364,6 @@ namespace RulerBox
             public float WarExhaustionGainMultiplier = 1.0f;
             public float StabilityTargetModifier = 0f;
             public int FlatManpowerPerCity = 0;
-            public float TechSpeedMultiplier = 1.0f;
             
             public float ManpowerRegenRate = 0.015f; // Default base (fraction of max per minute)
             public float ManpowerAccumulator = 0f;    // Accumulates fractional updates

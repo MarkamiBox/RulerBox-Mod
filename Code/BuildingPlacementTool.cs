@@ -117,7 +117,9 @@ namespace RulerBox
             if (def.TreasuryPctCost > 0f && city.kingdom != null)
             {
                 var d = KingdomMetricsSystem.Get(city.kingdom);
-                if (d != null && d.Treasury > 0)
+                if (d == null || d.Treasury <= 0) return false;
+
+                if (d.Treasury > 0)
                 {
                     long baseTax = (long)(d.Treasury * def.TreasuryPctCost);
                     float corruptionFactor = Mathf.Min(d.CorruptionLevel, 0.5f);

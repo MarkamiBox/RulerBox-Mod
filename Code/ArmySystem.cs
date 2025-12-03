@@ -116,17 +116,19 @@ namespace RulerBox
             if (SoldierJobHelper.IsSoldier(a)) return;
             if (a.city == null) return;
 
-            // Check Manpower (Currency)
+            // Check Manpower (Currency) & Gold
             var d = KingdomMetricsSystem.Get(a.kingdom);
-            if (d.ManpowerCurrent < 1) 
+            if (d.ManpowerCurrent < 1) return;
+            if (d.Treasury < 1)
             {
-                // Optional: Fail feedback
+                WorldTip.showNow("Not enough gold (1g) to recruit!", true, "top", 1f);
                 return;
             }
             
             // Execute Recruit -> Force job to warrior
             a.setProfession(UnitProfession.Warrior);
-            d.ManpowerCurrent--;             
+            d.ManpowerCurrent--;
+            d.Treasury -= 1;
             a.startColorEffect();
         }
         

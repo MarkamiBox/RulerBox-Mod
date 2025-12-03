@@ -159,11 +159,12 @@ namespace RulerBox
                 $"<b>EXPENSES</b>\n" +
                 $"- Army ({FormatBig(d.Soldiers)} soldiers):        {armyCost}\n" +
                 $"- Infrastructure ({FormatBig(d.Cities)} cities, {FormatBig(d.Buildings)} bld): {infraCost}\n" +
-                $"- Demography:                         {demoCost}\n" +
+                //$"- Demography:                         {demoCost}\n" +
                 $"- War overhead:                       {warOverhead}\n" +
                 $"- Laws & Policies:                    {lawsCost}\n" +
                 $"- Trade Import Costs:                 {tradeCost}\n" +
                 $"- Corruption Drain ({d.CorruptionLevel*100:0}%):    {corruptCost}\n" +
+                (d.CorruptionFromEvents > 0 ? $"  <color=#FF5A5A>(Events: {d.CorruptionFromEvents*100:0}%)</color>\n" : "") +
                 $"- Total expenses:     {expenses}\n\n" +
                 $"<b>MODIFIERS</b>\n" +
                 $"- Build Speed: {buildSpeed}\n" +

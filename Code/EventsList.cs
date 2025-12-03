@@ -65,7 +65,7 @@ namespace RulerBox
                             d.Treasury += 5000;
                             d.Stability += 5f;
                             // Add a temporary stability boost effect
-                            d.ActiveEffects.Add(new TimedEffect("econ_boom", 60f, 0.5f)); // +0.5 stab/sec for 60s
+                            d.ActiveEffects.Add(new TimedEffect("econ_boom", 60f, 0f, 10f)); // +10 Stability Target for 60s
                         }
                     }
                 }
@@ -95,7 +95,7 @@ namespace RulerBox
                             d.Treasury -= (long)(debt * 2f); 
                             //d.Treasury = -5000; // Reset to a flat debt
                             d.Stability -= 20f;
-                            d.ActiveEffects.Add(new TimedEffect("econ_hyperinflation", 120f, -0.2f)); // Negative drift
+                            d.ActiveEffects.Add(new TimedEffect("econ_hyperinflation", 120f, 0f, -10f)); // -10 Stability Target
                         }
                     },
                     new EventOption
@@ -133,7 +133,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury = 0;
-                            d.ActiveEffects.Add(new TimedEffect("econ_imf", 120f, -0.5f)); // Economic Depression effect
+                            d.ActiveEffects.Add(new TimedEffect("econ_imf", 120f, 0f, -20f)); // Economic Depression effect (-20 Target)
                         }
                     },
                     new EventOption
@@ -183,7 +183,7 @@ namespace RulerBox
                             var d = GetData(k);
                             d.Stability -= 10f;
                             d.TaxRateLocal *= 0.8f;
-                            d.ActiveEffects.Add(new TimedEffect("unrest_strikers", 60f, -0.2f));
+                            d.ActiveEffects.Add(new TimedEffect("unrest_strikers", 60f, 0f, -10f));
                         }
                     },
                     new EventOption
@@ -307,6 +307,70 @@ namespace RulerBox
                 }
             });
             
+            // ==========================================
+            // HEALTH & PLAGUE
+            // ==========================================
+
+            // 8. The Black Death (Plague)
+            Definitions.Add(new EventDef
+            {
+                Id = "health_plague",
+                Title = "The Plague Spreads",
+                Text = "A deadly pestilence is sweeping through our cities! The people are dying in the streets.",
+                Trigger = k => 
+                {
+                    var d = GetData(k);
+                    // Trigger if Plague Risk is high enough
+                    return d.PlagueRisk > 50f && UnityEngine.Random.value < 0.05f;
+                },
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Enforce Quarantine",
+                        Tooltip = "<color=#FF5A5A>Cost 500 Gold</color>\n<color=#7CFC00>Plague Risk -30</color>\n<color=#7CFC00>Stability +5</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            if (d.Treasury >= 500)
+                            {
+                                d.Treasury -= 500;
+                                d.PlagueRiskAccumulator -= 30f; // Reduce risk
+                                d.Stability += 5f;
+                            }
+                            else
+                            {
+                                // Failed quarantine due to lack of funds
+                                d.Stability -= 5f;
+                                d.Population = (long)(d.Population * 0.9f);
+                            }
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Let it burn out",
+                        Tooltip = "<color=#FF5A5A>Population -15%</color>\n<color=#FF5A5A>Stability -10</color>\n<color=#7CFC00>Plague Risk Reset</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Population = (long)(d.Population * 0.85f);
+                            d.Stability -= 10f;
+                            d.PlagueRiskAccumulator = -20f; // Reset risk significantly
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Pray for salvation",
+                        Tooltip = "<color=#7CFC00>Culture Knowledge +100</color>\n<color=#FF5A5A>Population -5%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Population = (long)(d.Population * 0.95f);
+                        }
+                    }
+                }
+            });
+
             // ==========================================
             // INSURGENCY
             // ==========================================
