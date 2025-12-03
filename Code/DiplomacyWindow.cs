@@ -45,28 +45,29 @@ namespace RulerBox
         // ================================================================================================
         public static void Initialize(Transform parent)
         {
+            // Explicitly verify LeadersWindow init
+            LeadersWindow.Initialize(parent);
+            RankingsWindow.Initialize(parent);
+            PoliciesWindow.Initialize(parent);
+
             if (root != null) return;
             
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
             defaultIcon = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.Resource.iconResMythril.png");
             
-            // root container
             root = new GameObject("DiplomacyRoot", typeof(RectTransform));
             root.transform.SetParent(parent, false);
             
-            // Stretch to fill parent
             var rt = root.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero;
             rt.anchorMax = Vector2.one;
             rt.offsetMin = Vector2.zero;
             rt.offsetMax = Vector2.zero;
             
-            // Background
             var bg = root.AddComponent<Image>();
             if (windowInnerSprite != null) { bg.sprite = windowInnerSprite; bg.type = Image.Type.Sliced; }
-            bg.color = new Color(1f, 0f, 0f, 0.1f); 
+            bg.color = new Color(0f, 0f, 0f, 0.2f); 
             
-            // Main Layout
             var rootV = root.AddComponent<VerticalLayoutGroup>();
             rootV.childAlignment = TextAnchor.UpperCenter;
             rootV.spacing = 4;
@@ -76,15 +77,12 @@ namespace RulerBox
             rootV.childForceExpandWidth = true;
             rootV.childForceExpandHeight = false;
             
-            CreateHeader(root.transform); // header panel
-            CreateRelationsSection(root.transform); // relations section
-            CreateSplitSection(root.transform); // split section
+            CreateHeader(root.transform);
+            CreateRelationsSection(root.transform);
+            CreateSplitSection(root.transform);
             root.SetActive(false);
         }
 
-        // ================================================================================================
-        // Helpers
-        // ================================================================================================
         public static void SetVisible(bool visible)
         {
             if (root != null) 
@@ -92,7 +90,6 @@ namespace RulerBox
                 root.SetActive(visible);
                 if (visible)
                 {
-                    // Reset cache so list rebuilds immediately on open
                     lastSearchFilter = null; 
                     lastKingdomCount = -1;
                 }
@@ -105,7 +102,8 @@ namespace RulerBox
         {
             if (!IsVisible() || k == null) return;
             
-            // --- 1. Header Updates (Safe to update every frame for smooth visuals) ---
+            if (LeadersWindow.IsVisible()) LeadersWindow.Refresh();
+
             Color mainColor = Color.white;
             Color bannerColor = Color.white;
             if (k.kingdomColor != null)
@@ -123,8 +121,6 @@ namespace RulerBox
             headerRulerInfo.text = $"Ruler: {ruler}";
             headerPopInfo.text = $"Population: {k.getPopulationTotal()}";
             
-            // --- 2. List Rebuild Throttling (THE FIX) ---
-            // Only check for list changes every 0.2 seconds to allow clicks to register
             refreshTimer += Time.unscaledDeltaTime;
             if (refreshTimer > 0.2f)
             {
@@ -133,20 +129,16 @@ namespace RulerBox
                 if (searchInput)
                 {
                     string currentFilter = searchInput.text;
-                    // Check if the number of kingdoms in the world has changed (e.g. one died or spawned)
                     int currentCount = World.world.kingdoms.list.Count;
-                    // Only destroy/recreate buttons if the filter changed OR the kingdom count changed
                     if (currentFilter != lastSearchFilter || currentCount != lastKingdomCount)
                     {
                         RefreshSearchList(currentFilter);
-                        // Update cache
                         lastSearchFilter = currentFilter;
                         lastKingdomCount = currentCount;
                     }
                 }
             }
         }
-
         // ================================================================================================
         // UI CONSTRUCTION
         // ================================================================================================
@@ -487,12 +479,20 @@ namespace RulerBox
             cRT.anchorMin = new Vector2(0, 1); cRT.anchorMax = new Vector2(1, 1); cRT.pivot = new Vector2(0.5f, 1);
             scroll.viewport = viewport.GetComponent<RectTransform>(); 
             scroll.content = cRT;
-            CreateActionBtn("Laws", () => TopPanelUI.OpenEconomicLaws());
-            CreateActionBtn("Doctrines", null);
-            CreateActionBtn("Leaders", null);
-            CreateActionBtn("Policies", null);
-            CreateActionBtn("Ideologies", null);
-            CreateActionBtn("National Flags", null);
+            CreateActionBtn("Laws", () => TopPanelUI.OpenLaws());
+            CreateActionBtn("Leaders", () => {
+                SetVisible(false); // Hide main diplomacy
+                LeadersWindow.SetVisible(true); // Open Leaders
+            });
+            CreateActionBtn("Policies",  () => {
+                Debug.Log("[RulerBox] Opening LeadersWindow...");
+                SetVisible(false); // Hide main diplomacy
+                PoliciesWindow.SetVisible(true); // Open Leaders
+            });
+            CreateActionBtn("Rankings", () => {
+                SetVisible(false); 
+                RankingsWindow.SetVisible(true);
+            });
         }
 
         // ================================================================================================
@@ -689,7 +689,7 @@ namespace RulerBox
             var go = new GameObject("Text", typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var txt = go.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = content;
             txt.fontSize = size;
             txt.fontStyle = style;

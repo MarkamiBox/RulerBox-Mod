@@ -100,6 +100,9 @@ namespace RulerBox
             {
                 TriggerRandomEvent();
             }
+
+            // --- Plague Check ---
+            CheckPlague(dt);
         }
         
         // =====================================================================
@@ -514,98 +517,60 @@ namespace RulerBox
         // Store EventDef for random events by their assigned event ID
         private static Dictionary<int, EventsList.EventDef> randomEventPerId 
             = new Dictionary<int, EventsList.EventDef>();
-    }
 
-    // =====================================================================
-    // ============================= PATCHES ===============================
-    // =====================================================================
-
-    //patch WarManager.newWar to detect wars declared against our focused kingdom.
-    [HarmonyPatch(typeof(WarManager), nameof(WarManager.newWar))]
-    public static class Patch_WarManager_NewWar
-    {
-        [HarmonyPrefix]
-        public static bool Prefix(Kingdom pAttacker, Kingdom pDefender, WarTypeAsset pType, ref War __result)
+        private static void CheckPlague(float dt)
         {
-            // If the player is the attacker
-            if (pAttacker != null && pAttacker == Main.selectedKingdom)
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+            var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            // Only trigger if Risk is high (> 60%)
+            if (d.PlagueRisk > 60f)
             {
-                if (EventsSystem.AllowPlayerWar == false)
+                // Chance increases with risk
+                // Base chance: 0.01% per tick at 60% risk
+                // Max chance: 0.05% per tick at 100% risk
+                float chance = 0.0001f + ((d.PlagueRisk - 60f) * 0.00001f);
+                
+                if (UnityEngine.Random.value < chance)
                 {
-                    __result = null; 
-                    return false; 
+                    TriggerPlagueOutbreak(k, d);
                 }
             }
-            return true;
         }
 
-        [HarmonyPostfix]
-        public static void Postfix(War __result, Kingdom pAttacker, Kingdom pDefender)
+        private static void TriggerPlagueOutbreak(Kingdom k, KingdomMetricsSystem.Data d)
         {
-            if (__result != null)
-            {
-                EventsSystem.OnWarDeclared(pAttacker, pDefender, __result);
-            }
-        }
-    }
-    
-    // Patch WarManager.endWar to detect wars that end with peace involving our focused kingdom.
-    [HarmonyPatch(typeof(WarManager), nameof(WarManager.endWar))]
-    public static class Patch_WarManager_EndWar
-    {
-        [HarmonyPostfix]
-        public static void Postfix(War pWar, WarWinner pWinner)
-        {
-            if (pWar == null) return;
+            int infectedCount = 0;
+            int deathCount = 0;
             
-            // Check if our focused kingdom was involved in this war
-            if (pWinner == WarWinner.Peace)
+            if (k.units != null)
             {
-                EventsSystem.OnWarEndedWithPeace(pWar);
+                // Infect 30% of population, Kill 5%
+                foreach(var a in k.units)
+                {
+                    if (a == null || !a.isAlive()) continue;
+                    
+                    if (UnityEngine.Random.value < 0.30f)
+                    {
+                        a.addTrait("plague");
+                        infectedCount++;
+                    }
+                    
+                    if (UnityEngine.Random.value < 0.05f)
+                    {
+                        a.dieSimpleNone();
+                        deathCount++;
+                    }
+                }
             }
+
+            // Show Popup
+            string msg = $"PLAGUE OUTBREAK!\n\nRisk Level: {d.PlagueRisk:F1}%\nInfected: {infectedCount}\nDead: {deathCount}\n\nIncrease Welfare to reduce risk!";
+            EventsUI.ShowPopup(msg, EventButtonType.Random, k, () => {}, null, null);
+            WorldTip.showNow("Plague Outbreak!", true, "top", 5f, "#FF0000");
         }
     }
 
-    // When an alliance is formed that includes our focused kingdom.
-    [HarmonyPatch(typeof(AllianceManager), nameof(AllianceManager.newAlliance))]
-    public static class Patch_AllianceManager_NewAlliance
-    {
-        [HarmonyPostfix]
-        public static void Postfix(Alliance __result, Kingdom pKingdom, Kingdom pKingdom2)
-        {
-            if (__result == null || pKingdom == null || pKingdom2 == null)
-                return;
-            EventsSystem.OnAllianceFormed(__result, pKingdom, pKingdom2);
-        }
-    }
-    
-    // When we leave an alliance.
-    [HarmonyPatch(typeof(Alliance), nameof(Alliance.leave))]
-    public static class Patch_Alliance_Leave
-    {
-        [HarmonyPostfix]
-        public static void Postfix(Alliance __instance, Kingdom pKingdom, bool pRecalc)
-        {
-            var me = Main.selectedKingdom;
-            if (me == null || pKingdom != me)
-                return;
-            EventsSystem.OnAllianceLeft(me, __instance);
-        }
-    }
-    
-    // When an alliance we are in is dissolved.
-    [HarmonyPatch(typeof(AllianceManager), nameof(AllianceManager.dissolveAlliance))]
-    public static class Patch_AllianceManager_Dissolve
-    {
-        [HarmonyPrefix]
-        public static void Prefix(Alliance pAlliance)
-        {
-            var me = Main.selectedKingdom;
-            if (me == null || pAlliance == null)
-                return;
-            if (!pAlliance.kingdoms_hashset.Contains(me))
-                return;
-            EventsSystem.OnAllianceDissolved(me, pAlliance);
-        }
-    }
 }

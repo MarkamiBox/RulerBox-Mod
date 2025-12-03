@@ -84,7 +84,7 @@ namespace RulerBox
             var incomeHeaderGO = new GameObject("IncomeHeader");
             incomeHeaderGO.transform.SetParent(incomeCol.transform, false);
             var incomeHeaderText = incomeHeaderGO.AddComponent<Text>();
-            incomeHeaderText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            incomeHeaderText.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             incomeHeaderText.text = "Income";
             incomeHeaderText.alignment = TextAnchor.UpperCenter;  
             incomeHeaderText.color = new Color(0.48f, 0.99f, 0f, 1f);
@@ -243,7 +243,7 @@ namespace RulerBox
             }
 
             var h = row.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 4;
             h.childControlWidth = true;
             h.childForceExpandWidth = true;
@@ -254,7 +254,7 @@ namespace RulerBox
             var labelText = labelGO.AddComponent<Text>();
             labelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             labelText.text = label;
-            labelText.alignment = TextAnchor.MiddleLeft;
+            labelText.alignment = TextAnchor.MiddleCenter;
             labelText.color = Color.white;
             labelText.resizeTextForBestFit = true;
             labelText.resizeTextMinSize = 6;
@@ -266,7 +266,7 @@ namespace RulerBox
             var valueText = valueGO.AddComponent<Text>();
             valueText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             valueText.text = "-";
-            valueText.alignment = TextAnchor.MiddleRight;
+            valueText.alignment = TextAnchor.MiddleCenter;
             valueText.color = NeutralColor;
             valueText.resizeTextForBestFit = true;
             valueText.resizeTextMinSize = 6;
@@ -284,7 +284,7 @@ namespace RulerBox
             
             // Layout
             var h = row.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 3;
             h.childControlWidth = true;
             h.childForceExpandWidth = true;
@@ -295,7 +295,7 @@ namespace RulerBox
             var labelText = labelGO.AddComponent<Text>();
             labelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             labelText.text = label;
-            labelText.alignment = TextAnchor.MiddleLeft;
+            labelText.alignment = TextAnchor.MiddleCenter;
             labelText.color = Color.white;
             labelText.resizeTextForBestFit = true;
             labelText.resizeTextMinSize = 8;
@@ -307,7 +307,7 @@ namespace RulerBox
             var valueText = valueGO.AddComponent<Text>();
             valueText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
             valueText.text = "-";
-            valueText.alignment = TextAnchor.MiddleRight;
+            valueText.alignment = TextAnchor.MiddleCenter;
             valueText.color = NeutralColor;
             valueText.resizeTextForBestFit = true;
             var le = row.AddComponent<LayoutElement>();

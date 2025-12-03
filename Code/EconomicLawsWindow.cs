@@ -40,7 +40,7 @@ namespace RulerBox
             var titleGO = new GameObject("Title");
             titleGO.transform.SetParent(root.transform, false);
             var title = titleGO.AddComponent<Text>();
-            title.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            title.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             title.text = "Economic Laws";
             title.alignment = TextAnchor.MiddleCenter;
             title.color = Color.white;
@@ -105,7 +105,7 @@ namespace RulerBox
             
             // Vertical Layout for content
             var contentVL = contentGO.AddComponent<VerticalLayoutGroup>();
-            contentVL.childAlignment = TextAnchor.UpperLeft;
+            contentVL.childAlignment = TextAnchor.UpperCenter;
             contentVL.spacing = 4;
             contentVL.padding = new RectOffset(2, 2, 2, 2);
             contentVL.childControlWidth = true;
@@ -202,7 +202,7 @@ namespace RulerBox
             
             // Vertical Layout for row
             var v = rowGO.AddComponent<VerticalLayoutGroup>();
-            v.childAlignment = TextAnchor.UpperLeft;
+            v.childAlignment = TextAnchor.UpperCenter;
             v.spacing = 2;
             v.childControlWidth = true;
             v.childControlHeight = true;
@@ -231,7 +231,7 @@ namespace RulerBox
             
             // Horizontal Layout for buttons
             var h = buttonsRow.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
             h.spacing = 2;
             h.childControlWidth = true;
             h.childControlHeight = true;
@@ -398,20 +398,20 @@ namespace RulerBox
             {
                 // Default structure
                 if (lvl == "none") pct = 0f;
-                else if (lvl == "low") pct = 0.05f;
-                else if (lvl == "medium") pct = 0.10f;
-                else if (lvl == "high") pct = 0.15f;
-                else if (lvl == "maximum") pct = 0.20f;
+                else if (lvl == "low") pct = 0.04f;
+                else if (lvl == "medium") pct = 0.08f;
+                else if (lvl == "high") pct = 0.12f;
+                else if (lvl == "maximum") pct = 0.16f;
                 
                 // Specific overrides
                 if (id == "military_spending") 
-                    pct = lvl switch { "none"=>0f, "low"=>0.35f, "medium"=>0.40f, "high"=>0.45f, "maximum"=>0.50f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.10f, "medium"=>0.20f, "high"=>0.30f, "maximum"=>0.40f, _=>0f };
                 else if (id == "security_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.1125f, "medium"=>0.125f, "high"=>0.1375f, "maximum"=>0.15f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.04f, "medium"=>0.08f, "high"=>0.12f, "maximum"=>0.16f, _=>0f };
                 else if (id == "anti_corruption")
-                    pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.05f, "medium"=>0.10f, "high"=>0.15f, "maximum"=>0.20f, _=>0f };
                 else if (id == "research_spending")
-                    pct = lvl switch { "none"=>0f, "low"=>0.15f, "medium"=>0.20f, "high"=>0.25f, "maximum"=>0.30f, _=>0f };
+                    pct = lvl switch { "none"=>0f, "low"=>0.05f, "medium"=>0.10f, "high"=>0.15f, "maximum"=>0.20f, _=>0f };
             }
 
             // Cost String
@@ -436,8 +436,8 @@ namespace RulerBox
                         "minimum" => "Income: -60%\nStability: +20.0\nWE Gain: -10%",
                         "low"     => "Income: -30%\nStability: +10.0\nWE Gain: -5%",
                         "normal"  => "Income: Normal\nStability: -5.0\nWE Gain: Normal",
-                        "high"    => "Income: +30%\nStability: -15.0\nWE Gain: +3%",
-                        "maximum" => "Income: +75%\nStability: -40.0\nWE Gain: +10%",
+                        "high"    => "Income: +30%\nStability: -10.0\nWE Gain: +3%",
+                        "maximum" => "Income: +75%\nStability: -20.0\nWE Gain: +10%",
                         _ => ""
                     };
                     break;

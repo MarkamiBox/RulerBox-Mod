@@ -131,8 +131,16 @@ namespace RulerBox
             // 1. Check Money
             if (buyerData.Treasury < c.CostPerTick)
             {
-                CancelContract(c, $"{buyer.data.name} cannot afford the payment.");
-                return;
+                // User Request: "Some trades should still fail... even after a while"
+                // 20% chance to fail due to insolvency
+                if (UnityEngine.Random.value < 0.20f)
+                {
+                    CancelContract(c, $"{buyer.data.name} is insolvent and cannot pay.");
+                    return;
+                }
+
+                // Otherwise, boost them (Bailout/Loan)
+                buyerData.Treasury += (c.CostPerTick + 5000);
             }
 
             // 2. Check Resource
@@ -164,8 +172,16 @@ namespace RulerBox
 
             if (buyerData.Treasury < cost)
             {
-                WorldTip.showNow("Trade Failed: Buyer cannot afford it.", false, "top", 2f, "#FF5A5A");
-                return false;
+                // User Request: "Some trades should still fail"
+                // 20% chance to fail
+                if (UnityEngine.Random.value < 0.20f)
+                {
+                    WorldTip.showNow("Trade Failed: Buyer denied credit.", false, "top", 2f, "#FF5A5A");
+                    return false;
+                }
+
+                // Otherwise, boost them
+                buyerData.Treasury += (cost + 10000); 
             }
 
             int available = GetKingdomResourceCount(source, resource);
@@ -211,15 +227,15 @@ namespace RulerBox
             float basePrice = 1f;
             switch(resourceId)
             {
-                case "wood": case "stone": basePrice = 1f; break;
-                case "wheat": case "berries": basePrice = 2f; break;
-                case "bread": case "meat": case "fish": basePrice = 3f; break;
-                case "gold": case "mithril": case "adamantine": basePrice = 8f; break;
-                default: basePrice = 4f; break;
+                case "wood": case "stone": basePrice = 3f; break;
+                case "wheat": case "berries": basePrice = 5f; break;
+                case "bread": case "meat": case "fish": basePrice = 8f; break;
+                case "gold": case "mithril": case "adamantine": basePrice = 25f; break;
+                default: basePrice = 10f; break;
             }
 
             // Scarcity Multiplier: The less there is, the higher the price.
-            float scarcity = 1f + (5000f / (totalWorld + 500f)); 
+            float scarcity = 1f + (10000f / (totalWorld + 200f)); 
             
             float finalPricePerUnit = basePrice * scarcity;
             return Mathf.CeilToInt(finalPricePerUnit * amount);

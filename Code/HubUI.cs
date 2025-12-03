@@ -181,7 +181,7 @@ namespace RulerBox
             var labelGO = new GameObject("Label");
             labelGO.transform.SetParent(inner.transform, false);
             var labelText = labelGO.AddComponent<Text>();
-            labelText.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            labelText.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             labelText.text = label;
             labelText.alignment = TextAnchor.MiddleLeft;
             labelText.color = new Color(0.8f, 0.9f, 1f, 0.9f);
@@ -209,6 +209,7 @@ namespace RulerBox
             if (root == null) Initialize();
             root.SetActive(visible);
             if (visible) Refresh();
+            else TopPanelUI.SetVisible(false);
         }
         
         // refresh the displayed data

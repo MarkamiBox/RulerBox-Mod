@@ -353,7 +353,6 @@ namespace RulerBox
                         return;
                     }
 
-                    // --- NEW LOGIC START ---
                     // Check for shared alliance and dissolve if necessary
                     if (Main.selectedKingdom.hasAlliance() && targetKingdom.hasAlliance())
                     {
@@ -372,7 +371,7 @@ namespace RulerBox
                     EventsSystem.IsPlayerInitiated = true;
                     try {
                         // (Existing war start logic...)
-                        var warAsset = AssetManager.war_types_library.get("whisper_of_war");
+                        var warAsset = AssetManager.war_types_library.get("war");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
                             EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
@@ -630,7 +629,7 @@ namespace RulerBox
             var go = new GameObject("Text", typeof(RectTransform));
             go.transform.SetParent(parent, false);
             var txt = go.AddComponent<Text>();
-            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.font = Resources.Load<Font>("Fonts/Roboto-Regular") ?? Resources.GetBuiltinResource<Font>("Arial.ttf");
             txt.text = content;
             txt.fontSize = size;
             txt.fontStyle = style;
