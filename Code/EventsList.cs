@@ -80,7 +80,7 @@ namespace RulerBox
                 {
                     var d = GetData(k);
                     // Trigger if deep in debt
-                    return d.Treasury < -2000 && UnityEngine.Random.value < 0.05f;
+                    return d.Treasury < -50 && UnityEngine.Random.value < 0.05f;
                 },
                 Options = new List<EventOption>
                 {
@@ -101,12 +101,12 @@ namespace RulerBox
                     new EventOption
                     {
                         Text = "Print more money (Monetary Policy)",
-                        Tooltip = "<color=#7CFC00>Gain 10,000 Gold</color>\n<color=#FF5A5A>Corruption +10%</color>\n<color=#FF5A5A>Stability -5</color>",
+                        Tooltip = "<color=#7CFC00>Gain 3,000 Gold</color>\n<color=#FF5A5A>Corruption +10%</color>\n<color=#FF5A5A>Stability -5</color>",
                         Action = k => 
                         {
                             var d = GetData(k);
-                            d.Treasury += 10000;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
+                            d.Treasury += 3000;
+                            d.CorruptionFromEvents += 0.10f; // +10%
                             d.Stability -= 5f;
                         }
                     }
@@ -222,7 +222,8 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Stability += 5f;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_reduction_medium", 300f, 0f));
+                            d.CorruptionFromEvents -= 0.10f; // -10%
+                            if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
                         }
                     },
                     new EventOption
@@ -397,7 +398,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 500;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_small", 300f, 0f));
+                            d.CorruptionFromEvents += 0.05f; // +5%
                         }
                     },
                     new EventOption
@@ -421,12 +422,12 @@ namespace RulerBox
                     new EventOption
                     {
                         Text = "Accept",
-                        Tooltip = "<color=#7CFC00>Gain 3,000 Gold</color>\n<color=#FF5A5A>Corruption +10%</color>",
+                        Tooltip = "<color=#7CFC00>Gain 1,500 Gold</color>\n<color=#FF5A5A>Corruption +10%</color>",
                         Action = k => 
                         {
                             var d = GetData(k);
                             d.Treasury += 1500;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
+                            d.CorruptionFromEvents += 0.10f; // +10%
                         }
                     },
                     new EventOption
@@ -486,7 +487,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 2000;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_medium", 300f, 0f));
+                            d.CorruptionFromEvents += 0.10f; // +10%
                             d.Stability -= 5f;
                         }
                     },
@@ -659,7 +660,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 1500;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_small", 300f, 0f));
+                            d.CorruptionFromEvents += 0.05f; // +5%
                         }
                     },
                     new EventOption
@@ -688,7 +689,8 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury -= 500;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_reduction_small", 300f, 0f));
+                            d.CorruptionFromEvents -= 0.05f; // -5%
+                            if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
                         }
                     },
                     new EventOption
@@ -722,7 +724,7 @@ namespace RulerBox
                         {
                             var d = GetData(k);
                             d.Treasury += 5000;
-                            d.ActiveEffects.Add(new TimedEffect("event_corruption_large", 300f, 0f));
+                            d.CorruptionFromEvents += 0.15f; // +15%
                             d.ActiveEffects.Add(new TimedEffect("powerful_mic", 120f, 0f));
                         }
                     },

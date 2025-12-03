@@ -232,7 +232,6 @@ namespace RulerBox
             string genius     = ColorGold(FormatBig(d.Genius));
             
             string researchEff = ColorGold($"{d.ResearchOutputModifier * 100f:0.##}%");
-            string plagueRes = ColorGold($"{d.PlagueResistanceModifier * 100f:0.##}%");
             string geniusChance = ColorGold($"+{d.GeniusChanceModifier * 100f:0.##}%");
             string popGrowth = ColorGold($"+{d.PopulationGrowthBonus * 100f:0.##}%");
 
@@ -256,9 +255,10 @@ namespace RulerBox
                 $"-Sick: {sick}\n" +
                 $"-Happy Units: {ColorGold(FormatBig(d.HappyUnits))} ({happyRatio})\n" +
                 $"-Research Eff: {researchEff}\n" +
-                $"-Plague Res: {plagueRes}\n" +
                 $"-Genius Chance: {geniusChance}\n" +
-                $"-Growth Bonus: {popGrowth}";
+                $"-Growth Bonus: {popGrowth}\n" +
+                $"-Plague Risk: {ColorRed($"{10f + (d.Cities * 2f) + d.PlagueRiskAccumulator:0.##}")} {ColorRed($"(+{(d.Population / 100f) * 0.05f:0.###}/s)")}\n" +
+                $"-Plague Resistance: {ColorGreen($"{d.PlagueResistance:0.##}")} {ColorRed($"(-0.02/s)")}";
         }
 
         // ==============================================================================================

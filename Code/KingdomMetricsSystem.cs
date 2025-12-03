@@ -167,6 +167,14 @@ namespace RulerBox
             {
                 d.CorruptionLevel += (d.Cities - 1) * 0.025f;
             }
+            
+            // Decay event-based corruption
+            if (d.CorruptionFromEvents > 0)
+            {
+                d.CorruptionFromEvents -= 0.0005f * deltaWorldSeconds; // Decay rate: 0.5% per second (approx 30% per minute)
+                if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
+            }
+            d.CorruptionLevel += d.CorruptionFromEvents;
             d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
 
             // 3. Economy Calc (Income)
@@ -241,6 +249,19 @@ namespace RulerBox
                 d.Treasury += SafeLong(yearlyBalance / 12.0);
                 d.TreasuryTimer = 0f;
             }
+
+            // Check for bankruptcy/low income and reset laws
+            if (d.Balance <= 0)
+            {
+                if (d.MilitarySpending != "None") d.MilitarySpending = "None";
+                if (d.SecuritySpending != "None") d.SecuritySpending = "None";
+                if (d.GovernmentSpending != "None") d.GovernmentSpending = "None";
+                if (d.WelfareSpending != "None") d.WelfareSpending = "None";
+                if (d.EducationSpending != "None") d.EducationSpending = "None";
+                if (d.ResearchSpending != "None") d.ResearchSpending = "None";
+                if (d.AntiCorruption != "None") d.AntiCorruption = "None";
+                EconomicLawsWindow.Refresh(k);
+            }
             
             UpdateResources(k, d);
             UpdateManpower(k, d, deltaWorldSeconds);
@@ -250,11 +271,24 @@ namespace RulerBox
             UpdateStability(k, d, deltaWorldSeconds);
 
             // --- 6. Plague Risk Calculation ---
-            float risk = 10f;
+            // Accumulate risk over time
+            d.PlagueRiskAccumulator += (d.Population / 100f) * deltaWorldSeconds * 0.03f; // Example rate
+            // Decay resistance over time
+            float decayRate = 0.02f;
+            if (d.WelfareSpending == "High") decayRate = 0.0005f;
+            else if (d.WelfareSpending == "Maximum") decayRate = 0.0001f;
+            
+            d.PlagueResistanceDecay += deltaWorldSeconds * decayRate;
+
+            float risk = 10f + d.PlagueRiskAccumulator;
             risk += d.Cities * 2f;
-            risk += (d.Population / 10f);
-            risk -= (d.PlagueResistanceModifier * 100f); 
+            
+            float resistance = 200f; // Base resistance to prevent immediate plague
+            resistance += (d.PlagueResistanceModifier * 100f);
+            resistance -= d.PlagueResistanceDecay;
+            
             d.PlagueRisk = Mathf.Clamp(risk, 0f, 100f);
+            d.PlagueResistance = Mathf.Max(0f, resistance); // Store for display/logic
 
             // --- 7. Research Progress ---
             if (k.getCulture() != null)
@@ -602,13 +636,13 @@ namespace RulerBox
             // Costs calculated as % of Income
             long inc = d.Income; 
 
-            total += GetCost(d.MilitarySpending, inc, 0.10f, 0.20f, 0.30f, 0.40f);
-            total += GetCost(d.SecuritySpending, inc, 0.04f, 0.08f, 0.12f, 0.16f);
-            total += GetCost(d.GovernmentSpending, inc, 0.04f, 0.08f, 0.12f, 0.16f);
-            total += GetCost(d.WelfareSpending, inc, 0.04f, 0.08f, 0.12f, 0.16f);
-            total += GetCost(d.EducationSpending, inc, 0.04f, 0.08f, 0.12f, 0.16f);
-            total += GetCost(d.ResearchSpending, inc, 0.05f, 0.10f, 0.15f, 0.20f);
-            total += GetCost(d.AntiCorruption, inc, 0.05f, 0.10f, 0.15f, 0.20f);
+            total += GetCost(d.MilitarySpending, inc, 0.10f, 0.25f, 0.40f, 0.60f);
+            total += GetCost(d.SecuritySpending, inc, 0.05f, 0.15f, 0.25f, 0.35f);
+            total += GetCost(d.GovernmentSpending, inc, 0.05f, 0.15f, 0.25f, 0.35f);
+            total += GetCost(d.WelfareSpending, inc, 0.05f, 0.15f, 0.25f, 0.35f);
+            total += GetCost(d.EducationSpending, inc, 0.05f, 0.15f, 0.25f, 0.35f);
+            total += GetCost(d.ResearchSpending, inc, 0.10f, 0.20f, 0.30f, 0.40f);
+            total += GetCost(d.AntiCorruption, inc, 0.10f, 0.20f, 0.30f, 0.40f);
             
             return total;
         }
@@ -1336,6 +1370,9 @@ namespace RulerBox
             public float InvestmentAvailabilityModifier;
             public float LeaderXPModifier;
             public float PlagueRisk;
+            public float PlagueRiskAccumulator; // Increases over time
+            public float CorruptionFromEvents; // Stores corruption from events, decays over time
+            public float PlagueResistanceDecay; // Increases over time (reducing total resistance)
             public float MaxWarOverheadPct;
             public System.Collections.Generic.Dictionary<string, int> ResourceStockpiles = new System.Collections.Generic.Dictionary<string, int>();
             public System.Collections.Generic.Dictionary<string, float> ResourceRates = new System.Collections.Generic.Dictionary<string, float>();

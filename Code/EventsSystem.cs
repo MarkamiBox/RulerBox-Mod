@@ -111,17 +111,66 @@ namespace RulerBox
             if (k == null) return;
             var d = KingdomMetricsSystem.Get(k);
             if (d == null) return;
+            
+            // Prevent plague in very small/new kingdoms
+            if (d.Population < 30) return;
 
-            float risk = d.PlagueRisk;
-            float resistance = d.PlagueResistance + d.PlagueResistanceModifier;
-
-            if (d.WelfareSpending == "High") resistance += 0.2f;
-            else if (d.WelfareSpending == "Maximum") resistance += 0.4f;
-
-            if (risk > resistance)
+            // CURE / PREVENTION logic for Maximum Welfare
+            if (d.WelfareSpending == "Maximum" || d.WelfareSpending == "High")
             {
-                // Trigger a plague event if risk exceeds resistance
-                return;
+                if (k.units != null)
+                {
+                    bool curedAny = false;
+                    foreach (var actor in k.units)
+                    {
+                        if (actor != null && actor.hasTrait("plague"))
+                        {
+                            actor.removeTrait("plague");
+                            curedAny = true;
+                        }
+                    }
+                }
+                
+                // Also reset risk to ensure it doesn't build up silently
+                d.PlagueRiskAccumulator = 0f;
+                d.PlagueResistanceDecay = 0f;
+                
+                return; // Stop here, do not trigger new plague
+            }
+
+            // Calculate true risk (unclamped) to ensure it can eventually overcome high resistance
+            float trueRisk = 10f + (d.Cities * 2f) + d.PlagueRiskAccumulator;
+            
+            if (trueRisk > d.PlagueResistance)
+            {                
+                // 1. Notify Player
+                WorldTip.showNow($"A Plague has started in {k.data.name}!", false, "top", 5f, "#FF5A5A");
+                
+                // 2. Infect Units
+                if (k.units != null)
+                {
+                    int infectedCount = 0;
+                    foreach (var actor in k.units)
+                    {
+                        if (actor != null && actor.isAlive() && !actor.hasTrait("plague") && !actor.hasTrait("immune"))
+                        {
+                            // 10% chance to infect initially
+                            if (UnityEngine.Random.value < 0.1f)
+                            {
+                                actor.addTrait("plague");
+                                infectedCount++;
+                            }
+                        }
+                    }
+                    // WorldTip.showNow($"{infectedCount} citizens infected!", false, "top", 3f, "#FF5A5A");
+                }
+
+                // 3. Reset Risk/Resistance to restart cycle
+                d.PlagueRiskAccumulator = 0f;
+                d.PlagueResistanceDecay = 0f;
+                
+                // Force recalculate to update UI immediately
+                KingdomMetricsSystem.RecalculateAllForKingdom(k, d);
             }
         }
 

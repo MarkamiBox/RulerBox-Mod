@@ -344,7 +344,6 @@ namespace RulerBox
             le.flexibleHeight = 0.1f;
 
             // --- DECLARE WAR ---
-            // --- DECLARE WAR ---
             CreateDiplomacyBtn(col.transform, "Declare War", new Color(0.6f, 0.1f, 0.1f, 1f), () => {
                 if(Main.selectedKingdom != null && targetKingdom != null)
                 {
@@ -371,7 +370,7 @@ namespace RulerBox
                     EventsSystem.IsPlayerInitiated = true;
                     try {
                         // (Existing war start logic...)
-                        var warAsset = AssetManager.war_types_library.get("war");
+                        var warAsset = AssetManager.war_types_library.get("whisper_of_war");
                         if (warAsset != null) {
                             World.world.diplomacy.startWar(Main.selectedKingdom, targetKingdom, warAsset, true);
                             EventsUI.ShowPopup($"War declared on {targetKingdom.data.name}!", EventButtonType.War, targetKingdom, null, null, null);
