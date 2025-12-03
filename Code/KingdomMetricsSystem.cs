@@ -1306,28 +1306,4 @@ namespace RulerBox
             public float ManpowerAccumulator = 0f;    // Accumulates fractional updates
         }
     }
-
-    // ================= MANPOWER GAMEPLAY PATCH =================
-    // This patch injects a bonus to the city's max_warriors stat based on the Military Spending law.
-    [HarmonyPatch(typeof(City), "getMaxWarriors")]
-    public static class Patch_City_GetMaxWarriors
-    {
-        public static void Postfix(City __instance, ref int __result)
-        {
-            if (__instance == null || __instance.kingdom == null) return;
-
-            // Get Mod Data
-            var d = KingdomMetricsSystem.Get(__instance.kingdom);
-            if (d == null) return;
-
-            // If we have a multiplier > 1 or flat bonus, apply it
-            if (d.ManpowerMaxMultiplier > 1.0f || d.FlatManpowerPerCity > 0)
-            {
-                // Apply multipliers to the result calculated by the game
-                float val = (float)__result;
-                val = (val * d.ManpowerMaxMultiplier) + d.FlatManpowerPerCity;
-                __result = (int)val;
-            }
-        }
-    }
 }
