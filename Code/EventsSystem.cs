@@ -104,6 +104,28 @@ namespace RulerBox
             // --- Plague Check ---
             CheckPlague(dt);
         }
+
+        private static void CheckPlague(float dt)
+        {
+            var k = Main.selectedKingdom;
+            if (k == null) return;
+            var d = KingdomMetricsSystem.Get(k);
+            if (d == null) return;
+
+            float risk = d.PlagueRisk;
+            float resistance = d.PlagueResistance + d.PlagueResistanceModifier;
+
+            if (d.WelfareSpending == "High") resistance += 0.2f;
+            else if (d.WelfareSpending == "Maximum") resistance += 0.4f;
+
+            if (risk > resistance)
+            {
+                // Trigger a plague event if risk exceeds resistance
+                return;
+            }
+        }
+
+
         
         // =====================================================================
         // ========================= PUBLIC API =================================
@@ -613,3 +635,4 @@ namespace RulerBox
     }
 
 }
+

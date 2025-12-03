@@ -277,7 +277,7 @@ namespace RulerBox
             
             // Stats
             int amount = data.ResourceStockpiles.ContainsKey(resId) ? data.ResourceStockpiles[resId] : 0;
-            int rate = data.ResourceRates.ContainsKey(resId) ? data.ResourceRates[resId] : 0;
+            int rate = data.ResourceRates.ContainsKey(resId) ? (int)data.ResourceRates[resId] : 0;
 
             string rateStr = rate > 0 ? $"+{rate}" : $"{rate}";
             string colorHex = rate < 0 ? "#FF5A5A" : "#7CFC00";

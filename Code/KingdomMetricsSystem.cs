@@ -103,6 +103,16 @@ namespace RulerBox
             Recalculate(k, d, delta);
         }
 
+                private static void ApplyActiveEffects(Data d)
+        {
+            if (d.ActiveEffects == null) return;
+            for (int i = d.ActiveEffects.Count - 1; i >= 0; i--)
+            {
+                var eff = d.ActiveEffects[i];
+                // Apply effects logic
+            }
+        }
+
         private static void Recalculate(Kingdom k, Data d, float deltaWorldSeconds)
         {
             if (k == null || d == null) return;
@@ -1058,7 +1068,7 @@ namespace RulerBox
 
         private static void UpdateResources(Kingdom k, Data d)
         {
-            if (d.ResourceRates == null) d.ResourceRates = new Dictionary<string, int>();
+            if (d.ResourceRates == null) d.ResourceRates = new Dictionary<string, float>();
             if (d.ResourceStockpiles == null) d.ResourceStockpiles = new Dictionary<string, int>();
 
             var currentStockpiles = new Dictionary<string, int>();
@@ -1281,7 +1291,7 @@ namespace RulerBox
             public float UnemploymentRate; public float HomelessRate; public float HungerRate; public float StarvationRate; public float SicknessRate; public float HappinessRate; public float ChildrenShare; public float ElderShare;
 
             // Army
-            public int Soldiers; public int Cities; public int Buildings;
+            // public int Soldiers; public int Cities; public int Buildings; // Removed duplicates
             public long ManpowerCurrent; public long ManpowerMax; public long ManpowerMaxIncrease;
             public float ManpowerCurrentRatio; public float MobilizationRate; public float MilitaryBurdenRate;
             public bool AllowChildSoldiers; public bool AllowElderSoldiers; public bool AllowVeteranDraft;
@@ -1304,6 +1314,34 @@ namespace RulerBox
             
             public float ManpowerRegenRate = 0.015f; // Default base (fraction of max per minute)
             public float ManpowerAccumulator = 0f;    // Accumulates fractional updates
+            // Missing Modifiers
+            public float MilitaryAttackModifier;
+            public long ExpensesLawUpkeep;
+            public float BuildingSpeedModifier;
+            public float FactoryOutputModifier;
+            public float ResourceOutputModifier;
+            public float TradeIncomeModifier;
+            public float InvestmentCostModifier;
+            public float ResearchOutputModifier;
+            public float PlagueResistanceModifier;
+            public float GeniusChanceModifier;
+            public float MilitaryUpkeepModifier;
+            public float JustificationTimeModifier;
+            public float IntegrationSpeedModifier;
+            public float PoliticalPowerGainModifier;
+            public float IdeologyPowerModifier;
+            public float UnrestReductionModifier;
+            public float CityResistanceModifier;
+            public float RebelSuppressionModifier;
+            public float InvestmentAvailabilityModifier;
+            public float LeaderXPModifier;
+            public float PlagueRisk;
+            public float MaxWarOverheadPct;
+            public System.Collections.Generic.Dictionary<string, int> ResourceStockpiles = new System.Collections.Generic.Dictionary<string, int>();
+            public System.Collections.Generic.Dictionary<string, float> ResourceRates = new System.Collections.Generic.Dictionary<string, float>();
         }
     }
 }
+
+
+
