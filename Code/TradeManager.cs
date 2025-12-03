@@ -131,7 +131,6 @@ namespace RulerBox
             // 1. Check Money
             if (buyerData.Treasury < c.CostPerTick)
             {
-                // User Request: "Some trades should still fail... even after a while"
                 // 20% chance to fail due to insolvency
                 if (UnityEngine.Random.value < 0.20f)
                 {
@@ -172,7 +171,6 @@ namespace RulerBox
 
             if (buyerData.Treasury < cost)
             {
-                // User Request: "Some trades should still fail"
                 // 20% chance to fail
                 if (UnityEngine.Random.value < 0.20f)
                 {

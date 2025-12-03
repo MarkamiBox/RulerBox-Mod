@@ -314,6 +314,13 @@ namespace RulerBox
                 civicScore += k.king.stats["intelligence"] * 10.0f;
             }
 
+            if(k != Main.selectedKingdom) 
+            {   
+                ecoScore *= 0.5f;
+                militaryScore *= 0.5f;
+                civicScore *= 0.5f;
+            }
+
             return ecoScore + militaryScore + civicScore;
         }
 

@@ -183,7 +183,7 @@ namespace RulerBox
             // Decay event-based corruption
             if (d.CorruptionFromEvents > 0)
             {
-                d.CorruptionFromEvents -= 0.0005f * deltaWorldSeconds; // Decay rate: 0.5% per second (approx 30% per minute)
+                d.CorruptionFromEvents -= 0.005f * deltaWorldSeconds; // Decay rate: 0.5% per second (approx 30% per minute)
                 if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
             }
             d.CorruptionLevel += d.CorruptionFromEvents;
