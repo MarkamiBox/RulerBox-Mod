@@ -203,17 +203,32 @@ namespace RulerBox
                 if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
             }
             d.CorruptionLevel += d.CorruptionFromEvents;
-            d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
+            // --- Anarchy / Low Stability Penalties ---
+            bool isAnarchy = d.Stability <= 0f;
+            if (isAnarchy)
+            {
+                // Corruption "increase 200%" -> effectively tripled or forced high
+                // Since base corruption is 0-1, we can just multiply by 3 or add a flat amount
+                d.CorruptionLevel = Mathf.Min(1.0f, d.CorruptionLevel * 3.0f);
+            }
+
 
             // 3. Economy Calc (Income)
+            // MOVED UP: Wealth calculation for Corruption Logic
             double totalWealth = 0;
-            // Use property directly
             if (k.units != null) {
                 foreach (var unit in k.units) {
                     if (unit != null && unit.isAlive()) totalWealth += unit.money;
                 }
             }
             d.TaxBaseWealth = totalWealth;
+            
+            // --- Corruption from High Taxes ---
+            double estimatedTaxIncome = totalWealth * d.TaxRateLocal;
+            float corruptionFromTax = (float)(estimatedTaxIncome / 1000.0) * 0.01f; // 1% per 1000 gold
+            d.CorruptionLevel += corruptionFromTax;
+
+            d.CorruptionLevel = Mathf.Clamp01(d.CorruptionLevel);
             
             double baseTaxable = totalWealth;
             if (baseTaxable <= 0) baseTaxable = d.Population * d.PerCapitaGDP;
@@ -244,9 +259,21 @@ namespace RulerBox
             
             d.Income = SafeLong(taxableBase * econScale) + tradeIn;
 
+             if (isAnarchy)
+            {
+                // Income decrease (User requested) -> e.g. -50%
+                d.Income = SafeLong(d.Income * 0.5f);
+            }
+
             // 4. Expenses Calc
-            long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier);
-            long infra = d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding;
+            // Administration & Logistics Scaling
+            // "kingdom with 3 cities pay more" -> We scale aggresively starting from city 2+
+            float infraScale = 1.0f + Mathf.Max(0, (d.Cities - 1) * 0.15f); // +15% admin cost per additional city (3 cities = +30%)
+            // "military scaling do for every 20 citizen" -> 1% per 20 citizens
+            float milScale = 1.0f + ((d.Population / 20.0f) * 0.01f); // +1% per 20 citizens (e.g. 100 pop = +5%, 1000 pop = +50%)
+
+            long military = SafeLong(d.Soldiers * d.MilitaryCostPerSoldier * d.MilitaryUpkeepModifier * milScale);
+            long infra = SafeLong((d.Cities * d.CostPerCity + d.Buildings * d.CostPerBuilding) * infraScale);
             long demo = 0; 
             
             d.ExpensesMilitary = military;
@@ -282,6 +309,12 @@ namespace RulerBox
 
             d.Expenses = Math.Max(0, SafeLong((baseExpenses + warOverhead) * econScale) + tradeOut + corruptionCost + econSpending);
 
+            if (isAnarchy)
+            {
+                // Expenses increase 200% -> Total = 300%
+                d.Expenses = SafeLong(d.Expenses * 3.0f);
+            }
+
             // 5. Update Treasury (Every 5 seconds)
             d.TreasuryTimer += deltaWorldSeconds;
             if (d.TreasuryTimer >= 5f)
@@ -313,13 +346,40 @@ namespace RulerBox
 
             // --- 6. Plague Risk Calculation ---
             // Accumulate risk over time
-            d.PlagueRiskAccumulator += (d.Population / 100f) * deltaWorldSeconds * 0.005f; // Reduced from 0.03f
+            d.PlagueRiskAccumulator += (Math.Min(d.Population, 20000) / 100f) * deltaWorldSeconds * 0.001f; // Slower accumulation
             // Decay resistance over time
             float decayRate = 0.02f;
             if (d.WelfareSpending == "High") decayRate = 0.0005f;
             else if (d.WelfareSpending == "Maximum") decayRate = 0.0001f;
             
             d.PlagueResistanceDecay += deltaWorldSeconds * decayRate;
+
+            // --- Anarchy Population Decline ---
+            if (isAnarchy && k.units != null && k.units.Count > 0)
+            {
+                // Active population decline
+                // Kill chance proportional to delta time. e.g. 1% of population dies every few seconds?
+                // Let's make it relatively slow but noticeable: 0.1% per second
+                float killChance = 0.001f * deltaWorldSeconds;
+                if (UnityEngine.Random.value < 0.05f) // Optimization: only run check half the time or for partial list
+                {
+                   int killBudget = Mathf.Max(1, (int)(d.Population * killChance));
+                    // Simple kill loop - iterate backwards or just pick randoms?
+                    // Safe approach: pick random
+                   int attempts = 0;
+                   while(killBudget > 0 && attempts < 20)
+                   {
+                        attempts++;
+                        if (k.units.Count == 0) break;
+                        var victim = k.units.GetRandom();
+                        if (victim != null && victim.isAlive() && !victim.isKing() && !victim.isCityLeader())
+                        {
+                            victim.getHit(10000f, true, AttackType.Other, null, true, false);
+                            killBudget--;
+                        }
+                   }
+                }
+            }
 
             float risk = 10f + d.PlagueRiskAccumulator;
             risk += d.Cities * 2f;

@@ -126,7 +126,20 @@ namespace RulerBox
             string cityModStr   = d.TaxModifierFromCities != 0 ? ColorGold($"+{d.TaxModifierFromCities:0.##}%") : ColorGold("0%");
             string baseWealth   = Money(SafeLong(d.TaxBaseWealth));
             string incomeBase   = Money(d.IncomeBeforeModifiers);
+            // Calculate how much was lost to corruption (Raw Potential - Actual Collected before modifiers)
+            // Since we don't store "Raw Potential" explicitly before corruption in d.IncomeBeforeModifiers (which is taxableBase), 
+            // and corruption reduces stability/income indirectly or directly depending on implementation.
+            // Actually, in Recalculate: taxableBase = baseTaxable * d.TaxRateLocal.
+            // Corruption is an Expense in ExpensesCorruption.
+            // But user says: "i see raw tax but in the income i see less so i'm not showing where that money is going"
+            // If they mean the discrepancy between "Tax Rate * Wealth" and "Final Income", we should show the breakdown clearer.
+            
+            // Let's add a "Lost to Inefficiency" or similar if pertinent.
+            // Current "Raw tax" line shows `incomeBase` which is `Wealth * TaxRate`.
+            // But if `incomeBase` is high and `income` is low, it's due to penalties.
+            
             string incomeWar    = Money(d.IncomeAfterWarPenalty);
+            string lostToWar    = Money(d.IncomeBeforeModifiers - d.IncomeAfterWarPenalty);
             string incomeStab   = Money(d.IncomeAfterStability);
             string incomeCities = Money(d.IncomeAfterCityBonus);
             string incomeTrade  = Money(d.TradeIncome);
@@ -144,6 +157,18 @@ namespace RulerBox
             string resOut     = d.ResourceOutputModifier != 1f ? ColorGold($"{d.ResourceOutputModifier*100:0}%") : "100%";
             string tradeMod   = d.TradeIncomeModifier != 1f ? ColorGold($"{d.TradeIncomeModifier*100:0}%") : "100%";
             string investCost = d.InvestmentCostModifier != 1f ? ColorGold($"{d.InvestmentCostModifier*100:0}%") : "100%";
+            
+            // Calc variables for detailed view
+            bool isAnarchy = d.Stability <= 0;
+            // Deduce Scale Effect:
+            // Final Income = (AfterCities * Scale) + Trade - AnarchyLoss
+            // AnarchyLoss is simply 50% of total if active.
+            // So: PreAnarchyTotal = d.Income * (isAnarchy ? 2 : 1)
+            // TaxPortion = PreAnarchyTotal - Trade
+            // ScaleEffect = TaxPortion - AfterCities
+            long preAnarchyTotal = d.Income * (isAnarchy ? 2 : 1);
+            long taxPortion = preAnarchyTotal - d.TradeIncome;
+            long scaleEffect = taxPortion - d.IncomeAfterCityBonus;
 
             return
                 $"Treasury: {treasury}\n" +
@@ -151,10 +176,14 @@ namespace RulerBox
                 $"<b>INCOME</b> (Level: {d.TaxationLevel})\n" +
                 $"- Base taxable wealth: {baseWealth}\n" +
                 $"- Raw tax {taxRateStr}:             {incomeBase}\n" +
-                $"- After war penalty ({warPenStr}):    {incomeWar}\n" +
-                $"- After stability ({stabModStr}):     {incomeStab}\n" +
+                (d.TaxPenaltyFromWar != 0 ? $"  {ColorRed("Lost to War")} ({warPenStr}):        {ColorRed("-" + lostToWar)}\n" : "") +
+                $"- After war penalty:                  {incomeWar}\n" +
+                (d.TaxModifierFromStability != 0 ? $"  Stability Effect ({stabModStr}):       {(d.TaxModifierFromStability > 0 ? ColorGreen("+" + Money(d.IncomeAfterStability - d.IncomeAfterWarPenalty)) : ColorRed(Money(d.IncomeAfterStability - d.IncomeAfterWarPenalty)))}\n" : "") +
+                $"- After stability:                    {incomeStab}\n" +
                 $"- After cities bonus ({cityModStr}):  {incomeCities}\n" +
+                $"- Economic Scale & Efficiency:        {(scaleEffect >= 0 ? ColorGreen("+" + Money(scaleEffect)) : ColorRed(Money(scaleEffect)))}\n" +
                 $"- Trade Income:                       {incomeTrade}\n" +
+                (isAnarchy ? $"  {ColorRed("LOST TO ANARCHY (-50%)")}:       {ColorRed("-" + Money(d.Income))}\n" : "") +
                 $"- Final income:       {income}\n\n" +
                 $"<b>EXPENSES</b>\n" +
                 $"- Army ({FormatBig(d.Soldiers)} soldiers):        {armyCost}\n" +
@@ -164,7 +193,22 @@ namespace RulerBox
                 $"- Laws & Policies:                    {lawsCost}\n" +
                 $"- Trade Import Costs:                 {tradeCost}\n" +
                 $"- Corruption Drain ({d.CorruptionLevel*100:0}%):    {corruptCost}\n" +
-                (d.CorruptionFromEvents > 0 ? $"  <color=#FF5A5A>(Events: {d.CorruptionFromEvents*100:0}%)</color>\n" : "") +
+                 // Corruption Breakdown
+                 (d.CorruptionLevel > 0 ? 
+                    (
+                    // Re-calculate components to show user roughly where it comes from
+                    // 1. Cities: (Cities-1)*0.025
+                    // 2. Events: d.CorruptionFromEvents
+                    // 3. Tax: The rest
+                    // Note: If Anarchy is active, everything is tripled, so we show base relative shares then mention multiplier?
+                    // Simpler: Just calculate the raw values again for display purposes.
+                    $"    * From Cities: {Math.Max(0, (d.Cities - 1) * 2.5f):0.0}% ({(d.Cities>1?d.Cities-1:0)} extra cities)\n" +
+                    $"    * From Events: {d.CorruptionFromEvents*100f:0.0}%\n" +
+                    // Tax corruption: estimatedTaxIncome / 1000 * 0.01.
+                    $"    * From High Taxes: {Math.Max(0, (d.CorruptionLevel - ((d.Cities > 1 ? (d.Cities - 1) * 0.025f : 0) + d.CorruptionFromEvents)) * (isAnarchy ? 0.33f : 1f))*100f:0.0}%\n" +
+                    (isAnarchy ? $"    * {ColorRed("ANARCHY MULTIPLIER (x3)")}\n" : "")
+                    ) 
+                 : "") +
                 $"- Total expenses:     {expenses}\n\n" +
                 $"<b>MODIFIERS</b>\n" +
                 $"- Build Speed: {buildSpeed}\n" +

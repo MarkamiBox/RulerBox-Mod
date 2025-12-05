@@ -1219,6 +1219,7 @@ namespace RulerBox
                     }
                 }
             });
+        }
 
         public static EventDef GetRandomEvent(Kingdom k)
         {

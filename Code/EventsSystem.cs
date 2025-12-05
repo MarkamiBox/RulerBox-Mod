@@ -630,6 +630,26 @@ namespace RulerBox
             }
         }
     }
+
+    // patch DiplomacyManager.startWar to prevent crash if newWar returns null (blocked by us)
+    [HarmonyPatch(typeof(DiplomacyManager), nameof(DiplomacyManager.startWar))]
+    public static class Patch_DiplomacyManager_StartWar
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(Kingdom pAttacker, Kingdom pDefender, WarTypeAsset pAsset, bool pLog)
+        {
+             // If the player is the attacker and War is not allowed, block execution to prevent NRE
+             if (pAttacker != null && pAttacker == Main.selectedKingdom)
+             {
+                 if (EventsSystem.AllowPlayerWar == false)
+                 {
+                     // Block the call entirely
+                     return false; 
+                 }
+             }
+             return true;
+        }
+    }
     
     // Patch WarManager.endWar to detect wars that end with peace involving our focused kingdom.
     [HarmonyPatch(typeof(WarManager), nameof(WarManager.endWar))]
