@@ -9,6 +9,8 @@ namespace RulerBox
     {
         public static bool AllowPlayerWar = false;
         public static bool IsPlayerInitiated = false;
+        private static float timeSinceLastEvent = 0f;
+        private const float EventCooldown = 180f; // 3 Minutes
         
         // ruler event data structure       
         private class RulerEvent
@@ -95,8 +97,11 @@ namespace RulerBox
             }
             // Let UI handle popup auto-close.
             EventsUI.TickPopup(dt);
+            // Event Cooldown
+            timeSinceLastEvent += dt;
+
             // Random event trigger logic (to change)
-            if (UnityEngine.Random.value < 0.0005f) // ~0.05% per tick
+            if (timeSinceLastEvent >= EventCooldown && UnityEngine.Random.value < 0.0005f) // ~0.05% per tick
             {
                 TriggerRandomEvent();
             }
@@ -542,6 +547,9 @@ namespace RulerBox
             var def = EventsList.GetRandomEvent(k);
             if (def == null) return;
             
+            // Reset Cooldown
+            timeSinceLastEvent = 0f;
+
             // spawn the event
             int id = nextId++;
             var rulerEvt = new RulerEvent

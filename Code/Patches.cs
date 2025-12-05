@@ -284,5 +284,38 @@ namespace RulerBox
                 EventsSystem.OnAllianceDissolved(me, pAlliance);
             }
         }
+
+        // --- Serialization Patches ---
+        
+        [HarmonyPatch(typeof(MapBox), "saveSave")]
+        public static class Patch_MapBox_Save
+        {
+            // Prefix to ensure data is in Kingdom.data BEFORE it is written to disk
+            public static void Prefix()
+            {
+                if (World.world?.kingdoms?.list != null)
+                {
+                    foreach (var k in World.world.kingdoms.list)
+                    {
+                        KingdomMetricsSystem.SyncToKingdom(k);
+                    }
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(MapBox), "loadSave")]
+        public static class Patch_MapBox_Load
+        {
+            public static void Postfix()
+            {
+                if (World.world?.kingdoms?.list != null)
+                {
+                    foreach (var k in World.world.kingdoms.list)
+                    {
+                        KingdomMetricsSystem.SyncFromKingdom(k);
+                    }
+                }
+            }
+        }
     }
 }

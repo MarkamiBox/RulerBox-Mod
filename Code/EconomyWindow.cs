@@ -26,6 +26,9 @@ namespace RulerBox
         private static Text expensesDemoText;
         private static Text expensesWarText;
         private static Text expensesLawsText;
+        private static Text expensesTradeText;
+        private static Text expensesCorruptionText;
+        private static Text incomeTradeText;
         // Colors (from original TopPanelUI)
         private static readonly Color PositiveColor = new Color(0.48f, 0.99f, 0f, 1f);
         private static readonly Color NegativeColor = new Color(1f, 0.35f, 0.35f, 1f);
@@ -217,13 +220,16 @@ namespace RulerBox
             SetColoredNumber(incomeAfterWarText, d.IncomeAfterWarPenalty);
             SetColoredNumber(incomeAfterStabText, d.IncomeAfterStability);
             SetColoredNumber(incomeAfterCitiesText, d.IncomeAfterCityBonus);
+            SetColoredNumber(incomeTradeText, d.TradeIncome);
             
             // Breakdown EXPENSES
             SetColoredNumber(expensesMilitaryText, d.ExpensesMilitary, forceNegative: true);
             SetColoredNumber(expensesInfraText, d.ExpensesInfrastructure, forceNegative: true);
-            SetColoredNumber(expensesDemoText, d.ExpensesDemography, forceNegative: true);
+            //SetColoredNumber(expensesDemoText, d.ExpensesDemography, forceNegative: true);
             SetColoredNumber(expensesWarText, d.ExpensesWarOverhead, forceNegative: true);
             SetColoredNumber(expensesLawsText, d.ExpensesLawUpkeep, forceNegative: true);
+            SetColoredNumber(expensesTradeText, d.TradeExpenses, forceNegative: true);
+            SetColoredNumber(expensesCorruptionText, d.ExpensesCorruption, forceNegative: true);
         }
 
         // --- ORIGINAL HELPERS ---
@@ -455,6 +461,7 @@ namespace RulerBox
             incomeAfterWarText        = BuildListRow(contentRT, "War");
             incomeAfterStabText       = BuildListRow(contentRT, "Stability");
             incomeAfterCitiesText     = BuildListRow(contentRT, "City bonus");
+            incomeTradeText           = BuildListRow(contentRT, "Trade Income");
         }
 
         private static void BuildExpensesScroll(Transform parent)
@@ -540,9 +547,11 @@ namespace RulerBox
             // expense breakdown rows
             expensesMilitaryText = BuildListRow(contentRT, "Military upkeep");
             expensesInfraText    = BuildListRow(contentRT, "Infrastructure");
-            expensesDemoText     = BuildListRow(contentRT, "Demography");
+            //expensesDemoText     = BuildListRow(contentRT, "Demography");
             expensesWarText      = BuildListRow(contentRT, "War overhead");
             expensesLawsText     = BuildListRow(contentRT, "Laws & Policies");
+            expensesTradeText    = BuildListRow(contentRT, "Trade Import");
+            expensesCorruptionText = BuildListRow(contentRT, "Corruption");
         }
 
         // Set colored number text based on value

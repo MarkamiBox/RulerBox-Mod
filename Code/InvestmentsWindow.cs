@@ -275,26 +275,52 @@ namespace RulerBox
             string tooltip = $"<b>{def.Name}</b>\n{def.Description}";
 
             Kingdom k = Main.selectedKingdom;
-            if (k != null && def.TreasuryPctCost > 0f)
+            if (k != null)
             {
                 var data = KingdomMetricsSystem.Get(k);
-                if (data != null && data.Treasury > 0)
+                
+                // Treasury Check
+                if (def.TreasuryPctCost > 0f && data != null && data.Treasury > 0)
                 {
                     long goldCost = (long)(data.Treasury * def.TreasuryPctCost);
                     if (goldCost > 0)
                     {
-                        tooltip += $"\n\nTreasury Cost: <color=#FFD700>{goldCost} Gold</color> ({(def.TreasuryPctCost*100):0}%)";
+                        string goldColor = (data.Treasury >= goldCost) ? "#FFD700" : "#FF5A5A";
+                        tooltip += $"\n\nTreasury Cost: <color={goldColor}>{goldCost} Gold</color> ({(def.TreasuryPctCost*100):0}%)";
+                        if(data.Treasury < goldCost) tooltip += " <color=#FF5A5A>(Missing)</color>";
+                    }
+                }
+
+                // Resource Check
+                if (def.Costs.Count > 0)
+                {
+                    tooltip += "\n\nRequires:";
+                    foreach (var c in def.Costs)
+                    {
+                        string resName = AssetManager.resources.get(c.ResourceId)?.id ?? c.ResourceId;
+                        int currentAmount = 0;
+                        if (data != null && data.ResourceStockpiles.ContainsKey(c.ResourceId)) {
+                             currentAmount = data.ResourceStockpiles[c.ResourceId];
+                        }
+                        
+                        string color = (currentAmount >= c.Amount) ? "#FFFFFF" : "#FF5A5A";
+                        tooltip += $"\n- <color={color}>{c.Amount} {resName}</color>";
+                        
+                        if (currentAmount < c.Amount)
+                        {
+                            tooltip += $" <color=#FF5A5A>({currentAmount})</color>";
+                        }
                     }
                 }
             }
-
-            if (def.Costs.Count > 0)
+            else
             {
-                tooltip += "\n\nRequires:";
-                foreach (var c in def.Costs)
+                // Fallback if no kingdom selected (shouldn't happen in view)
+                 if (def.Costs.Count > 0)
                 {
-                    string resName = AssetManager.resources.get(c.ResourceId)?.id ?? c.ResourceId;
-                    tooltip += $"\n- {c.Amount} {resName}";
+                    tooltip += "\n\nRequires:";
+                    foreach (var c in def.Costs)
+                        tooltip += $"\n- {c.Amount} {c.ResourceId}";
                 }
             }
 

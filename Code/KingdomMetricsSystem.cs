@@ -71,7 +71,7 @@ namespace RulerBox
             "herbs", "CommonMetals", "mithril", "adamantine", "pie", "tea", "cider"
         };
 
-        public static void Tick(float deltaTime)
+        public static void TickAll(float deltaTime)
         {
             if (deltaTime <= 0f) return;
 
@@ -80,21 +80,37 @@ namespace RulerBox
                 return;
             accum = 0f;
 
-            var k = Main.selectedKingdom;
-            if (k == null) return;
-
-            var d = Get(k);
-
-            for (int i = d.ActiveEffects.Count - 1; i >= 0; i--)
+            // Iterate through all tracked kingdoms
+            // Create a copy of keys to avoid modification errors if needed
+            var keys = new List<Kingdom>(db.Keys);
+            foreach (var k in keys)
             {
-                var eff = d.ActiveEffects[i];
-                d.Stability += eff.StabilityPerSecond * deltaTime;
-                eff.TimeRemaining -= deltaTime;
-                if (eff.TimeRemaining <= 0f)
-                    d.ActiveEffects.RemoveAt(i);
-            }
+                if (k == null || !k.isAlive() || k.data == null)
+                {
+                    db.Remove(k);
+                    continue;
+                }
 
-            RecalculateAllForKingdom(k, d);
+                var d = db[k];
+                
+                // Tick effects
+                for (int i = d.ActiveEffects.Count - 1; i >= 0; i--)
+                {
+                    var eff = d.ActiveEffects[i];
+                    d.Stability += eff.StabilityPerSecond * deltaTime;
+                    eff.TimeRemaining -= deltaTime * 0.1f; // 10x Slower decay for effects (longer duration)
+                    if (eff.TimeRemaining <= 0f)
+                        d.ActiveEffects.RemoveAt(i);
+                }
+
+                RecalculateForKingdom(k, d);
+            }
+            
+            // If we have a selection, update specific UI related
+            if (Main.selectedKingdom != null)
+            {
+                ResourcesTradeWindow.Update();
+            }
         }
 
         public static void RecalculateAllForKingdom(Kingdom k, Data d)
@@ -183,7 +199,7 @@ namespace RulerBox
             // Decay event-based corruption
             if (d.CorruptionFromEvents > 0)
             {
-                d.CorruptionFromEvents -= 0.005f * deltaWorldSeconds; // Decay rate: 0.5% per second (approx 30% per minute)
+                d.CorruptionFromEvents -= 0.0005f * deltaWorldSeconds; // Decay rate: 0.05% per second (Way slower)
                 if (d.CorruptionFromEvents < 0) d.CorruptionFromEvents = 0;
             }
             d.CorruptionLevel += d.CorruptionFromEvents;
@@ -238,8 +254,21 @@ namespace RulerBox
             d.ExpensesDemography = demo;
             
             long baseExpenses = military + infra + demo;
-            float warOverheadPct = we01 * d.MaxWarOverheadPct;
-            long warOverhead = SafeLong(baseExpenses * (warOverheadPct / 100.0));
+            // War Overhead Accumulator Logic
+            if (d.WarExhaustion > 5f)
+            {
+                // Increase very slowly if WE > 5
+                d.WarOverheadAccumulator += 0.005f * deltaWorldSeconds; 
+            }
+            else
+            {
+                // Decay if low WE
+                d.WarOverheadAccumulator -= 0.01f * deltaWorldSeconds;
+            }
+            d.WarOverheadAccumulator = Mathf.Clamp(d.WarOverheadAccumulator, 0f, 100f);
+
+            // Use Accumulator for overhead expenses
+            long warOverhead = SafeLong(baseExpenses * (d.WarOverheadAccumulator / 100.0));
             d.ExpensesWarOverhead = warOverhead;
 
             long econSpending = CalculateEconomicSpending(d);
@@ -284,7 +313,7 @@ namespace RulerBox
 
             // --- 6. Plague Risk Calculation ---
             // Accumulate risk over time
-            d.PlagueRiskAccumulator += (d.Population / 100f) * deltaWorldSeconds * 0.03f; // Example rate
+            d.PlagueRiskAccumulator += (d.Population / 100f) * deltaWorldSeconds * 0.005f; // Reduced from 0.03f
             // Decay resistance over time
             float decayRate = 0.02f;
             if (d.WelfareSpending == "High") decayRate = 0.0005f;
@@ -295,7 +324,7 @@ namespace RulerBox
             float risk = 10f + d.PlagueRiskAccumulator;
             risk += d.Cities * 2f;
             
-            float resistance = 200f; // Base resistance to prevent immediate plague
+            float resistance = 500f; // Base resistance to prevent immediate plague
             resistance += (d.PlagueResistanceModifier * 100f);
             resistance -= d.PlagueResistanceDecay;
             
@@ -1178,13 +1207,13 @@ namespace RulerBox
             // 2. Calculate Change
             if (atWar)
             {
-                // Base gain: +0.8 per second (modified by laws)
-                // E.g. 60 seconds (1 year) of war = +48 WE (without modifiers)
-                float baseGain = 0.8f * delta;
+                // Base gain: +0.2 per second (modified by laws)
+                // E.g. 60 seconds (1 year) of war = +12 WE (without modifiers)
+                float baseGain = 0.05f * delta;
                 d.WEChange = baseGain * d.WarExhaustionGainMultiplier;
                 
                 // Move towards 100
-                d.WarExhaustion = Mathf.MoveTowards(d.WarExhaustion, 100f, d.WEChange);
+                d.WarExhaustion = Mathf.MoveTowards(d.WarExhaustion, 30f, d.WEChange);
             }
             else
             {
@@ -1392,12 +1421,193 @@ namespace RulerBox
             public float PlagueRiskAccumulator; // Increases over time
             public float CorruptionFromEvents; // Stores corruption from events, decays over time
             public float PlagueResistanceDecay; // Increases over time (reducing total resistance)
+            public float WarOverheadAccumulator; // NEW: Accumulates over time when WE > 5
             public float MaxWarOverheadPct;
             public System.Collections.Generic.Dictionary<string, int> ResourceStockpiles = new System.Collections.Generic.Dictionary<string, int>();
             public System.Collections.Generic.Dictionary<string, float> ResourceRates = new System.Collections.Generic.Dictionary<string, float>();
         }
+        // ==============================================================================================
+        // NATIVE SAVE/LOAD SYNC
+        // ==============================================================================================
+        public static void SyncToKingdom(Kingdom k)
+        {
+            if (k == null || k.data == null) return;
+            var d = Get(k);
+            if (d == null) return;
+
+            // Serialize complex objects manually
+            string policiesStr = string.Join(",", d.ActivePolicies);
+            string leadersStr = Newtonsoft.Json.JsonConvert.SerializeObject(d.ActiveLeaders);
+            string effectsStr = Newtonsoft.Json.JsonConvert.SerializeObject(d.ActiveEffects);
+
+            // Set keys using native system
+            // We use a prefix 'rb_' to avoid collisions
+            k.data.set("rb_treasury_str", d.Treasury.ToString());
+            k.data.set("rb_income", (int)d.Income); // int usually enough for display logic, but purely visual?
+            // Actually we re-calc metrics every tick, so we only need to save STATE:
+            // - Treasury
+            // - Laws
+            // - Policies
+            // - Active Leaders/Effects (timers)
+            // - WarExhaustion / Stability state
+            
+            k.data.set("rb_policies", policiesStr);
+            k.data.set("rb_leaders", leadersStr);
+            k.data.set("rb_effects", effectsStr);
+
+            k.data.set("rb_tax_level", d.TaxationLevel);
+            k.data.set("rb_mil_spending", d.MilitarySpending);
+            // ... (Add all Law strings here) ...
+            k.data.set("rb_law_conscription", d.Law_Conscription);
+            k.data.set("rb_law_warbonds", d.Law_WarBonds);
+            k.data.set("rb_law_elitist", d.Law_ElitistMilitary);
+            k.data.set("rb_law_loyalty", d.Law_PartyLoyalty);
+            k.data.set("rb_law_central", d.Law_Centralization);
+            k.data.set("rb_law_press", d.Law_PressRegulation);
+            k.data.set("rb_law_firearm", d.Law_FirearmRegulation);
+            k.data.set("rb_law_religion", d.Law_Religion);
+            k.data.set("rb_law_pop", d.Law_PopulationGrowth);
+            k.data.set("rb_law_ind", d.Law_IndustrialSpec);
+            k.data.set("rb_law_res", d.Law_ResourceSubsidy);
+            k.data.set("rb_law_work", d.Law_WorkingHours);
+            k.data.set("rb_law_research", d.Law_ResearchFocus);
+            k.data.set("rb_law_monarch", d.Law_Monarch);
+            k.data.set("rb_law_collective", d.Law_CollectiveTheory);
+            k.data.set("rb_law_elective", d.Law_ElectiveAssembly);
+            k.data.set("rb_law_democracy", d.Law_DemocracyStyle);
+            k.data.set("rb_law_doctrine", d.Law_StateDoctrine);
+
+            k.data.set("rb_war_exhaustion", d.WarExhaustion);
+            k.data.set("rb_stability", d.Stability);
+            k.data.set("rb_war_overhead_acc", d.WarOverheadAccumulator);
+            k.data.set("rb_corruption", d.CorruptionLevel);
+            k.data.set("rb_plague_risk", d.PlagueRiskAccumulator);
+            k.data.set("rb_plague_res", d.PlagueResistance);
+            k.data.set("rb_manpower", d.ManpowerCurrent.ToString());
+        }
+
+        public static void SyncFromKingdom(Kingdom k)
+        {
+            if (k == null || k.data == null) return;
+            var d = Get(k); // Will create new if missing
+
+            // Load Treasury
+            string treasStr;
+            k.data.get("rb_treasury_str", out treasStr);
+            if (string.IsNullOrEmpty(treasStr)) treasStr = "0";
+            long.TryParse(treasStr, out d.Treasury);
+
+            // Load Laws (Strings)
+            k.data.get("rb_tax_level", out d.TaxationLevel);
+            if(d.TaxationLevel == null) d.TaxationLevel = "Normal";
+
+            k.data.get("rb_mil_spending", out d.MilitarySpending);
+            if(d.MilitarySpending == null) d.MilitarySpending = "None";
+            
+            k.data.get("rb_law_conscription", out d.Law_Conscription);
+            if(d.Law_Conscription == null) d.Law_Conscription = "Volunteer";
+
+            k.data.get("rb_law_warbonds", out d.Law_WarBonds);
+            if(d.Law_WarBonds == null) d.Law_WarBonds = "Inactive";
+
+            k.data.get("rb_law_elitist", out d.Law_ElitistMilitary);
+            if(d.Law_ElitistMilitary == null) d.Law_ElitistMilitary = "Default";
+
+            k.data.get("rb_law_loyalty", out d.Law_PartyLoyalty);
+            if(d.Law_PartyLoyalty == null) d.Law_PartyLoyalty = "Standard";
+
+            k.data.get("rb_law_central", out d.Law_Centralization);
+            if(d.Law_Centralization == null) d.Law_Centralization = "Balanced";
+
+            k.data.get("rb_law_press", out d.Law_PressRegulation);
+            if(d.Law_PressRegulation == null) d.Law_PressRegulation = "Laxed";
+
+            k.data.get("rb_law_firearm", out d.Law_FirearmRegulation);
+            if(d.Law_FirearmRegulation == null) d.Law_FirearmRegulation = "Standard";
+
+            k.data.get("rb_law_religion", out d.Law_Religion);
+            if(d.Law_Religion == null) d.Law_Religion = "Secularism";
+            
+            k.data.get("rb_law_pop", out d.Law_PopulationGrowth);
+            if(d.Law_PopulationGrowth == null) d.Law_PopulationGrowth = "Balanced";
+
+            k.data.get("rb_law_ind", out d.Law_IndustrialSpec);
+            if(d.Law_IndustrialSpec == null) d.Law_IndustrialSpec = "Balanced";
+
+            k.data.get("rb_law_res", out d.Law_ResourceSubsidy);
+            if(d.Law_ResourceSubsidy == null) d.Law_ResourceSubsidy = "None";
+
+            k.data.get("rb_law_work", out d.Law_WorkingHours);
+            if(d.Law_WorkingHours == null) d.Law_WorkingHours = "Standard";
+
+            k.data.get("rb_law_research", out d.Law_ResearchFocus);
+            if(d.Law_ResearchFocus == null) d.Law_ResearchFocus = "Balanced";
+
+            k.data.get("rb_law_monarch", out d.Law_Monarch);
+            if(d.Law_Monarch == null) d.Law_Monarch = "Ceremonial";
+
+            k.data.get("rb_law_collective", out d.Law_CollectiveTheory);
+            if(d.Law_CollectiveTheory == null) d.Law_CollectiveTheory = "Marxist";
+
+            k.data.get("rb_law_elective", out d.Law_ElectiveAssembly);
+            if(d.Law_ElectiveAssembly == null) d.Law_ElectiveAssembly = "Indirect";
+
+            k.data.get("rb_law_democracy", out d.Law_DemocracyStyle);
+            if(d.Law_DemocracyStyle == null) d.Law_DemocracyStyle = "Semi-Presidential";
+
+            k.data.get("rb_law_doctrine", out d.Law_StateDoctrine);
+            if(d.Law_StateDoctrine == null) d.Law_StateDoctrine = "Classical";
+
+            // Load Metrics State
+            k.data.get("rb_war_exhaustion", out d.WarExhaustion); 
+            // Default 0f is fine
+
+            k.data.get("rb_stability", out d.Stability);
+            // Check if we got 0, likely default. But 0 stability is valid...
+            // We use the Init flag elsewhere, so we can clamp or trust it.
+            // If it's a NEW load (all 0), we want 50.
+            // But we don't know if it's new simply by 0 value.
+            // Let's assume if ALL vars are 0/null, it's new.
+            // But 'd' is already existing potentially.
+            // We'll trust the load. If 0, it's 0.
+            d.HasInitializedStability = true;
+            
+            k.data.get("rb_war_overhead_acc", out d.WarOverheadAccumulator);
+
+            k.data.get("rb_corruption", out d.CorruptionLevel);
+            k.data.get("rb_plague_risk", out d.PlagueRiskAccumulator);
+            k.data.get("rb_plague_res", out d.PlagueResistance);
+
+            string mpStr;
+            k.data.get("rb_manpower", out mpStr);
+            if(string.IsNullOrEmpty(mpStr)) mpStr = "0";
+            long.TryParse(mpStr, out d.ManpowerCurrent);
+
+            // Load Complex
+            string policiesStr;
+            k.data.get("rb_policies", out policiesStr);
+            d.ActivePolicies.Clear();
+            if (!string.IsNullOrEmpty(policiesStr))
+            {
+                var arr = policiesStr.Split(',');
+                foreach(var s in arr) if(!string.IsNullOrEmpty(s)) d.ActivePolicies.Add(s);
+            }
+
+            string leadersStr;
+            k.data.get("rb_leaders", out leadersStr);
+            if (!string.IsNullOrEmpty(leadersStr))
+            {
+                try { d.ActiveLeaders = Newtonsoft.Json.JsonConvert.DeserializeObject<List<LeaderState>>(leadersStr) ?? new List<LeaderState>(); }
+                catch { d.ActiveLeaders = new List<LeaderState>(); }
+            }
+
+            string effectsStr;
+            k.data.get("rb_effects", out effectsStr);
+            if (!string.IsNullOrEmpty(effectsStr))
+            {
+                try { d.ActiveEffects = Newtonsoft.Json.JsonConvert.DeserializeObject<List<TimedEffect>>(effectsStr) ?? new List<TimedEffect>(); }
+                catch { d.ActiveEffects = new List<TimedEffect>(); }
+            }
+        }
     }
 }
-
-
-

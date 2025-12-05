@@ -113,6 +113,7 @@ namespace RulerBox
 
         public static void SetVisible(bool visible)
         {
+            if (root == null && visible) Initialize(DebugConfig.instance.transform); // Auto-init helper if null
             if (root == null) return;
             root.SetActive(visible);
             if (visible)
@@ -120,6 +121,8 @@ namespace RulerBox
                 Refresh();
             }
         }
+        
+        public static bool IsVisible() => root != null && root.activeSelf;
 
         private static void Refresh()
         {
@@ -314,8 +317,9 @@ namespace RulerBox
                 civicScore += k.king.stats["intelligence"] * 10.0f;
             }
 
-            if(k != Main.selectedKingdom) 
+            if(k == Main.selectedKingdom) 
             {   
+                // Make it harder for player to reach top ranks
                 ecoScore *= 0.5f;
                 militaryScore *= 0.5f;
                 civicScore *= 0.5f;

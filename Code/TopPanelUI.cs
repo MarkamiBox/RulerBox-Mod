@@ -61,9 +61,7 @@ namespace RulerBox
                 InitSubWindow("Diplomacy", () => DiplomacyWindow.Initialize(contentContainer.transform));
                 InitSubWindow("DiplomacyActions", () => DiplomacyActionsWindow.Initialize(contentContainer.transform));
                 InitSubWindow("Technology", () => TechnologyWindow.Initialize(contentContainer.transform));
-                InitSubWindow("Policies", () => PoliciesWindow.Initialize(contentContainer.transform));
-                
-                // --- FIX: Explicitly Initialize LeadersWindow ---
+                InitSubWindow("Policies", () => PoliciesWindow.Initialize(contentContainer.transform));                
                 InitSubWindow("LeadersWindow", () => LeadersWindow.Initialize(contentContainer.transform));
 
                 SetTab(HubTab.Economy);
@@ -213,18 +211,19 @@ namespace RulerBox
             showEconomicLaws = false;
             showInvestments = false;
             
-            EconomyWindow.SetVisible(false);
-            EconomicLawsWindow.SetVisible(false);
-            InvestmentsWindow.SetVisible(false);
-            ResourcesTradeWindow.SetVisible(false);
-            TradeWindow.SetVisible(false);
-            DiplomacyWindow.SetVisible(false);
-            DiplomacyActionsWindow.SetVisible(false);
-            LawsWindow.SetVisible(false);
-            LeadersWindow.SetVisible(false);
-            RankingsWindow.SetVisible(false);
-            PoliciesWindow.SetVisible(false);
-            LawsWindow.SetVisible(false);
+            // Force hide all known windows using safety checks
+            if(EconomyWindow.IsVisible()) EconomyWindow.SetVisible(false);
+            if(EconomicLawsWindow.IsVisible()) EconomicLawsWindow.SetVisible(false);
+            if(InvestmentsWindow.IsVisible()) InvestmentsWindow.SetVisible(false);
+            if(ResourcesTradeWindow.IsVisible()) ResourcesTradeWindow.SetVisible(false);
+            if(TradeWindow.IsVisible()) TradeWindow.SetVisible(false);
+            if(DiplomacyWindow.IsVisible()) DiplomacyWindow.SetVisible(false);
+            if(DiplomacyActionsWindow.IsVisible()) DiplomacyActionsWindow.SetVisible(false);
+            if(LeadersWindow.IsVisible()) LeadersWindow.SetVisible(false);
+            if(RankingsWindow.IsVisible()) RankingsWindow.SetVisible(false);
+            if(PoliciesWindow.IsVisible()) PoliciesWindow.SetVisible(false);
+            if(LawsWindow.IsVisible()) LawsWindow.SetVisible(false);
+            if(TechnologyWindow.IsVisible()) TechnologyWindow.SetVisible(false);
             
             if (currentTab == HubTab.Economy)
             {

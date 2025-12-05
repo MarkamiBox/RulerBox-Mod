@@ -877,7 +877,348 @@ namespace RulerBox
                     }
                 }
             });
-        }
+
+            // ==========================================
+            // NEW EVENTS BATCH 2 (Golden Age, etc.)
+            // ==========================================
+
+            // 25. Golden Age
+            Definitions.Add(new EventDef
+            {
+                Id = "cult_golden_age",
+                Title = "Golden Age",
+                Text = "Arts, sciences, and commerce are flourishing! Our nation is the envy of the world.",
+                Trigger = k => GetData(k).Stability > 80f && GetData(k).Treasury > 2000 && UnityEngine.Random.value < 0.01f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "It is our destiny!",
+                        Tooltip = "<color=#7CFC00>Culture +150</color>\n<color=#7CFC00>Research +20% (300s)</color>\n<color=#7CFC00>Tax +10% (300s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.ActiveEffects.Add(new TimedEffect("golden_age", 300f, 0f));
+                        }
+                    }
+                }
+            });
+
+            // 26. Famine
+            Definitions.Add(new EventDef
+            {
+                Id = "disaster_famine",
+                Title = "Great Famine",
+                Text = "Crops have failed and our stockpiles are running low. The people are starving.",
+                Trigger = k => GetData(k).Population > 100 && UnityEngine.Random.value < 0.015f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Import Food",
+                        Tooltip = "<color=#FF5A5A>Cost 1,000 Gold</color>\n<color=#7CFC00>Mitigate Famine</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            if (d.Treasury >= 1000)
+                            {
+                                d.Treasury -= 1000;
+                            }
+                            else
+                            {
+                                 WorldTip.showNow("Not enough gold! Thousands starve.", false, "top", 3f, "#FF5A5A");
+                                 d.Population = (long)(d.Population * 0.9f);
+                                 d.Stability -= 10f;
+                            }
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Let them eat cake",
+                        Tooltip = "<color=#FF5A5A>Population -10%</color>\n<color=#FF5A5A>Stability -15</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Population = (long)(d.Population * 0.9f);
+                            d.Stability -= 15f;
+                        }
+                    }
+                }
+            });
+
+            // 27. Diplomatic Incident
+            Definitions.Add(new EventDef
+            {
+                Id = "dip_incident",
+                Title = "Diplomatic Incident",
+                Text = "One of our ambassadors has insulted a foreign dignitary.",
+                Trigger = k => UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Apologize formally",
+                        Tooltip = "<color=#FF5A5A>Cost 200 Gold</color>\n<color=#FF5A5A>PP Gain -10% (120s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 200;
+                            d.ActiveEffects.Add(new TimedEffect("humiliated_diplomat", 120f, 0f));
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Stand by our man",
+                        Tooltip = "<color=#FF5A5A>War Exhaustion +3</color>\n<color=#7CFC00>Stability +1</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.WarExhaustion += 3f;
+                            d.Stability += 1f;
+                        }
+                    }
+                }
+            });
+
+            // 28. Mineral Discovery
+            Definitions.Add(new EventDef
+            {
+                Id = "econ_mineral",
+                Title = "Rich Vein Discovered",
+                Text = "Prospectors have found a massive deposit of precious metals!",
+                Trigger = k => UnityEngine.Random.value < 0.01f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Develop it",
+                        Tooltip = "<color=#FF5A5A>Cost 500 Gold</color>\n<color=#7CFC00>Resource Output +25% (Permanent)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 500;
+                            d.ResourceOutputModifier += 0.25f; // Permanent boost (simplified)
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Quick Cash",
+                        Tooltip = "<color=#7CFC00>Gain 2,000 Gold</color>",
+                        Action = k => GetData(k).Treasury += 2000
+                    }
+                }
+            });
+
+            // 29. General's Coup
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_coup",
+                Title = "General's Ambition",
+                Text = "A popular general is gathering support to overthrow the government!",
+                Trigger = k => GetData(k).Stability < 25f && GetData(k).Soldiers > 50 && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Purge the Military",
+                        Tooltip = "<color=#FF5A5A>Lose 50% Manpower</color>\n<color=#FF5A5A>Stability -10</color>\n<color=#7CFC00>Prevent Coup</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.ManpowerCurrent /= 2;
+                            d.Stability -= 10f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Offer Power Sharing",
+                        Tooltip = "<color=#7CFC00>Stability +10</color>\n<color=#FF5A5A>Corruption +20%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability += 10f;
+                            d.CorruptionFromEvents += 0.20f;
+                        }
+                    }
+                }
+            });
+
+            // 30. Political Scandal
+            Definitions.Add(new EventDef
+            {
+                Id = "pol_scandal_major",
+                Title = "Political Scandal",
+                Text = "A major scandal involving the royal family has erupted!",
+                Trigger = k => UnityEngine.Random.value < 0.015f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Cover it up",
+                        Tooltip = "<color=#FF5A5A>Cost 150 Gold</color>\n<color=#FF5A5A>Corruption +15%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 150;
+                            d.CorruptionFromEvents += 0.15f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Face the public",
+                        Tooltip = "<color=#FF5A5A>Stability -20</color>",
+                        Action = k => GetData(k).Stability -= 20f
+                    }
+                }
+            });
+
+            // 31. Grand Festival
+            Definitions.Add(new EventDef
+            {
+                Id = "cult_grand_festival",
+                Title = "Grand Festival",
+                Text = "The people wish to hold a grand festival to celebrate our culture.",
+                Trigger = k => GetData(k).Treasury > 300 && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Fund it",
+                        Tooltip = "<color=#FF5A5A>Cost 200 Gold</color>\n<color=#7CFC00>Stability +15</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 200;
+                            d.Stability += 15f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Refuse",
+                        Tooltip = "<color=#FF5A5A>Stability -5</color>",
+                        Action = k => GetData(k).Stability -= 5f
+                    }
+                }
+            });
+
+            // 32. Local Warlord
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_warlord",
+                Title = "Local Warlord Rises",
+                Text = "With central authority weak, a local warlord has seized control of a province in the chaos!",
+                Trigger = k => GetData(k).Stability < 30f && UnityEngine.Random.value < 0.02f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Crush him!",
+                        Tooltip = "<color=#FF5A5A>Stability -5</color>\n<color=#FF5A5A>War Exhaustion +5</color>\n<color=#7CFC00>Show of Force</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability -= 5f;
+                            d.WarExhaustion += 5f;
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Bribe him",
+                        Tooltip = "<color=#FF5A5A>Cost 250 Gold</color>\n<color=#7CFC00>Stability +5</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Treasury -= 250;
+                            d.Stability += 5f;
+                        }
+                    }
+                }
+            });
+
+            // 33. Plague of Madness
+            Definitions.Add(new EventDef
+            {
+                Id = "disaster_madness",
+                Title = "Plague of Madness",
+                Text = "A strange affliction is driving people mad! Chaos reigns in the streets.",
+                Trigger = k => UnityEngine.Random.value < 0.005f, // Rare
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Purge the afflicted",
+                        Tooltip = "<color=#FF5A5A>Stability -25</color>\n<color=#FF5A5A>Population -5%</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability -= 25f;
+                            d.Population = (long)(d.Population * 0.95f);
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Do nothing",
+                        Tooltip = "<color=#FF5A5A>Stability -40</color>",
+                        Action = k => GetData(k).Stability -= 40f
+                    }
+                }
+            });
+
+            // 34. Heir Born
+            Definitions.Add(new EventDef
+            {
+                Id = "cult_heir",
+                Title = "Royal Heir Born",
+                Text = "A healthy heir has been born to the royal family! The nation rejoices.",
+                Trigger = k => UnityEngine.Random.value < 0.01f, // Rare
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Celebrate!",
+                        Tooltip = "<color=#7CFC00>Stability +20</color>\n<color=#FF5A5A>Cost 50 Gold</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            d.Stability += 20f;
+                            d.Treasury -= 50;
+                        }
+                    }
+                }
+            });
+
+            // 35. Mercenary Contract
+            Definitions.Add(new EventDef
+            {
+                Id = "mil_mercenaries",
+                Title = "Mercenary Company",
+                Text = "A famous mercenary company offers their services for a reasonable price.",
+                Trigger = k => GetData(k).WarExhaustion > 5f && UnityEngine.Random.value < 0.03f,
+                Options = new List<EventOption>
+                {
+                    new EventOption
+                    {
+                        Text = "Hire them",
+                        Tooltip = "<color=#FF5A5A>Cost 200 Gold</color>\n<color=#7CFC00>Manpower +100</color>\n<color=#7CFC00>Army Attack +10% (180s)</color>",
+                        Action = k => 
+                        {
+                            var d = GetData(k);
+                            if (d.Treasury >= 200)
+                            {
+                                d.Treasury -= 200;
+                                d.ManpowerCurrent += 100;
+                                d.ActiveEffects.Add(new TimedEffect("mercs_hired", 180f, 0f));
+                            }
+                        }
+                    },
+                    new EventOption
+                    {
+                        Text = "Dismiss",
+                        Tooltip = "No effect",
+                        Action = k => { }
+                    }
+                }
+            });
 
         public static EventDef GetRandomEvent(Kingdom k)
         {

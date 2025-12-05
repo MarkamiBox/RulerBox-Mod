@@ -35,25 +35,27 @@ namespace RulerBox
         private void Update()
         {
             if (Input.GetKeyDown(KeyCode.K)) SelectKingdom();   // Select kingdom on key press
-            if (Main.selectedKingdom != null)   // Update systems if a kingdom is selected
+            // Update simulation regardless of selection
+            float dt = World.world.delta_time; 
+            if (dt > 0f && !World.world.isPaused())
+            {
+                KingdomMetricsSystem.TickAll(dt);
+                EventsSystem.Tick(dt);
+                TradeManager.Tick(dt);
+            }
+
+            if (Main.selectedKingdom != null)   // Update UI only if a kingdom is selected
             {
                 if (!Main.selectedKingdom.isAlive() || Main.selectedKingdom.data == null)
                 {
                     ClearSelection();
                     return;
                 }
-                // Update various systems
+                // Update various systems that depend on selection or need frequent updates
                 ArmySystem.Tick(Time.unscaledDeltaTime);
-                if (World.world.isPaused()) return;
-
-                float dt = World.world.delta_time; // Use game time
-                if (dt <= 0f) return;
                 
-                KingdomMetricsSystem.Tick(dt);
                 HubUI.Refresh();
                 TopPanelUI.Refresh();
-                EventsSystem.Tick(dt);
-                TradeManager.Tick(dt);
                 DiplomacyWindow.Refresh(Main.selectedKingdom);
             }
         }
