@@ -13,6 +13,10 @@ namespace RulerBox
         private static Button economyTabBtn;
         private static Button technologyTabBtn;
 
+        private static Image bgImage;
+        private static Sprite mainHubSprite;
+        private static Sprite techHubSprite;
+
         public enum HubTab { Diplomacy, Economy, Technology }
         private static HubTab currentTab = HubTab.Economy;
 
@@ -29,10 +33,10 @@ namespace RulerBox
                 root = new GameObject("RulerBox_MainHub");
                 root.transform.SetParent(DebugConfig.instance?.transform, false);
 
-                var img = root.AddComponent<Image>();
-                img.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.MainHub.png");
-                img.type = Image.Type.Sliced;
-                img.color = Color.white;
+                bgImage = root.AddComponent<Image>();
+                bgImage.sprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.MainHub.png");
+                bgImage.type = Image.Type.Sliced;
+                bgImage.color = Color.white;
 
                 var rt = root.GetComponent<RectTransform>();
                 rt.anchorMin = new Vector2(1.05f, 0.7f);
@@ -85,29 +89,37 @@ namespace RulerBox
         }
 
         // ... [Rest of the file remains unchanged] ...
+        private static HorizontalLayoutGroup tabLayoutGroup;
+        private static RectTransform tabsRect;
+
         // Create Tab Buttons
         private static void CreateTabs(Transform parent)
         {
             var tabsRow = new GameObject("TabsRow");
             tabsRow.transform.SetParent(parent, false);
-            var tabsRT = tabsRow.AddComponent<RectTransform>();
-            tabsRT.anchorMin = new Vector2(0f, 1f);
-            tabsRT.anchorMax = new Vector2(1f, 1f);
-            tabsRT.pivot     = new Vector2(0.6f, 1f);
-            tabsRT.offsetMin = new Vector2(9f, -34f);
-            tabsRT.offsetMax = new Vector2(-9f, -24f);
+            tabsRect = tabsRow.AddComponent<RectTransform>();
+            tabsRect.anchorMin = new Vector2(0f, 1f);
+            tabsRect.anchorMax = new Vector2(1f, 1f);
+            tabsRect.pivot     = new Vector2(0.6f, 1f);
+            tabsRect.offsetMin = new Vector2(9f, -34f);
+            tabsRect.offsetMax = new Vector2(-9f, -24f);
 
-            var hTabs = tabsRow.AddComponent<HorizontalLayoutGroup>();
-            hTabs.childAlignment = TextAnchor.MiddleCenter;
-            hTabs.spacing = 3f;
-            hTabs.padding = new RectOffset(8, 8, 0, 0);
-            hTabs.childControlWidth = true;
-            hTabs.childControlHeight = true;
-            hTabs.childForceExpandWidth = true;
+            // TWEAK HERE: Visualize Tab Container (Debug)
+            var tabsImg = tabsRow.AddComponent<Image>();
+            tabsImg.color = new Color(1f, 0f, 0f, 0f); // Red semi-transparent
+
+            tabLayoutGroup = tabsRow.AddComponent<HorizontalLayoutGroup>();
+            tabLayoutGroup.childAlignment = TextAnchor.MiddleCenter;
+            // TWEAK HERE: Default Spacing
+            tabLayoutGroup.spacing = 0f;
+            tabLayoutGroup.padding = new RectOffset(8, 8, 0, 0);
+            tabLayoutGroup.childControlWidth = true;
+            tabLayoutGroup.childControlHeight = true;
+            tabLayoutGroup.childForceExpandWidth = false;
 
             diplomacyTabBtn = BuildTabButton(tabsRow.transform, "Diplomacy", () => OnTabClicked(HubTab.Diplomacy));
             economyTabBtn   = BuildTabButton(tabsRow.transform, "Economy",   () => OnTabClicked(HubTab.Economy));
-            technologyTabBtn= BuildTabButton(tabsRow.transform, "Technology",() => OnTabClicked(HubTab.Technology));
+            technologyTabBtn= BuildTabButton(tabsRow.transform, "Technology", () => { /* Disabled */ });
         }
 
         public static void OnTabClicked(HubTab tab)
@@ -147,6 +159,39 @@ namespace RulerBox
             if (economyTabBtn)   economyTabBtn.GetComponent<Image>().color   = unselectedColor;
             if (technologyTabBtn)technologyTabBtn.GetComponent<Image>().color= unselectedColor;
 
+            var rt = root.GetComponent<RectTransform>();
+            if (tab == HubTab.Technology)
+            {
+                // Ensure sprite is loaded
+                if (techHubSprite == null)
+                {
+                    techHubSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.TechHub.png");
+                }
+                if (bgImage != null && techHubSprite != null) 
+                {
+                    bgImage.sprite = techHubSprite;
+                    bgImage.color = Color.white; 
+                }
+                
+                // Increase size for Tech Window
+                // TWEAK HERE: Width, Height
+                rt.sizeDelta = new Vector2(400, 250); 
+                
+                UpdateButtonLayout(true);
+            }
+            else
+            {
+                if (mainHubSprite == null) mainHubSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.MainHub.png");
+                if (bgImage != null && mainHubSprite != null) 
+                {
+                    bgImage.sprite = mainHubSprite;
+                }
+                // Reset to default size
+                rt.sizeDelta = new Vector2(230, 230);
+                
+                UpdateButtonLayout(false);
+            }
+
             switch (tab)
             {
                 case HubTab.Diplomacy:
@@ -161,6 +206,90 @@ namespace RulerBox
                     TechnologyWindow.SetVisible(true);
                     if (technologyTabBtn) technologyTabBtn.GetComponent<Image>().color = selectedColor;
                     break;
+            }
+        }
+
+        private static void UpdateButtonLayout(bool isTechMode)
+        {
+            // Helper to resize a button
+            void ResizeBtn(Button btn, float w, float h, int textSize)
+            {
+                if(btn == null) return;
+                var le = btn.GetComponent<LayoutElement>();
+                if(le != null)
+                {
+                    le.minWidth = w; 
+                    le.preferredWidth = w;
+                    le.minHeight = h; 
+                    le.preferredHeight = h;
+                }
+                var txt = btn.GetComponentInChildren<Text>();
+                if(txt != null)
+                {
+                    txt.resizeTextMaxSize = textSize;
+                }
+            }
+
+            if (isTechMode)
+            {
+                // TWEAK HERE: Button Size when in TECH MODE
+                float w = 60f; 
+                float h = 10f;
+                int fontSize = 1;
+                ResizeBtn(diplomacyTabBtn, w, h, fontSize);
+                ResizeBtn(economyTabBtn, w, h, fontSize);
+                ResizeBtn(technologyTabBtn, w, h, fontSize);
+                
+                // TWEAK HERE: Spacing when in TECH MODE
+                if(tabLayoutGroup != null) tabLayoutGroup.spacing = 0f; 
+                
+                // Postion Tabs on the RIGHT (Fixed Width)
+                if(tabsRect != null)
+                {
+                     // Anchor Top-Right
+                     tabsRect.anchorMin = new Vector2(1f, 1f); 
+                     tabsRect.anchorMax = new Vector2(1f, 1f);
+                     tabsRect.pivot = new Vector2(1f, 1f);
+                     
+                     // TWEAK HERE: Tab Container Width (Tech Mode)
+                     // Height is controlled differently or can be set here
+                     float containerWidth = 200f; 
+                     
+                     tabsRect.sizeDelta = new Vector2(containerWidth, 0f); // Height 0 means use anchors? No, we need height too if anchors are same.
+                     // The original code relied on parent height or stretch? 
+                     // Original anchors were Min Y=1, Max Y=1. Offset Y was -34 to -24 (Height 10).
+                     // Let's preserve height via offsets or sizeDelta Y.
+                     
+                     // Let's set height explicitly too if we are standardizing
+                     tabsRect.sizeDelta = new Vector2(containerWidth, 20f); // Width, Height
+                     
+                     // TWEAK HERE: Position Offset from Top-Right (Negative moves Left)
+                     float xOffset = -9f; // Default was -10, trying -60 to move nicely left
+                     float yOffset = -20f;
+                     tabsRect.anchoredPosition = new Vector2(xOffset, yOffset); 
+                }
+            }
+            else
+            {
+                // TWEAK HERE: Button Size when in NORMAL MODE
+                float w = 60f; 
+                float h = 18f; 
+                int fontSize = 2;
+                ResizeBtn(diplomacyTabBtn, w, h, fontSize);
+                ResizeBtn(economyTabBtn, w, h, fontSize);
+                ResizeBtn(technologyTabBtn, w, h, fontSize);
+                
+                // TWEAK HERE: Spacing when in NORMAL MODE
+                if(tabLayoutGroup != null) tabLayoutGroup.spacing = 6f;
+                
+                // Position Tabs normally (Stretched)
+                if(tabsRect != null)
+                {
+                     tabsRect.anchorMin = new Vector2(0f, 1f);
+                     tabsRect.anchorMax = new Vector2(1f, 1f);
+                     tabsRect.offsetMin = new Vector2(9f, -34f);
+                     tabsRect.offsetMax = new Vector2(-9f, -24f);
+                }
             }
         }
 
@@ -267,7 +396,10 @@ namespace RulerBox
             var img = go.AddComponent<Image>();
             img.color = new Color(0f, 0f, 0f, 0.001f);
             var le = go.AddComponent<LayoutElement>();
-            le.minWidth = 10; le.preferredWidth = 10; le.minHeight = 18; le.preferredHeight = 18;
+            // TWEAK HERE: Tab Button Size
+            le.minWidth = 50; le.preferredWidth = 60; 
+            le.minHeight = 20; le.preferredHeight = 20;
+
             var btn = go.AddComponent<Button>();
             btn.targetGraphic = img;
             if (onClick != null) btn.onClick.AddListener(() => onClick.Invoke());
@@ -280,7 +412,8 @@ namespace RulerBox
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
             txt.resizeTextForBestFit = true;
-            txt.resizeTextMinSize = 6; txt.resizeTextMaxSize = 8;
+            // TWEAK HERE: Text Size
+            txt.resizeTextMinSize = 10; txt.resizeTextMaxSize = 14; 
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
             return btn;

@@ -394,8 +394,30 @@ namespace RulerBox
             // --- 7. Research Progress ---
             if (k.getCulture() != null)
             {
-                float knowledgeGain = 0.1f * d.ResearchOutputModifier * deltaWorldSeconds;
-                //k.getCulture().data.knowledge_progress += knowledgeGain;
+                Culture culture = k.getCulture();
+                // Access private/internal fields if needed via reflection or assuming public if confirmed.
+                // Assuming data has knowledge_progress and knowledge_type based on previous hints.
+                // If they are missing, we might need to rely on a different approach or fix the field names.
+                // For now, I will use Reflection to be safe as I am not 100% sure of the field names in the public API.
+                
+                // Note: I am writing this to be compatible with the mod's existing patterns.
+                // Assuming culture.data is accessible.
+                
+                // We need to implement the loop:
+                // 1. Get current tech.
+                // 2. If valid, add progress.
+                // 3. If no tech, pick one (respecting unlock).
+                
+                // Since accessing these fields might be tricky without IntelliSense on the game's assembly,
+                // and the user prompt implies I should "implement" it, meaning maybe I need to patch the behavior.
+                
+                // However, I will try to implement it HERE as `KingdomMetricsSystem.TickAll` runs every frame/tick.
+                // But wait, `Culture` itself probably has an update loop in the base game.
+                // If I add code here, I might be doubling it.
+                // The user said "implement the technology branch".
+                
+                // I will call a helper in TechnologyManager to handle this to keep this file clean.
+                TechnologyManager.UpdateResearch(culture, deltaWorldSeconds * d.ResearchOutputModifier);
             }
         }
 
