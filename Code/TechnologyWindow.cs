@@ -23,7 +23,7 @@ namespace RulerBox
             // Load resources
             windowInnerSprite = Mod.EmbededResources.LoadSprite("RulerBox.Resources.UI.windowInnerSliced.png");
 
-            // 1. Create Main Window Panel
+            // Create Main Window Panel
             root = new GameObject("TechnologyWindow");
             root.transform.SetParent(parent, false);
             var rt = root.AddComponent<RectTransform>();
@@ -31,110 +31,31 @@ namespace RulerBox
             rt.anchorMax = new Vector2(0.99f, 0.99f);
             rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;
 
-            // Main Horizontal Layout
-            var h = root.AddComponent<HorizontalLayoutGroup>();
-            h.childAlignment = TextAnchor.UpperLeft;
-            h.spacing = 10;
-            h.padding = new RectOffset(5, 5, 5, 5);
-            h.childControlWidth = true;
-            h.childControlWidth = true;
-            h.childControlHeight = true;
-            h.childForceExpandWidth = false; // Fix: Don't force left panel to expand
-            h.childForceExpandHeight = true;
-
-            // --- LEFT PANEL (30%) ---
-            leftPanel = new GameObject("LeftPanel");
-            leftPanel.transform.SetParent(root.transform, false);
-            var leftLe = leftPanel.AddComponent<LayoutElement>();
-            // TWEAK HERE: Left Panel Width
-            leftLe.flexibleWidth = 0f; // Don't grow
-            leftLe.preferredWidth = 60; 
-            // TWEAK HERE: Left Panel Height (0 = auto, 1 = fill)
-            leftLe.flexibleHeight = 0f; 
-            leftLe.preferredHeight = 50; // Fixed height logic if needed, or rely on content
-
             // Background
-            var leftImg = leftPanel.AddComponent<Image>();
-            leftImg.sprite = windowInnerSprite;
-            leftImg.type = Image.Type.Sliced;
-            leftImg.color = new Color(1f, 0.5f, 0.5f, 0.5f); // Reddish for testing
+            var img = root.AddComponent<Image>();
+            if (windowInnerSprite != null) {
+                img.sprite = windowInnerSprite;
+                img.type = Image.Type.Sliced;
+            }
+            img.color = Color.white;
 
-            var leftV = leftPanel.AddComponent<VerticalLayoutGroup>();
-            leftV.childAlignment = TextAnchor.UpperCenter;
-            leftV.spacing = 2;
-            leftV.padding = new RectOffset(15, 15, 15, 15);
-            leftV.childControlWidth = true;
-            leftV.childControlHeight = true; // Control children height
-            leftV.childForceExpandHeight = false; // Don't force stretch children
-
-
-            // 1. "Current Research" Header
-            CreateTextRow(leftPanel.transform, "Current:", Color.white, 6);
-
-            // 2. Current Research Item (Button/Icon)
-            // Identify what IS researching?
-            // Currently simulated by TechnologyManager. But we don't have a specific "active" field exposed easily besides logic.
-            // We'll calculate it in Refresh().
-            GameObject currentResearchObj = new GameObject("CurrentResearchItem");
-            currentResearchObj.transform.SetParent(leftPanel.transform, false);
-            var crLe = currentResearchObj.AddComponent<LayoutElement>();
-            crLe.preferredHeight = 120;
-            currentResearchText = CreateText(currentResearchObj.transform, "Nothing", Color.yellow, 6);
-
-            // Spacer
-            var spacer = new GameObject("Spacer");
-            spacer.transform.SetParent(leftPanel.transform, false);
-            spacer.AddComponent<LayoutElement>().preferredHeight = 20;
-
-            // 3. "Tech Points" Header
-            CreateTextRow(leftPanel.transform, "Knowledge Points:", Color.white, 6);
-
-            // 4. Tech Points Value
-            techPowerText = CreateTextRow(leftPanel.transform, "0", Color.green, 6);
-
-            // --- RIGHT PANEL (Rest) ---
-            rightPanel = new GameObject("RightPanel");
-            rightPanel.transform.SetParent(root.transform, false);
-            var rightLe = rightPanel.AddComponent<LayoutElement>();
-            rightLe.flexibleWidth = 1f;
-            rightLe.flexibleHeight = 1f;
-
-            // Scroll View for Tech Tree
-            GameObject scrollContainer = new GameObject("ScrollContainer");
-            scrollContainer.transform.SetParent(rightPanel.transform, false);
-            var scrollRt = scrollContainer.AddComponent<RectTransform>();
-            scrollRt.anchorMin = Vector2.zero; scrollRt.anchorMax = Vector2.one;
-            scrollRt.offsetMin = Vector2.zero; scrollRt.offsetMax = Vector2.zero;
-
-            var scrollBg = scrollContainer.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0.2f);
-
-            var scrollRect = scrollContainer.AddComponent<ScrollRect>();
+            // Coming Soon Text
+            var textObj = new GameObject("ComingSoonText");
+            textObj.transform.SetParent(root.transform, false);
+            var txt = textObj.AddComponent<Text>();
+            txt.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            txt.text = "(Coming Soon)";
+            txt.color = Color.white;
+            txt.alignment = TextAnchor.MiddleCenter;
+            txt.resizeTextForBestFit = true;
+            txt.resizeTextMinSize = 20;
+            txt.resizeTextMaxSize = 40;
             
-            // Viewport
-            GameObject viewport = new GameObject("Viewport");
-            viewport.transform.SetParent(scrollContainer.transform, false);
-            var viewRt = viewport.AddComponent<RectTransform>();
-            viewRt.anchorMin = Vector2.zero; viewRt.anchorMax = Vector2.one;
-            viewRt.sizeDelta = Vector2.zero;
-            viewport.AddComponent<Mask>().showMaskGraphic = false;
-            viewport.AddComponent<Image>().color = new Color(1,1,1,0.01f);
-
-            // Content
-            contentContainer = new GameObject("Content");
-            contentContainer.transform.SetParent(viewport.transform, false);
-            var contentRt = contentContainer.AddComponent<RectTransform>();
-            contentRt.anchorMin = new Vector2(0, 1);
-            contentRt.anchorMax = new Vector2(0, 1);
-            contentRt.pivot = new Vector2(0, 1);
-            contentRt.sizeDelta = new Vector2(2000, 2000); 
-
-            scrollRect.content = contentRt;
-            scrollRect.viewport = viewRt;
-            scrollRect.horizontal = true;
-            scrollRect.vertical = true;
-            scrollRect.movementType = ScrollRect.MovementType.Clamped;
-            scrollRect.scrollSensitivity = 25f;
+            var txtRt = textObj.GetComponent<RectTransform>();
+            txtRt.anchorMin = Vector2.zero; 
+            txtRt.anchorMax = Vector2.one;
+            txtRt.offsetMin = Vector2.zero;
+            txtRt.offsetMax = Vector2.zero;
 
             root.SetActive(false);
         }
@@ -179,38 +100,7 @@ namespace RulerBox
 
         private static void RefreshContent()
         {
-            // Clear existing
-            foreach(Transform child in contentContainer.transform)
-            {
-                GameObject.Destroy(child.gameObject);
-            }
-
-            int x = 0;
-            int y = 0;
-            int cellSize = 110;
-            int padding = 30;
-            int cols = 8;
-            
-            var lib = AssetManager.knowledge_library;
-            if (lib == null) return;
-
-            foreach(var asset in lib.list)
-            {
-                if (!asset.show_in_knowledge_window) continue;
-                
-                bool isUnlocked = TechnologyManager.IsTechUnlockable(asset.id);
-                CreateTechNode(asset, x * (cellSize + padding) + padding, -y * (cellSize + padding) - padding, isUnlocked);
-                
-                x++;
-                if (x >= cols)
-                {
-                    x = 0;
-                    y++;
-                }
-            }
-            
-            var rt = contentContainer.GetComponent<RectTransform>();
-            rt.sizeDelta = new Vector2(cols * (cellSize + padding) + padding, (y + 1) * (cellSize + padding) + padding);
+            // Placeholder: Do nothing
         }
 
         private static void CreateTechNode(KnowledgeAsset asset, int x, int y, bool isUnlocked)

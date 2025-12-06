@@ -126,18 +126,6 @@ namespace RulerBox
             string cityModStr   = d.TaxModifierFromCities != 0 ? ColorGold($"+{d.TaxModifierFromCities:0.##}%") : ColorGold("0%");
             string baseWealth   = Money(SafeLong(d.TaxBaseWealth));
             string incomeBase   = Money(d.IncomeBeforeModifiers);
-            // Calculate how much was lost to corruption (Raw Potential - Actual Collected before modifiers)
-            // Since we don't store "Raw Potential" explicitly before corruption in d.IncomeBeforeModifiers (which is taxableBase), 
-            // and corruption reduces stability/income indirectly or directly depending on implementation.
-            // Actually, in Recalculate: taxableBase = baseTaxable * d.TaxRateLocal.
-            // Corruption is an Expense in ExpensesCorruption.
-            // But user says: "i see raw tax but in the income i see less so i'm not showing where that money is going"
-            // If they mean the discrepancy between "Tax Rate * Wealth" and "Final Income", we should show the breakdown clearer.
-            
-            // Let's add a "Lost to Inefficiency" or similar if pertinent.
-            // Current "Raw tax" line shows `incomeBase` which is `Wealth * TaxRate`.
-            // But if `incomeBase` is high and `income` is low, it's due to penalties.
-            
             string incomeWar    = Money(d.IncomeAfterWarPenalty);
             string lostToWar    = Money(d.IncomeBeforeModifiers - d.IncomeAfterWarPenalty);
             string incomeStab   = Money(d.IncomeAfterStability);
@@ -160,12 +148,6 @@ namespace RulerBox
             
             // Calc variables for detailed view
             bool isAnarchy = d.Stability <= 0;
-            // Deduce Scale Effect:
-            // Final Income = (AfterCities * Scale) + Trade - AnarchyLoss
-            // AnarchyLoss is simply 50% of total if active.
-            // So: PreAnarchyTotal = d.Income * (isAnarchy ? 2 : 1)
-            // TaxPortion = PreAnarchyTotal - Trade
-            // ScaleEffect = TaxPortion - AfterCities
             long preAnarchyTotal = d.Income * (isAnarchy ? 2 : 1);
             long taxPortion = preAnarchyTotal - d.TradeIncome;
             long scaleEffect = taxPortion - d.IncomeAfterCityBonus;
@@ -200,8 +182,6 @@ namespace RulerBox
                     // 1. Cities: (Cities-1)*0.025
                     // 2. Events: d.CorruptionFromEvents
                     // 3. Tax: The rest
-                    // Note: If Anarchy is active, everything is tripled, so we show base relative shares then mention multiplier?
-                    // Simpler: Just calculate the raw values again for display purposes.
                     $"    * From Cities: {Math.Max(0, (d.Cities - 1) * 2.5f):0.0}% ({(d.Cities>1?d.Cities-1:0)} extra cities)\n" +
                     $"    * From Events: {d.CorruptionFromEvents*100f:0.0}%\n" +
                     // Tax corruption: estimatedTaxIncome / 1000 * 0.01.

@@ -101,7 +101,7 @@ namespace RulerBox
             timeSinceLastEvent += dt;
 
             // Random event trigger logic (to change)
-            if (timeSinceLastEvent >= EventCooldown && UnityEngine.Random.value < 0.0005f) // ~0.05% per tick
+            if (timeSinceLastEvent >= EventCooldown && UnityEngine.Random.value < 0.0005f) 
             {
                 TriggerRandomEvent();
             }

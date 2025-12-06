@@ -104,13 +104,11 @@ namespace RulerBox
             tabsRect.offsetMin = new Vector2(9f, -34f);
             tabsRect.offsetMax = new Vector2(-9f, -24f);
 
-            // TWEAK HERE: Visualize Tab Container (Debug)
             var tabsImg = tabsRow.AddComponent<Image>();
-            tabsImg.color = new Color(1f, 0f, 0f, 0f); // Red semi-transparent
+            tabsImg.color = new Color(1f, 0f, 0f, 0f); 
 
             tabLayoutGroup = tabsRow.AddComponent<HorizontalLayoutGroup>();
             tabLayoutGroup.childAlignment = TextAnchor.MiddleCenter;
-            // TWEAK HERE: Default Spacing
             tabLayoutGroup.spacing = 0f;
             tabLayoutGroup.padding = new RectOffset(8, 8, 0, 0);
             tabLayoutGroup.childControlWidth = true;
@@ -119,7 +117,7 @@ namespace RulerBox
 
             diplomacyTabBtn = BuildTabButton(tabsRow.transform, "Diplomacy", () => OnTabClicked(HubTab.Diplomacy));
             economyTabBtn   = BuildTabButton(tabsRow.transform, "Economy",   () => OnTabClicked(HubTab.Economy));
-            technologyTabBtn= BuildTabButton(tabsRow.transform, "Technology", () => { /* Disabled */ });
+            technologyTabBtn= BuildTabButton(tabsRow.transform, "Technology", () => OnTabClicked(HubTab.Technology));
         }
 
         public static void OnTabClicked(HubTab tab)
@@ -232,7 +230,6 @@ namespace RulerBox
 
             if (isTechMode)
             {
-                // TWEAK HERE: Button Size when in TECH MODE
                 float w = 60f; 
                 float h = 10f;
                 int fontSize = 1;
@@ -240,38 +237,27 @@ namespace RulerBox
                 ResizeBtn(economyTabBtn, w, h, fontSize);
                 ResizeBtn(technologyTabBtn, w, h, fontSize);
                 
-                // TWEAK HERE: Spacing when in TECH MODE
                 if(tabLayoutGroup != null) tabLayoutGroup.spacing = 0f; 
                 
                 // Postion Tabs on the RIGHT (Fixed Width)
                 if(tabsRect != null)
                 {
-                     // Anchor Top-Right
                      tabsRect.anchorMin = new Vector2(1f, 1f); 
                      tabsRect.anchorMax = new Vector2(1f, 1f);
                      tabsRect.pivot = new Vector2(1f, 1f);
                      
-                     // TWEAK HERE: Tab Container Width (Tech Mode)
-                     // Height is controlled differently or can be set here
                      float containerWidth = 200f; 
                      
-                     tabsRect.sizeDelta = new Vector2(containerWidth, 0f); // Height 0 means use anchors? No, we need height too if anchors are same.
-                     // The original code relied on parent height or stretch? 
-                     // Original anchors were Min Y=1, Max Y=1. Offset Y was -34 to -24 (Height 10).
-                     // Let's preserve height via offsets or sizeDelta Y.
+                     tabsRect.sizeDelta = new Vector2(containerWidth, 0f); 
+                     tabsRect.sizeDelta = new Vector2(containerWidth, 20f); 
                      
-                     // Let's set height explicitly too if we are standardizing
-                     tabsRect.sizeDelta = new Vector2(containerWidth, 20f); // Width, Height
-                     
-                     // TWEAK HERE: Position Offset from Top-Right (Negative moves Left)
-                     float xOffset = -9f; // Default was -10, trying -60 to move nicely left
+                     float xOffset = -9f; 
                      float yOffset = -20f;
                      tabsRect.anchoredPosition = new Vector2(xOffset, yOffset); 
                 }
             }
             else
             {
-                // TWEAK HERE: Button Size when in NORMAL MODE
                 float w = 60f; 
                 float h = 18f; 
                 int fontSize = 2;
@@ -279,10 +265,8 @@ namespace RulerBox
                 ResizeBtn(economyTabBtn, w, h, fontSize);
                 ResizeBtn(technologyTabBtn, w, h, fontSize);
                 
-                // TWEAK HERE: Spacing when in NORMAL MODE
                 if(tabLayoutGroup != null) tabLayoutGroup.spacing = 6f;
                 
-                // Position Tabs normally (Stretched)
                 if(tabsRect != null)
                 {
                      tabsRect.anchorMin = new Vector2(0f, 1f);
@@ -396,7 +380,6 @@ namespace RulerBox
             var img = go.AddComponent<Image>();
             img.color = new Color(0f, 0f, 0f, 0.001f);
             var le = go.AddComponent<LayoutElement>();
-            // TWEAK HERE: Tab Button Size
             le.minWidth = 50; le.preferredWidth = 60; 
             le.minHeight = 20; le.preferredHeight = 20;
 
@@ -412,7 +395,6 @@ namespace RulerBox
             txt.alignment = TextAnchor.MiddleCenter;
             txt.color = Color.white;
             txt.resizeTextForBestFit = true;
-            // TWEAK HERE: Text Size
             txt.resizeTextMinSize = 10; txt.resizeTextMaxSize = 14; 
             var rt = txt.GetComponent<RectTransform>();
             rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = Vector2.zero; rt.offsetMax = Vector2.zero;

@@ -62,11 +62,6 @@ namespace RulerBox
             {
                 if (c.Source == k) // Selling -> Income
                 {
-                    // Income per tick scaled to "Yearly" projection for the UI?
-                    // Metrics usually show yearly rates. 
-                    // Trade happens every 120s (2 mins). A year is 60s.
-                    // So trade happens every 2 years.
-                    // Yearly Income = Cost / 2
                     total += c.CostPerTick / 2;
                 }
             }

@@ -67,10 +67,6 @@ namespace RulerBox
                 bgImg.type = Image.Type.Sliced;
                 bgImg.color = Color.white;
             }
-            /*else
-            {                                                       To Remove: Darken bg even without sprite
-                //bgImg.color = new Color(0f, 0f, 0f, 0.35f);
-            }*/
             
             // ScrollRect
             var scrollRect = scrollGO.AddComponent<ScrollRect>();

@@ -63,7 +63,7 @@ namespace RulerBox
             scrollLE.flexibleHeight = 1f; // Fill remaining space
 
             var scrollBg = scrollObj.AddComponent<Image>();
-            scrollBg.color = new Color(0, 0, 0, 0.3f);
+            scrollBg.color = new Color(0, 0, 0, 0f);
 
             var scrollRect = scrollObj.AddComponent<ScrollRect>();
             scrollRect.horizontal = true;

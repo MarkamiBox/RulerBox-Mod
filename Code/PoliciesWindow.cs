@@ -198,17 +198,17 @@ namespace RulerBox
 
             var h = btnObj.AddComponent<HorizontalLayoutGroup>();
             h.spacing = 2;
-            h.padding = new RectOffset(50, 50, 2, 2); 
+            h.padding = new RectOffset(5, 5, 2, 2); 
             h.childControlWidth = true;
             h.childControlHeight = true;
             h.childForceExpandWidth = false; 
-            h.childAlignment = TextAnchor.MiddleLeft;
+            h.childAlignment = TextAnchor.MiddleCenter;
 
             var textStack = new GameObject("InfoStack");
             textStack.transform.SetParent(btnObj.transform, false);
             
             var textVL = textStack.AddComponent<VerticalLayoutGroup>();
-            textVL.childAlignment = TextAnchor.MiddleLeft;
+            textVL.childAlignment = TextAnchor.MiddleCenter;
             textVL.spacing = 0;
             textVL.childControlHeight = true; textVL.childControlWidth = true;
             textVL.childForceExpandHeight = false; textVL.childForceExpandWidth = true;
@@ -217,7 +217,7 @@ namespace RulerBox
             textStackLE.flexibleWidth = 1f;
             textStackLE.minWidth = 50f;
 
-            CreateText(textStack.transform, policy.Name, 9, FontStyle.Bold, Color.white);
+            CreateText(textStack.transform, policy.Name, 5, FontStyle.Bold, Color.white);
             
             if (isActive)
             {
@@ -225,7 +225,7 @@ namespace RulerBox
             }
             else
             {
-                CreateText(textStack.transform, $"Cost: {policy.Cost}g", 8, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
+                CreateText(textStack.transform, $"Cost: {policy.Cost}g", 6, FontStyle.Normal, new Color(1f, 0.85f, 0.4f));
             }
 
             ChipTooltips.AttachSimpleTooltip(btnObj, () => GetPolicyTooltip(policy));
@@ -327,6 +327,7 @@ namespace RulerBox
             
             var scroll = scrollObj.AddComponent<ScrollRect>();
             scroll.vertical = true; scroll.horizontal = false; scroll.movementType = ScrollRect.MovementType.Clamped;
+            scroll.scrollSensitivity = 25f;
             
             var viewport = new GameObject("Viewport");
             viewport.transform.SetParent(scrollObj.transform, false);
@@ -342,7 +343,11 @@ namespace RulerBox
             cRT.pivot = new Vector2(0.5f, 1);
             
             var v = content.AddComponent<VerticalLayoutGroup>();
-            v.spacing = 2; v.childControlWidth = true; v.childControlHeight = true; v.childForceExpandHeight = false;
+            v.padding = new RectOffset(55, 55, 5, 5); 
+            v.spacing = 2; 
+            v.childControlWidth = true; 
+            v.childControlHeight = true; 
+            v.childForceExpandHeight = false;
             
             content.AddComponent<ContentSizeFitter>().verticalFit = ContentSizeFitter.FitMode.PreferredSize;
             

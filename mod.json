@@ -3,5 +3,6 @@
     "author": "markami#5286",
     "version": "0.4.0",
     "description": "Ruler Simulator",
-    "iconPath": "icon.png"
+    "iconPath": "icon.png",
+    "GUID": "RulerBox.mod"
 }

@@ -364,7 +364,6 @@ namespace RulerBox
                             WorldTip.showNow("Alliance destroyed by betrayal!", false, "top", 3f, "#FF0000");
                         }
                     }
-                    // --- NEW LOGIC END ---
 
                     EventsSystem.AllowPlayerWar = true;
                     EventsSystem.IsPlayerInitiated = true;
@@ -529,14 +528,12 @@ namespace RulerBox
 
             var img = btnObj.AddComponent<Image>();
             if (windowInnerSprite != null) { img.sprite = windowInnerSprite; img.type = Image.Type.Sliced; }
-            img.color = color; // COLOR KEPT EXACTLY THE SAME
+            img.color = color; 
 
             var btn = btnObj.AddComponent<Button>();
             btn.targetGraphic = img;
             btn.onClick.AddListener(() => onClick?.Invoke());
 
-            // Increased font slightly (5->9) so it is readable on the smaller button, 
-            // but the physical button size is strictly reduced as requested.
             var txt = CreateText(btnObj.transform, label, 9, FontStyle.Normal, Color.white);
             txt.alignment = TextAnchor.MiddleCenter;
             Stretch(txt.rectTransform);
@@ -545,7 +542,6 @@ namespace RulerBox
         // ================================================================================================
         // REFRESH LOGIC
         // ================================================================================================
-
         private static void RefreshRelationsList()
         {
             if(alliesContent == null || warsContent == null) return;
@@ -589,7 +585,6 @@ namespace RulerBox
             var rt = flagObj.GetComponent<RectTransform>();
             rt.sizeDelta = new Vector2(22f, 22f); 
 
-            // Keep LayoutElement for safety (helps the parent ContentSizeFitter calculate total width)
             var le = flagObj.AddComponent<LayoutElement>();
             le.minWidth = 22f;
             le.minHeight = 22f;

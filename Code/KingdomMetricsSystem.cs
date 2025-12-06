@@ -10,7 +10,7 @@ namespace RulerBox
         public string Id; 
         public float TimeRemaining;
         public float StabilityPerSecond;
-        public float StabilityModifier; // New: Affects target stability
+        public float StabilityModifier; 
 
         // Constructor for 2 arguments (Legacy support)
         public TimedEffect(float duration, float stabilityPerSecond)
@@ -98,7 +98,7 @@ namespace RulerBox
                 {
                     var eff = d.ActiveEffects[i];
                     d.Stability += eff.StabilityPerSecond * deltaTime;
-                    eff.TimeRemaining -= deltaTime * 0.1f; // 10x Slower decay for effects (longer duration)
+                    eff.TimeRemaining -= deltaTime * 0.1f; 
                     if (eff.TimeRemaining <= 0f)
                         d.ActiveEffects.RemoveAt(i);
                 }
@@ -384,7 +384,7 @@ namespace RulerBox
             float risk = 10f + d.PlagueRiskAccumulator;
             risk += d.Cities * 2f;
             
-            float resistance = 500f; // Base resistance to prevent immediate plague
+            float resistance = 300f; // Base resistance to prevent immediate plague
             resistance += (d.PlagueResistanceModifier * 100f);
             resistance -= d.PlagueResistanceDecay;
             
@@ -395,28 +395,6 @@ namespace RulerBox
             if (k.getCulture() != null)
             {
                 Culture culture = k.getCulture();
-                // Access private/internal fields if needed via reflection or assuming public if confirmed.
-                // Assuming data has knowledge_progress and knowledge_type based on previous hints.
-                // If they are missing, we might need to rely on a different approach or fix the field names.
-                // For now, I will use Reflection to be safe as I am not 100% sure of the field names in the public API.
-                
-                // Note: I am writing this to be compatible with the mod's existing patterns.
-                // Assuming culture.data is accessible.
-                
-                // We need to implement the loop:
-                // 1. Get current tech.
-                // 2. If valid, add progress.
-                // 3. If no tech, pick one (respecting unlock).
-                
-                // Since accessing these fields might be tricky without IntelliSense on the game's assembly,
-                // and the user prompt implies I should "implement" it, meaning maybe I need to patch the behavior.
-                
-                // However, I will try to implement it HERE as `KingdomMetricsSystem.TickAll` runs every frame/tick.
-                // But wait, `Culture` itself probably has an update loop in the base game.
-                // If I add code here, I might be doubling it.
-                // The user said "implement the technology branch".
-                
-                // I will call a helper in TechnologyManager to handle this to keep this file clean.
                 TechnologyManager.UpdateResearch(culture, deltaWorldSeconds * d.ResearchOutputModifier);
             }
         }
@@ -1642,16 +1620,8 @@ namespace RulerBox
 
             // Load Metrics State
             k.data.get("rb_war_exhaustion", out d.WarExhaustion); 
-            // Default 0f is fine
 
             k.data.get("rb_stability", out d.Stability);
-            // Check if we got 0, likely default. But 0 stability is valid...
-            // We use the Init flag elsewhere, so we can clamp or trust it.
-            // If it's a NEW load (all 0), we want 50.
-            // But we don't know if it's new simply by 0 value.
-            // Let's assume if ALL vars are 0/null, it's new.
-            // But 'd' is already existing potentially.
-            // We'll trust the load. If 0, it's 0.
             d.HasInitializedStability = true;
             
             k.data.get("rb_war_overhead_acc", out d.WarOverheadAccumulator);
